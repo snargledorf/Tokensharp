@@ -16,22 +16,10 @@ public record TemplateLanguageTokenTypes(string Lexeme, int Id) : TokenType<Temp
 
 public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenTypes>
 {
-    private Tokenizer<TemplateLanguageTokenTypes> _tokenizer;
-
-    protected override ITokenizer<TemplateLanguageTokenTypes> Tokenizer => _tokenizer;
-
-    [SetUp]
-    public void Setup()
-    {
-        _tokenizer = new Tokenizer<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.TokenTypes);
-    }
-
     [Test]
     public void BasicBinding()
     {
-        ReadOnlySpan<char> testStr = "{{text}}";
-        
-        RunTest(testStr,
+        RunTest("{{text}}",
         [
             new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.StartBinding),
             new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "text"),
@@ -42,9 +30,7 @@ public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenType
     [Test]
     public void TextHasPartialTokensWhichShouldBeReadAsText()
     {
-        ReadOnlySpan<char> testStr = "{{{}text}}";
-        
-        RunTest(testStr,
+        RunTest("{{{}text}}",
         [
             new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.StartBinding),
             new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "{}text"),

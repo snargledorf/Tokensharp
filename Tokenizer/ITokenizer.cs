@@ -2,8 +2,9 @@
 
 namespace Tokenizer
 {
-    public interface ITokenizer<TTokenType>
+    public interface ITokenizer<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [MaybeNullWhen(false)] out TTokenType type, out int tokenLength);
+        bool TryParseToken(ReadOnlyMemory<char> buffer, bool moreDataAvailable, out Token<TTokenType> token);
+        bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [MaybeNullWhen(false)] out TTokenType token, out int tokenLength);
     }
 }

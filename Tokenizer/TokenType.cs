@@ -6,33 +6,31 @@ public abstract record TokenType<T>(string Lexeme, int Id)
     private static T? _start;
     public static T Start => _start ??= LastUserDefinedTokenType.Next("start");
 
-    private static T LastUserDefinedTokenType
-    {
-        get
-        {
-            T? maxUserDefinedTokenType = T.TokenTypes.MaxBy(tokenType => tokenType.Id);
-            
-            if (maxUserDefinedTokenType is null)
-                throw new InvalidOperationException("User definitions is empty");
-            
-            return maxUserDefinedTokenType;
-        }
-    }
+    private static T LastUserDefinedTokenType =>
+        T.TokenTypes.MaxBy(tokenType => tokenType.Id) ?? T.Create("no_user_tokens", -1);
 
     private static T? _text;
     public static T Text => _text ??= Start.Next("text");
+
+    private static T? _digit;
+    public static T Number => _digit ??= Text.Next("number");
     
     private static T? _whiteSpace;
-    public static T WhiteSpace => _whiteSpace ??= Text.Next("whitespace");
+    public static T WhiteSpace => _whiteSpace ??= Number.Next("whitespace");
     
     private static T? _endOfText;
     internal static T EndOfText => _endOfText ??= WhiteSpace.Next("end_of_text");
     
+    private static T? _endOfNumber;
+    internal static T EndOfNumber => _endOfNumber ??= EndOfText.Next("end_of_number");
+    
     private static T? _endOfWhiteSpace;
-    internal static T EndOfWhiteSpace => _endOfWhiteSpace ??= EndOfText.Next("end_of_whitespace");
+    internal static T EndOfWhiteSpace => _endOfWhiteSpace ??= EndOfNumber.Next("end_of_whitespace");
     
     private static T? _startOfGeneratedTokenTypes;
-    internal static T StartOfGeneratedTokenTypes => _startOfGeneratedTokenTypes ??= EndOfWhiteSpace.Next("start_of_generated_types");
+
+    internal static T StartOfGeneratedTokenTypes =>
+        _startOfGeneratedTokenTypes ??= EndOfWhiteSpace.Next("start_of_generated_types");
 
     public bool IsGenerated { get; private set; }
     public bool IsDefined => Id < StartOfGeneratedTokenTypes.Id;

@@ -6,20 +6,20 @@ namespace Tokenizer
 {
     internal static class TokenizerStateMachineFactory
     {
-        internal static StateMachine<TTokenType, char> Create<TTokenType>(
-            IEnumerable<TTokenType> tokenDefinitions) 
+        internal static StateMachine<TTokenType, char> Create<TTokenType>() 
             where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
-            TokenTree<TTokenType> tree = CreateTokenTree(tokenDefinitions);
+            TokenTree<TTokenType> tree = CreateTokenTree<TTokenType>();
             
             return new StateMachine<TTokenType, char>(builder =>
             {
                 BuildStartState(builder, tree);
                 BuildWhiteSpaceState(builder, tree);
                 BuildTextState(builder, tree);
+                BuildNumberState(builder, tree);
             });
         }
-        
+
         private static void BuildStartState<TTokenType>(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder,
             TokenTree<TTokenType> tree)
@@ -34,6 +34,7 @@ namespace Tokenizer
 
             startBuilder
                 .When(c => char.IsWhiteSpace(c), TokenType<TTokenType>.WhiteSpace)
+                .When(c => char.IsDigit(c), TokenType<TTokenType>.Number)
                 .Default(TokenType<TTokenType>.Text);
         }
 
@@ -89,6 +90,16 @@ namespace Tokenizer
         private static Expression<Func<char, bool>> GetExpression(Expression<Func<char, bool>> expression)
         {
             return expression;
+        }
+
+        private static void BuildNumberState<TTokenType>(
+            IStateMachineTransitionMapBuilder<TTokenType, char> builder,
+            TokenTree<TTokenType> tree) 
+            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+        {
+            IStateTransitionMapBuilder<TTokenType,char> numberBuilder = builder.From(TokenType<TTokenType>.Number);
+            
+            numberBuilder.When(c => !char.IsDigit(c), TokenType<TTokenType>.EndOfNumber);
         }
 
         private static void BuildTransitions<TTokenType>(TokenTreeNode<TTokenType> node,
@@ -190,13 +201,12 @@ namespace Tokenizer
             }
         }
 
-        private static TokenTree<TTokenType> CreateTokenTree<TTokenType>(
-            IEnumerable<TTokenType> tokenDefinitions) 
+        private static TokenTree<TTokenType> CreateTokenTree<TTokenType>() 
             where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
             var tree = new TokenTree<TTokenType>();
 
-            foreach (TTokenType tokenDefinition in tokenDefinitions)
+            foreach (TTokenType tokenDefinition in TTokenType.TokenTypes)
             {
                 TokenTreeNode<TTokenType>? currentNode = null;
                 foreach (char nodeKey in tokenDefinition.Lexeme)

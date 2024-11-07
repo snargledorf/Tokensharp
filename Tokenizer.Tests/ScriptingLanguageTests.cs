@@ -22,16 +22,6 @@ public record ScriptingLanguageTokenTypes(string Lexeme, int Id) : TokenType<Scr
 
 public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTypes>
 {
-    private Tokenizer<ScriptingLanguageTokenTypes> _tokenizer;
-
-    protected override ITokenizer<ScriptingLanguageTokenTypes> Tokenizer => _tokenizer;
-
-    [SetUp]
-    public void Setup()
-    {
-        _tokenizer = new Tokenizer<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.TokenTypes);
-    }
-
     [Test]
     public void TestFun()
     {
@@ -41,7 +31,7 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
     [Test]
     public void TestFunWithMoreData()
     {
-        RunTest("fun", (TestCase<ScriptingLanguageTokenTypes>)ScriptingLanguageTokenTypes.Fun);
+        RunTest("fun", ScriptingLanguageTokenTypes.Fun);
     }
 
     [Test]

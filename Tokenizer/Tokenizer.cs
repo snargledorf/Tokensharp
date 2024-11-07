@@ -3,15 +3,27 @@ using FastState;
 
 namespace Tokenizer
 {
-    public class Tokenizer<TTokenType>(IEnumerable<TTokenType> tokenDefinitions)
-        : ITokenizer<TTokenType>
+    public class Tokenizer<TTokenType> : ITokenizer<TTokenType>
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        private readonly StateMachine<TTokenType, char> _stateMachine = TokenizerStateMachineFactory.Create(tokenDefinitions);
+        private readonly StateMachine<TTokenType, char> _stateMachine = TokenizerStateMachineFactory.Create<TTokenType>();
 
-        public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [MaybeNullWhen(false)] out TTokenType type, out int tokenLength)
+        public bool TryParseToken(ReadOnlyMemory<char> buffer, bool moreDataAvailable, out Token<TTokenType> token)
+        {
+            if (TryParseToken(buffer.Span, moreDataAvailable, out var tokenType, out int tokenLength))
+            {
+                token = new Token<TTokenType>(tokenType, buffer[..tokenLength]);
+                return true;
+            }
+            
+            token = default;
+            return false;
+        }
+
+        public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [MaybeNullWhen(false)] out TTokenType token, out int tokenLength)
         {
             tokenLength = 0;
+            
             TTokenType? tokenType = TokenType<TTokenType>.Start;
 
             foreach (char c in buffer)
@@ -22,21 +34,28 @@ namespace Tokenizer
                     
                     if (tokenType == TokenType<TTokenType>.EndOfText)
                     {
-                        type = TokenType<TTokenType>.Text;
+                        token = TokenType<TTokenType>.Text;
+                        return true;
+                    }
+
+                    if (tokenType == TokenType<TTokenType>.EndOfNumber)
+                    {
+                        token = TokenType<TTokenType>.Number;
                         return true;
                     }
 
                     if (tokenType == TokenType<TTokenType>.EndOfWhiteSpace)
                     {
-                        type = TokenType<TTokenType>.WhiteSpace;
+                        token = TokenType<TTokenType>.WhiteSpace;
                         return true;
                     }
 
-                    if (tokenType != TokenType<TTokenType>.WhiteSpace && 
-                        tokenType != TokenType<TTokenType>.Text &&
+                    if (tokenType != TokenType<TTokenType>.Text &&
+                        tokenType != TokenType<TTokenType>.Number &&
+                        tokenType != TokenType<TTokenType>.WhiteSpace &&
                         tokenType.IsDefined)
                     {
-                        type = tokenType;
+                        token = tokenType;
                         return true;
                     }
                 }
@@ -47,14 +66,14 @@ namespace Tokenizer
             if (tokenType == TokenType<TTokenType>.Start) // If we have more data, check if this current token type is the start of another token type
             {
                 tokenLength = 0;
-                type = default;
+                token = default;
                 return false;
             }
 
             if (moreDataAvailable && _stateMachine.StateHasInputTransitions(tokenType)) 
             {
                 tokenLength = 0;
-                type = default;
+                token = default;
                 return false;
             }
 
@@ -63,24 +82,30 @@ namespace Tokenizer
 
             if (tokenType == TokenType<TTokenType>.EndOfText)
             {
-                type = TokenType<TTokenType>.Text;
+                token = TokenType<TTokenType>.Text;
+                return true;
+            }
+
+            if (tokenType == TokenType<TTokenType>.EndOfNumber)
+            {
+                token = TokenType<TTokenType>.Number;
                 return true;
             }
 
             if (tokenType == TokenType<TTokenType>.EndOfWhiteSpace)
             {
-                type = TokenType<TTokenType>.WhiteSpace;
+                token = TokenType<TTokenType>.WhiteSpace;
                 return true;
             }
 
             if (tokenType.IsDefined)
             {
-                type = tokenType;
+                token = tokenType;
                 return true;
             }
 
             tokenLength = 0;
-            type = default;
+            token = default;
             return false;
         }
     }
