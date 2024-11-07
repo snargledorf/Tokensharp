@@ -2,8 +2,6 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
 using System.Text.Json;
-using CodeGenHelpers;
-using CodeGenHelpers.Internals;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Tokenizer.TokenTypeGenerator
@@ -42,7 +40,7 @@ namespace Tokenizer.TokenTypeGenerator
                 static (spc, tokenClassAndDefinition) => GenerateClass(in tokenClassAndDefinition, spc));
         }
 
-        private TokenTypeClass? GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
+        private static TokenTypeClass? GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
         {
             if (context.TargetSymbol is not ITypeSymbol symbol)
                 return null;
@@ -100,7 +98,7 @@ namespace Tokenizer.TokenTypeGenerator
                                       }
                                       """;
             
-            var fileName = new StringBuilder($"{definition.TokenClass.TypeSymbol.GetFullName()}.g.cs")
+            var fileName = new StringBuilder($"{definition.TokenClass.TypeSymbol}.g.cs")
                 .Replace('<', '_')
                 .Replace('>', '_')
                 .Replace(',', '.')

@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="TestTokenTypes.tokens.json" />
+      <AdditionalFiles Include="TestTokenTypes.json" />
     </ItemGroup>
 
 </Project>
