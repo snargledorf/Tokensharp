@@ -62,24 +62,28 @@ namespace Tokenizer
             TTokenType currentTokenType = whiteSpace ? TokenType<TTokenType>.WhiteSpace : TokenType<TTokenType>.Text;
             TTokenType nextTokenType = whiteSpace ? TokenType<TTokenType>.EndOfWhiteSpace : TokenType<TTokenType>.EndOfText;
 
-            IStateTransitionMapBuilder<TTokenType, char> textBuilder = builder.From(currentTokenType);
+            IStateTransitionMapBuilder<TTokenType, char> textOrWhiteSpaceBuilder = builder.From(currentTokenType);
 
             foreach (TokenTreeNode<TTokenType> node in tree)
             {
                 if (whiteSpace)
                 {
+                    // If we have a token type that starts with a whitespace character
+                    // then we need to add a potential switch to the end of white space
                     if (node.IsWhiteSpaceToRoot())
-                        textBuilder.When(node.Key, nextTokenType);
+                        textOrWhiteSpaceBuilder.When(node.Key, nextTokenType);
                 }
                 else if (!node.IsWhiteSpaceToRoot())
-                    textBuilder.When(node.Key, nextTokenType);
+                    textOrWhiteSpaceBuilder.When(node.Key, nextTokenType);
             }
 
+            // Add a check if the next character is or is not another white space character
+            // depending if we are currently on white space or not
             Expression<Func<char, bool>> isWhiteSpaceExpression = whiteSpace
                 ? GetExpression(c => !char.IsWhiteSpace(c))
                 : GetExpression(c => char.IsWhiteSpace(c));
 
-            textBuilder.When(isWhiteSpaceExpression, nextTokenType);
+            textOrWhiteSpaceBuilder.When(isWhiteSpaceExpression, nextTokenType);
         }
 
         private static Expression<Func<char, bool>> GetExpression(Expression<Func<char, bool>> expression)

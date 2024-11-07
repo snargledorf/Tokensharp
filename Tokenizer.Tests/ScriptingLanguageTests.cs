@@ -8,7 +8,7 @@ public record ScriptingLanguageTokenTypes(string Lexeme, int Id) : TokenType<Scr
     public static readonly ScriptingLanguageTokenTypes OpenBrace = OpenParenthesis.Next("{");
     public static readonly ScriptingLanguageTokenTypes CloseBrace = OpenBrace.Next("}");
 
-    public static readonly IEnumerable<ScriptingLanguageTokenTypes> Definitions =
+    public static IEnumerable<ScriptingLanguageTokenTypes> TokenTypes { get; } =
     [
         Fun,
         OpenParenthesis,
@@ -16,9 +16,8 @@ public record ScriptingLanguageTokenTypes(string Lexeme, int Id) : TokenType<Scr
         OpenBrace,
         CloseBrace
     ];
-    
+
     public static ScriptingLanguageTokenTypes Create(string token, int id) => new(token, id);
-    public static ScriptingLanguageTokenTypes LastUserDefinedTokenType { get; } = Definitions.Last();
 }
 
 public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTypes>
@@ -30,7 +29,7 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
     [SetUp]
     public void Setup()
     {
-        _tokenizer = new Tokenizer<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Definitions);
+        _tokenizer = new Tokenizer<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.TokenTypes);
     }
 
     [Test]
@@ -42,7 +41,7 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
     [Test]
     public void TestFunWithMoreData()
     {
-        RunTest("fun", (ExpectedToken<ScriptingLanguageTokenTypes>)ScriptingLanguageTokenTypes.Fun);
+        RunTest("fun", (TestCase<ScriptingLanguageTokenTypes>)ScriptingLanguageTokenTypes.Fun);
     }
 
     [Test]
@@ -50,8 +49,8 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
     {
         RunTest("fun ", 
         [
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Fun, MoreDataAvailable: true),
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " ")
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Fun, MoreDataAvailable: true),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " ")
         ]);
     }
 
@@ -61,7 +60,7 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
         RunTest("fun ",
         [
             ScriptingLanguageTokenTypes.Fun,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " ")
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " ", ExpectToParse: false) // False because there could be more whitespace to add to this token
         ], true);
     }
 
@@ -82,8 +81,8 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
         RunTest("fun test()",
         [
             ScriptingLanguageTokenTypes.Fun,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Text, "test"),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Text, "test"),
             ScriptingLanguageTokenTypes.OpenParenthesis,
             ScriptingLanguageTokenTypes.CloseParenthesis,
         ]);
@@ -95,13 +94,13 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
         RunTest("fun test() { }",
         [
             ScriptingLanguageTokenTypes.Fun,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Text, "test"),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Text, "test"),
             ScriptingLanguageTokenTypes.OpenParenthesis,
             ScriptingLanguageTokenTypes.CloseParenthesis,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
             ScriptingLanguageTokenTypes.OpenBrace,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
             ScriptingLanguageTokenTypes.CloseBrace,
         ]);
     }
@@ -117,13 +116,13 @@ public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTy
         RunTest(testStr,
         [
             ScriptingLanguageTokenTypes.Fun,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Text, "test"),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.Text, "test"),
             ScriptingLanguageTokenTypes.OpenParenthesis,
             ScriptingLanguageTokenTypes.CloseParenthesis,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, " "),
             ScriptingLanguageTokenTypes.OpenBrace,
-            new ExpectedToken<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, "\r\n\r\n"),
+            new TestCase<ScriptingLanguageTokenTypes>(ScriptingLanguageTokenTypes.WhiteSpace, "\r\n\r\n"),
             ScriptingLanguageTokenTypes.CloseBrace,
         ]);
     }

@@ -4,8 +4,21 @@ public abstract record TokenType<T>(string Lexeme, int Id)
     where T : TokenType<T>, ITokenType<T>
 {
     private static T? _start;
-    public static T Start => _start ??= T.LastUserDefinedTokenType.Next("start");
-    
+    public static T Start => _start ??= LastUserDefinedTokenType.Next("start");
+
+    private static T LastUserDefinedTokenType
+    {
+        get
+        {
+            T? maxUserDefinedTokenType = T.TokenTypes.MaxBy(tokenType => tokenType.Id);
+            
+            if (maxUserDefinedTokenType is null)
+                throw new InvalidOperationException("User definitions is empty");
+            
+            return maxUserDefinedTokenType;
+        }
+    }
+
     private static T? _text;
     public static T Text => _text ??= Start.Next("text");
     

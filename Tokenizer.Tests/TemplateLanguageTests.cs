@@ -5,14 +5,13 @@ public record TemplateLanguageTokenTypes(string Lexeme, int Id) : TokenType<Temp
     public static readonly TemplateLanguageTokenTypes StartBinding = new("{{", 0);
     public static readonly TemplateLanguageTokenTypes EndBinding = StartBinding.Next("}}");
 
-    public static readonly IEnumerable<TemplateLanguageTokenTypes> Definitions =
+    public static IEnumerable<TemplateLanguageTokenTypes> TokenTypes { get; } =
     [
         StartBinding,
         EndBinding,
     ];
     
     public static TemplateLanguageTokenTypes Create(string token, int id) => new(token, id);
-    public static TemplateLanguageTokenTypes LastUserDefinedTokenType { get; } = Definitions.Last();
 }
 
 public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenTypes>
@@ -24,7 +23,7 @@ public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenType
     [SetUp]
     public void Setup()
     {
-        _tokenizer = new Tokenizer<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Definitions);
+        _tokenizer = new Tokenizer<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.TokenTypes);
     }
 
     [Test]
@@ -34,9 +33,9 @@ public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenType
         
         RunTest(testStr,
         [
-            new ExpectedToken<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.StartBinding),
-            new ExpectedToken<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "text"),
-            new ExpectedToken<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.EndBinding),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.StartBinding),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "text"),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.EndBinding),
         ]);
     }
 
@@ -47,9 +46,9 @@ public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenType
         
         RunTest(testStr,
         [
-            new ExpectedToken<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.StartBinding),
-            new ExpectedToken<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "{}text"),
-            new ExpectedToken<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.EndBinding),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.StartBinding),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "{}text"),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.EndBinding),
         ]);
     }
 }

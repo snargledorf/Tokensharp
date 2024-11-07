@@ -6,7 +6,7 @@ public record CsvTokenTypes(string Lexeme, int Id) : TokenType<CsvTokenTypes>(Le
     public static readonly CsvTokenTypes EndOfRecord = Comma.Next("\r\n");
     public static readonly CsvTokenTypes DoubleQuote = EndOfRecord.Next("\"");
 
-    public static readonly IEnumerable<CsvTokenTypes> Definitions =
+    public static IEnumerable<CsvTokenTypes> TokenTypes { get; } =
     [
         Comma,
         EndOfRecord,
@@ -14,7 +14,6 @@ public record CsvTokenTypes(string Lexeme, int Id) : TokenType<CsvTokenTypes>(Le
     ];
     
     public static CsvTokenTypes Create(string token, int id) => new(token, id);
-    public static CsvTokenTypes LastUserDefinedTokenType { get; } = Definitions.Last();
 }
 
 public class CsvTests : TokenizerTestBase<CsvTokenTypes>
@@ -26,7 +25,7 @@ public class CsvTests : TokenizerTestBase<CsvTokenTypes>
     [SetUp]
     public void Setup()
     {
-        _tokenizer = new Tokenizer<CsvTokenTypes>(CsvTokenTypes.Definitions);
+        _tokenizer = new Tokenizer<CsvTokenTypes>(CsvTokenTypes.TokenTypes);
     }
 
     [Test]
@@ -40,17 +39,17 @@ public class CsvTests : TokenizerTestBase<CsvTokenTypes>
 
         RunTest(testStr, 
         [
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.Text, "test"),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.Comma),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.WhiteSpace, " "),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.Text, "123"),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.EndOfRecord),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.Text, "foo"),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.Comma),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.DoubleQuote),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.Text, "bar"),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.EndOfRecord),
-            new ExpectedToken<CsvTokenTypes>(CsvTokenTypes.Text, "bizz")
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "test"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.WhiteSpace, " "),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "123"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "foo"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "bar"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "bizz")
         ]);
     }
 }

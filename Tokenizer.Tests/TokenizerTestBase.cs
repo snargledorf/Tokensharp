@@ -5,22 +5,23 @@ public abstract class TokenizerTestBase<TTokenType>
 {
     protected abstract ITokenizer<TTokenType> Tokenizer { get; }
     protected void RunTest(ReadOnlySpan<char> text,
-        IEnumerable<ExpectedToken<TTokenType>> expectedTokens,
+        IEnumerable<TestCase<TTokenType>> expectedTokens,
         bool moreDataAvailable = false)
     {
-        foreach (ExpectedToken<TTokenType> expectedToken in expectedTokens)
+        foreach (TestCase<TTokenType> expectedToken in expectedTokens)
             text = text[RunTest(text, expectedToken, moreDataAvailable)..];
     }
 
-    protected int RunTest(ReadOnlySpan<char> text, ExpectedToken<TTokenType> expectedToken, bool moreDataAvailable = false) =>
-        RunTest(text, expectedToken.TokenType, expectedToken.Lexeme, expectedToken.MoreDataAvailable || moreDataAvailable, expectedToken.ExpectToParse);
+    protected int RunTest(ReadOnlySpan<char> text, TestCase<TTokenType> testCase, bool moreDataAvailable = false) =>
+        RunTest(text, testCase.TokenType, testCase.Lexeme, testCase.MoreDataAvailable || moreDataAvailable, testCase.ExpectToParse);
 
     protected int RunTest(ReadOnlySpan<char> text, TTokenType expectedTokenType, string? lexeme = null, bool moreDataAvailable = false, bool expectToParse = true)
     {
         if (lexeme is null)
             lexeme = expectedTokenType.Lexeme;
-        
-        bool parsed = Tokenizer.TryParseToken(text, moreDataAvailable, out TTokenType? tokenType, out int tokenLength);
+
+        bool parsed =
+            Tokenizer.TryParseToken(text, moreDataAvailable, out TTokenType? tokenType, out int tokenLength);
 
         var parsedLexeme = text[..tokenLength].ToString();
 
@@ -39,12 +40,20 @@ public abstract class TokenizerTestBase<TTokenType>
                 Assert.That(parsedLexeme, Is.EqualTo(""));
             }
         });
-        
+
         return tokenLength;
     }
-}
 
-public record ExpectedToken<TTokenType>(TTokenType TokenType, string? Lexeme = null, bool MoreDataAvailable = false, bool ExpectToParse = true)
-{
-    public static implicit operator ExpectedToken<TTokenType>(TTokenType tokenType) => new(tokenType);
+    protected void RunTestShouldThrow<TExceptionType>(ReadOnlyMemory<char> text, Action<TExceptionType> validateException, bool moreDataAvailable = false) 
+        where TExceptionType : Exception
+    {
+        var exception = Assert.Throws<TExceptionType>(() =>
+        {
+            while (Tokenizer.TryParseToken(text.Span, moreDataAvailable, out _, out int tokenLength))
+                text = text[tokenLength..];
+        });
+        
+        if (exception is not null)
+            validateException(exception);
+    }
 }
