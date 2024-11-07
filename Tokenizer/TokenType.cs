@@ -26,15 +26,26 @@ public abstract record TokenType<T>(string Lexeme, int Id)
     public bool IsUserDefined => Id < Start.Id;
 
     internal T Next() => Next(Lexeme, true);
+    
     public T Next(string lexeme) => Next(lexeme, false);
 
     private T Next(string lexeme, bool generated)
     {
+        int nextId = Id + 1;
+
         if (generated)
+        {
+            bool idIsDefined = nextId < StartOfGeneratedTokenTypes.Id;
+            if (idIsDefined)
+                throw new InvalidOperationException("Generated token id would conflict with previously defined token type");
+            
             lexeme += "_g";
+        }
         
-        var tokenType = T.Create(lexeme, Id + 1);
+        var tokenType = T.Create(lexeme, nextId);
+        
         tokenType.IsGenerated = generated;
+        
         return tokenType;
     }
 }
