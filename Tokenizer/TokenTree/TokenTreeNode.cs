@@ -1,26 +1,26 @@
 namespace Tokenizer.TokenTree;
 
-public sealed class TokenTreeNode<TState>(char key, TokenTreeNode<TState>? parent = null) : TokenTreeNodeCollection<TState>
+public sealed class TokenTreeNode<TTokenType>(char key, TokenTreeNode<TTokenType>? parent = null) : TokenTreeNodeCollection<TTokenType>
 {
-    private TState? _state;
+    private TTokenType? _tokenType;
 
     public char Key { get; } = key;
 
-    public TokenTreeNode<TState>? Parent { get; } = parent;
+    public TokenTreeNode<TTokenType>? Parent { get; } = parent;
     
-    public TokenTreeNode<TState> RootNode => Parent?.Parent ?? this;
+    public TokenTreeNode<TTokenType> RootNode => Parent?.Parent ?? this;
 
-    public TState? State
+    public TTokenType? TokenType
     {
-        get => _state;
+        get => _tokenType;
         set
         {
             ArgumentNullException.ThrowIfNull(value);
             
-            if (_state is not null)
-                throw new InvalidOperationException("Node already has a state");
+            if (_tokenType is not null)
+                throw new InvalidOperationException("Node already has a token type");
 
-            _state = value;
+            _tokenType = value;
         }
     }
 

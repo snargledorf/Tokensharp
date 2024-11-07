@@ -11,30 +11,7 @@ namespace Tokenizer
             where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
             TokenTree<TTokenType> tree = CreateTokenTree(tokenDefinitions);
-
-            /* This is the Goal
-             * 
-             * The start builder is done I think
-            builder.From(FlexableTokenizerTokenState.Start)
-                .When(',', FlexableTokenizerTokenState.EndOfFieldDelimiter)
-                .When('\r', FlexableTokenizerTokenState.StartOfEndOfRecord)
-                .When('"', FlexableTokenizerTokenState.EndOfFieldDelimiter)
-                .When((c) => char.IsWhiteSpace(c), FlexableTokenizerTokenState.WhiteSpace)
-                .Default(FlexableTokenizerTokenState.Text);
-
-             * This needs more testing, should be built when building start state
-            builder.From(FlexableTokenizerTokenState.StartOfEndOfRecord)
-                .When('\n', FlexableTokenizerTokenState.EndOfEndOfRecord)
-                .When('\r', FlexableTokenizerTokenState.EndOfWhiteSpace)
-                .When((c) => char.IsWhiteSpace(c), FlexableTokenizerTokenState.WhiteSpace);
-
-             * Currently not possible. Need to work around currently, but may be able to improve.
-            builder.From(FlexableTokenizerTokenState.WhiteSpace)
-                .When((c) => c == '\r' || !char.IsWhiteSpace(c), FlexableTokenizerTokenState.EndOfWhiteSpace);
-
-            builder.From(FlexableTokenizerTokenState.Text)
-                .When((c) => c == ',' || c == '"' || char.IsWhiteSpace(c), FlexableTokenizerTokenState.EndOfText);
-            */
+            
             return new StateMachine<TTokenType, char>(builder =>
             {
                 BuildStartState(builder, tree);
@@ -42,21 +19,7 @@ namespace Tokenizer
                 BuildTextState(builder, tree);
             });
         }
-
-
-        // This method builds the start state and any child states
-        //builder.From(FlexableTokenizerTokenState.Start)
-        //    .When(',', FlexableTokenizerTokenState.EndOfFieldDelimiter)
-        //    .When('\r', FlexableTokenizerTokenState.StartOfEndOfRecord)
-        //    .When('"', FlexableTokenizerTokenState.EndOfFieldDelimiter)
-        //    .When((c) => char.IsWhiteSpace(c), FlexableTokenizerTokenState.WhiteSpace)
-        //    .Default(FlexableTokenizerTokenState.Text);
-
-        // * This needs more testing, should be built when building start state
-        //builder.From(FlexableTokenizerTokenState.StartOfEndOfRecord)
-        //    .When('\n', FlexableTokenizerTokenState.EndOfEndOfRecord)
-        //    .When('\r', FlexableTokenizerTokenState.EndOfWhiteSpace)
-        //    .When((c) => char.IsWhiteSpace(c), FlexableTokenizerTokenState.WhiteSpace);
+        
         private static void BuildStartState<TTokenType>(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder,
             TokenTree<TTokenType> tree)
@@ -74,10 +37,6 @@ namespace Tokenizer
                 .Default(TokenType<TTokenType>.Text);
         }
 
-
-        // Builds this -
-        // .When('\r', FlexableTokenizerTokenState.EndOfWhiteSpace)
-        // .When(!char.IsWhiteSpace(c), FlexableTokenizerTokenState.EndOfWhiteSpace)
         private static void BuildWhiteSpaceState<TTokenType>(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder, 
             TokenTree<TTokenType> tree)
@@ -86,10 +45,6 @@ namespace Tokenizer
             BuildTextOrWhiteSpaceState(builder, tree, true);
         }
 
-        // Builds this -
-        // .When(',', FlexableTokenizerTokenState.EndOfText)
-        // .When('"', FlexableTokenizerTokenState.EndOfText)
-        // .When(char.IsWhiteSpace(c), FlexableTokenizerTokenState.EndOfText)
         private static void BuildTextState<TTokenType>(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder,
             TokenTree<TTokenType> tree)
@@ -98,14 +53,6 @@ namespace Tokenizer
             BuildTextOrWhiteSpaceState(builder, tree, false);
         }
 
-
-        // Builds this -
-        // .When(',', FlexableTokenizerTokenState.EndOfText)
-        // .When('"', FlexableTokenizerTokenState.EndOfText)
-        // .When(char.IsWhiteSpace(c), FlexableTokenizerTokenState.EndOfText)
-        // Or this -
-        // .When('\r', FlexableTokenizerTokenState.EndOfText)
-        // .When(!char.IsWhiteSpace(c), FlexableTokenizerTokenState.EndOfWhiteSpace)
         private static void BuildTextOrWhiteSpaceState<TTokenType>(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder, 
             TokenTree<TTokenType> tree, 
@@ -149,19 +96,11 @@ namespace Tokenizer
             // Ex. " vs. "", " will be caught but not ""
             // Ex 2. <Foo vs. <FooBar, <FooBar will never be hit since <Foo finished first
             // Need to build states to check for longer control strings
-            if (node.State is not null)
+            if (node.TokenType is not null)
             {
                 if (node.HasChildren)
                 {
                     // Build follow-up states to check for longer control strings
-                    // Ex. " vs. ""
-                    //
-                    // We already matched on ", so now we need a state to possibly fall back to " if "" doesn't work out
-                    //
-                    // builder.From([State id for "])
-                    //  .When('"', [Escape child node].Value) // IE. FlexableTokenizerTokenState.EndOfEscape
-                    //  .Default(node.Value);
-                    //
                     //-------------------------------------------------------------------------------
                     // Ex 2. <Foo vs. <FooB vs. <FooBar
                     //
@@ -173,7 +112,7 @@ namespace Tokenizer
                     //
                     // builder.From([State id for second o])
                     //  .When('B', [State id for B])
-                    //  .Default(node.Value);
+                    //  .Default(node.Value); // Matching on anything else sets our state to <Foo
                     //
                     // builder.From([State id for second B])
                     //  .When('a', [State id for a])
@@ -186,6 +125,7 @@ namespace Tokenizer
                     // etc.
 
                     currentMapBuilder.When(node.Key, tokenType);
+                    
                     IStateTransitionMapBuilder<TTokenType, char>? subStateBuilder =
                         currentMapBuilder.StateMachineTransitionMapBuilder.From(tokenType);
 
@@ -195,7 +135,7 @@ namespace Tokenizer
                     foreach (TokenTreeNode<TTokenType> childNode in node)
                     {
                         BuildTransitions(childNode, subStateBuilder, ref tokenType);
-                        subStateBuilder.Default(node.State);
+                        subStateBuilder.Default(node.TokenType);
                     }
                 }
                 else
@@ -204,9 +144,16 @@ namespace Tokenizer
                     // to ensure the character is read
                     currentMapBuilder.When(node.Key, tokenType);
 
+                    // Add a default in case we don't match on the nodes key
+                    TTokenType defaultTokenType = node.IsWhiteSpaceToRoot()
+                        ? TokenType<TTokenType>.WhiteSpace
+                        : TokenType<TTokenType>.Text;
+
+                    currentMapBuilder.Default(defaultTokenType);
+
                     // The dummy state just defaults to the final state from the node Value
                     currentMapBuilder.StateMachineTransitionMapBuilder.From(tokenType)
-                        .Default(node.State);
+                        .Default(node.TokenType);
 
                     // Move to the next token type
                     tokenType = tokenType.Next();
@@ -270,7 +217,7 @@ namespace Tokenizer
 
                 // This is the final node in this branch, set the state
                 if (currentNode is { } endNode)
-                    endNode.State = tokenDefinition;
+                    endNode.TokenType = tokenDefinition;
             }
             
             return tree;
