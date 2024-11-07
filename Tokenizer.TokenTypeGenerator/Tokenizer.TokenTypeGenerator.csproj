@@ -6,6 +6,9 @@
         <IncludeBuldOutput>false</IncludeBuldOutput>
         <ImplicitUsings>true</ImplicitUsings>
         <LangVersion>Latest</LangVersion>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/snargledorf/Tokenizer.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>
