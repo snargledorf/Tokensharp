@@ -27,8 +27,8 @@ namespace Tokenizer
         {
             IStateTransitionMapBuilder<TTokenType, char> startBuilder = builder.From(TokenType<TTokenType>.Start);
 
-            // Start after the maximum token type
-            TTokenType tokenType = TTokenType.Maximum.Next();
+            // Start at the generated token types
+            TTokenType tokenType = TokenType<TTokenType>.StartOfGeneratedTokenTypes.Next();
             foreach (TokenTreeNode<TTokenType> node in tree)
                 BuildTransitions(node, startBuilder, ref tokenType);
 

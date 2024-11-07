@@ -44,9 +44,14 @@ namespace Tokenizer
                 tokenLength++;
             }
 
-            if (tokenType == TokenType<TTokenType>.Start ||
-                // If we have more data, check if this current token type is the start of another token type
-                (moreDataAvailable && _stateMachine.StateHasInputTransitions(tokenType))) 
+            if (tokenType == TokenType<TTokenType>.Start) // If we have more data, check if this current token type is the start of another token type
+            {
+                tokenLength = 0;
+                type = default;
+                return false;
+            }
+
+            if (moreDataAvailable && _stateMachine.StateHasInputTransitions(tokenType)) 
             {
                 tokenLength = 0;
                 type = default;
