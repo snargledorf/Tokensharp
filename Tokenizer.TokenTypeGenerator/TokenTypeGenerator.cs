@@ -77,6 +77,8 @@ namespace Tokenizer.TokenTypeGenerator
             string className = definition.TokenClass.TypeSymbol.Name;
             
             var namespaceAndClass = $$"""
+                                      using Tokenizer;
+                                      
                                       namespace {{definition.TokenClass.TypeSymbol.ContainingNamespace}}
                                       {
                                           partial record {{className}}(string Lexeme, int Id) 
