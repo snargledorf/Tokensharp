@@ -1,0 +1,8 @@
+﻿{
+  "Hello": "World",
+  "Foo": "Bar",
+  "Fiz": "Buzz",
+  "DoubleQuote": "\"",
+  "SingleQuote": "'",
+  "Backslash": "\\"
+}

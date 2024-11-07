@@ -3,7 +3,7 @@
 public record CsvTokenTypes(string Lexeme, int Id) : TokenType<CsvTokenTypes>(Lexeme, Id), ITokenType<CsvTokenTypes>
 {
     public static readonly CsvTokenTypes Comma = new(",", 0);
-    public static readonly CsvTokenTypes EndOfRecord = Comma.Next("\r\n");
+    public static readonly CsvTokenTypes EndOfRecord = new("\r\n", 1);
     public static readonly CsvTokenTypes DoubleQuote = EndOfRecord.Next("\"");
 
     public static IEnumerable<CsvTokenTypes> TokenTypes { get; } =

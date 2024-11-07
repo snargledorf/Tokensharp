@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokenizer", "Tokenizer\Toke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokenizer.Tests", "Tokenizer.Tests\Tokenizer.Tests.csproj", "{B58AD010-6264-4AFA-BF83-814AACDF3B3A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokenizer.TokenTypeGenerator", "Tokenizer.TokenTypeGenerator\Tokenizer.TokenTypeGenerator.csproj", "{976F4DC2-E2E3-4347-AD20-FBE9E805EE96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokenizer.TokenTypeGenerator.Test", "Tokenizer.TokenTypeGenerator.Test\Tokenizer.TokenTypeGenerator.Test.csproj", "{754C0727-09E3-43C8-9439-AF15DBB28336}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{B58AD010-6264-4AFA-BF83-814AACDF3B3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B58AD010-6264-4AFA-BF83-814AACDF3B3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B58AD010-6264-4AFA-BF83-814AACDF3B3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{976F4DC2-E2E3-4347-AD20-FBE9E805EE96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{976F4DC2-E2E3-4347-AD20-FBE9E805EE96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{976F4DC2-E2E3-4347-AD20-FBE9E805EE96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{976F4DC2-E2E3-4347-AD20-FBE9E805EE96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{754C0727-09E3-43C8-9439-AF15DBB28336}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{754C0727-09E3-43C8-9439-AF15DBB28336}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{754C0727-09E3-43C8-9439-AF15DBB28336}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{754C0727-09E3-43C8-9439-AF15DBB28336}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

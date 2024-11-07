@@ -5,6 +5,9 @@
         <Nullable>enable</Nullable>
         <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
         <LangVersion>12</LangVersion>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/snargledorf/Tokenizer.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>
