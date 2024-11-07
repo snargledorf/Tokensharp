@@ -21,9 +21,20 @@ public abstract record TokenType<T>(string Lexeme, int Id)
     private static T? _startOfGeneratedTokenTypes;
     internal static T StartOfGeneratedTokenTypes => _startOfGeneratedTokenTypes ??= EndOfWhiteSpace.Next("start_of_generated_types");
 
-    public T Next() => Next(Lexeme + "_g");
-    public T Next(string lexeme) => T.Create(lexeme, Id + 1);
-
+    public bool IsGenerated { get; private set; }
     public bool IsDefined => Id < StartOfGeneratedTokenTypes.Id;
     public bool IsUserDefined => Id < Start.Id;
+
+    internal T Next() => Next(Lexeme, true);
+    public T Next(string lexeme) => Next(lexeme, false);
+
+    private T Next(string lexeme, bool generated)
+    {
+        if (generated)
+            lexeme += "_g";
+        
+        var tokenType = T.Create(lexeme, Id + 1);
+        tokenType.IsGenerated = generated;
+        return tokenType;
+    }
 }
