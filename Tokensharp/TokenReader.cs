@@ -66,6 +66,7 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
             if (currentTokenType == TokenType<TTokenType>.Start)
             {
                 Debug.Assert(tokenType == default);
+                tokenLength = 0;
                 return false;
             }
             
@@ -74,6 +75,7 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
             if (moreDataAvailable && StateMachine.StateHasInputTransitions(currentTokenType))
             {
                 Debug.Assert(tokenType == default);
+                tokenLength = 0;
                 return false;
             }
 
