@@ -7,7 +7,6 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
 {
     private char[] _buffer;
     
-    private int _offset;
     private int _count;
     private bool _endOfReader;
 
@@ -22,7 +21,7 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
 
     public readonly bool EndOfReader => _endOfReader;
 
-    public readonly ReadOnlySpan<char> Chars => _buffer.AsSpan(_offset, _count);
+    public readonly ReadOnlySpan<char> Chars => _buffer.AsSpan(0, _count);
 
     public readonly async ValueTask<ReadBuffer<TTokenType>> ReadAsync(TextReader reader, CancellationToken cancellationToken = default)
     {
@@ -30,7 +29,9 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
 
         do
         {
-            int charsRead = await reader.ReadAsync(readBuffer._buffer.AsMemory(_count), cancellationToken).ConfigureAwait(false);
+            int charsRead = await reader.ReadAsync(readBuffer._buffer.AsMemory(_count), cancellationToken)
+                .ConfigureAwait(false);
+            
             if (charsRead == 0)
             {
                 readBuffer._endOfReader = true;
@@ -68,14 +69,14 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
 
         if (!_endOfReader)
         {
-            if (_count > _buffer.Length / 2)
+            if ((uint)_count > ((uint)_buffer.Length / 2))
             {
                 char[] oldBuffer = _buffer;
                 
                 int newMinBufferLength = _buffer.Length < (int.MaxValue / 2) ? _buffer.Length * 2 : int.MaxValue;
                 char[] newBuffer = ArrayPool<char>.Shared.Rent(newMinBufferLength);
                 
-                Buffer.BlockCopy(oldBuffer, _offset + charsConsumed, newBuffer, 0, _count);
+                Buffer.BlockCopy(oldBuffer, charsConsumed, newBuffer, 0, _count);
                 
                 _buffer = newBuffer;
                 
@@ -83,11 +84,9 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
             }
             else if (_count != 0)
             {
-                Buffer.BlockCopy(_buffer, _offset + charsConsumed, _buffer, 0, _count);
+                Buffer.BlockCopy(_buffer, charsConsumed, _buffer, 0, _count);
             }
         }
-        
-        _offset = 0;
     }
 
     public void Dispose()
