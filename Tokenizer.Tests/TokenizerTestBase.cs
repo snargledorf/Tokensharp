@@ -55,7 +55,7 @@ public abstract class TokenizerTestBase<TTokenType>
             }
         });
 
-        return token.Lexeme.Length;
+        return token.Length;
     }
 
     protected void RunTestShouldThrow<TExceptionType>(ReadOnlyMemory<char> text, Action<TExceptionType> validateException, bool moreDataAvailable = false) 

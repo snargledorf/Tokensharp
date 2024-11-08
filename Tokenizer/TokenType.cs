@@ -35,6 +35,10 @@ public abstract record TokenType<T>(string Lexeme, int Id)
     public bool IsGenerated { get; private set; }
     public bool IsDefined => Id < StartOfGeneratedTokenTypes.Id;
     public bool IsUserDefined => Id < Start.Id;
+    
+    public bool IsNumber => Id == Number.Id;
+    public bool IsText => Id == Text.Id;
+    public bool IsWhiteSpace => Id == WhiteSpace.Id;
 
     internal T Next() => Next(Lexeme, true);
     
