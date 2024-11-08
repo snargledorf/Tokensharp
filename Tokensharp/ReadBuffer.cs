@@ -29,7 +29,7 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
 
         do
         {
-            int charsRead = await reader.ReadAsync(readBuffer._buffer.AsMemory(_count), cancellationToken)
+            int charsRead = await reader.ReadAsync(readBuffer._buffer.AsMemory(readBuffer._count), cancellationToken)
                 .ConfigureAwait(false);
             
             if (charsRead == 0)
