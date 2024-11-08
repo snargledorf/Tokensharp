@@ -45,9 +45,9 @@ public static class Tokenizer<TTokenType>
 
     public static async IAsyncEnumerable<Token<TTokenType>> EnumerateTokensAsync(Stream tokenStream, TokenizerOptions? options = default, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var sr = new StreamReader(tokenStream);
-
         options ??= new TokenizerOptions();
+        
+        using var sr = new StreamReader(tokenStream, options.DefaultEncoding);
 
         var readBuffer = new ReadBuffer<TTokenType>(options.DefaultBufferSize);
         var tokenQueue = new Queue<Token<TTokenType>>();

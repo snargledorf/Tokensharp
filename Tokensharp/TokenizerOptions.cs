@@ -1,8 +1,12 @@
+using System.Text;
+
 namespace Tokensharp;
 
 public class TokenizerOptions
 {
     private int _defaultBufferSize = 1024;
+    
+    public Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
 
     public int DefaultBufferSize
     {
