@@ -1,112 +1,80 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using FastState;
+using System.Runtime.CompilerServices;
 
-namespace Tokenizer
+namespace Tokenizer;
+
+public static class Tokenizer<TTokenType>
+    where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public class Tokenizer<TTokenType> : ITokenizer<TTokenType>
-        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+    public static bool TryParseToken(ReadOnlyMemory<char> buffer, out Token<TTokenType> token) =>
+        TryParseToken(buffer, false, out token);
+
+    public static bool TryParseToken(ReadOnlyMemory<char> buffer, bool moreDataAvailable, out Token<TTokenType> token)
     {
-        private readonly StateMachine<TTokenType, char> _stateMachine = TokenizerStateMachineFactory.Create<TTokenType>();
-
-        public bool TryParseToken(ReadOnlyMemory<char> buffer, bool moreDataAvailable, out Token<TTokenType> token)
+        if (TryParseToken(buffer.Span, moreDataAvailable, out TTokenType? tokenType, out ReadOnlySpan<char> lexeme))
         {
-            if (TryParseToken(buffer.Span, moreDataAvailable, out TTokenType? tokenType, out int tokenLength))
-            {
-                token = new Token<TTokenType>(tokenType, buffer[..tokenLength]);
-                return true;
-            }
-            
-            token = default;
-            return false;
+            token = new Token<TTokenType>(tokenType, lexeme.ToString());
+            return true;
         }
-
-        public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [MaybeNullWhen(false)] out TTokenType token, out int tokenLength)
-        {
-            tokenLength = 0;
             
-            TTokenType? tokenType = TokenType<TTokenType>.Start;
+        token = default;
+        return false;
+    }
 
-            foreach (char c in buffer)
+    public static bool TryParseToken(ReadOnlySpan<char> buffer, [MaybeNullWhen(false)] out TTokenType tokenType,
+        out ReadOnlySpan<char> lexeme) => TryParseToken(buffer, false, out tokenType, out lexeme);
+
+    public static bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable,
+        [MaybeNullWhen(false)] out TTokenType tokenType, out ReadOnlySpan<char> lexeme)
+    {
+        var tokenReader = new TokenReader<TTokenType>(buffer, moreDataAvailable);
+        return tokenReader.Read(out tokenType, out lexeme);
+    }
+
+    public static IEnumerable<Token<TTokenType>> EnumerateTokens(string str) => EnumerateTokens(str.AsMemory());
+
+    public static IEnumerable<Token<TTokenType>> EnumerateTokens(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = default)
+    {
+        while (TryParseToken(buffer, out Token<TTokenType> token))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return token;
+            buffer = buffer[token.Length..];
+        }
+    }
+
+    public static async IAsyncEnumerable<Token<TTokenType>> EnumerateTokensAsync(Stream tokenStream, TokenizerOptions? options = default, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        using var sr = new StreamReader(tokenStream);
+
+        options ??= new TokenizerOptions();
+
+        var readBuffer = new ReadBuffer<TTokenType>(options.DefaultBufferSize);
+        var tokenQueue = new Queue<Token<TTokenType>>();
+        try
+        {
+            do
             {
-                if (_stateMachine.TryTransition(tokenType, c, out TTokenType newTokenType))
-                {
-                    tokenType = newTokenType;
+                readBuffer = await readBuffer.ReadAsync(sr, cancellationToken).ConfigureAwait(false);
                     
-                    if (tokenType == TokenType<TTokenType>.EndOfText)
-                    {
-                        token = TokenType<TTokenType>.Text;
-                        return true;
-                    }
-
-                    if (tokenType == TokenType<TTokenType>.EndOfNumber)
-                    {
-                        token = TokenType<TTokenType>.Number;
-                        return true;
-                    }
-
-                    if (tokenType == TokenType<TTokenType>.EndOfWhiteSpace)
-                    {
-                        token = TokenType<TTokenType>.WhiteSpace;
-                        return true;
-                    }
-
-                    if (tokenType != TokenType<TTokenType>.Text &&
-                        tokenType != TokenType<TTokenType>.Number &&
-                        tokenType != TokenType<TTokenType>.WhiteSpace &&
-                        !tokenType.IsGenerated)
-                    {
-                        token = tokenType;
-                        return true;
-                    }
-                }
-
-                tokenLength++;
-            }
-
-            if (tokenType == TokenType<TTokenType>.Start) // If we have more data, check if this current token type is the start of another token type
-            {
-                tokenLength = 0;
-                token = default;
-                return false;
-            }
-
-            if (moreDataAvailable && _stateMachine.StateHasInputTransitions(tokenType)) 
-            {
-                tokenLength = 0;
-                token = default;
-                return false;
-            }
-
-            if (_stateMachine.TryGetDefaultForState(tokenType, out TTokenType defaultType))
-                tokenType = defaultType;
-
-            if (tokenType == TokenType<TTokenType>.EndOfText)
-            {
-                token = TokenType<TTokenType>.Text;
-                return true;
-            }
-
-            if (tokenType == TokenType<TTokenType>.EndOfNumber)
-            {
-                token = TokenType<TTokenType>.Number;
-                return true;
-            }
-
-            if (tokenType == TokenType<TTokenType>.EndOfWhiteSpace)
-            {
-                token = TokenType<TTokenType>.WhiteSpace;
-                return true;
-            }
-
-            if (!tokenType.IsGenerated)
-            {
-                token = tokenType;
-                return true;
-            }
-
-            tokenLength = 0;
-            token = default;
-            return false;
+                ParseTokens(ref readBuffer, ref tokenQueue);
+                    
+                while (tokenQueue.TryDequeue(out Token<TTokenType> token))
+                    yield return token;
+            } while (!readBuffer.EndOfReader);
         }
+        finally
+        {
+            readBuffer.Dispose();
+        }
+    }
+
+    private static void ParseTokens(ref ReadBuffer<TTokenType> readBuffer, ref Queue<Token<TTokenType>> tokens)
+    {
+        var tokenReader = new TokenReader<TTokenType>(readBuffer.Chars, !readBuffer.EndOfReader);
+        while (tokenReader.Read(out TTokenType? tokenType, out ReadOnlySpan<char> lexeme))
+            tokens.Enqueue(new Token<TTokenType>(tokenType, lexeme.ToString()));
+
+        readBuffer.AdvanceBuffer(tokenReader.Consumed);
     }
 }

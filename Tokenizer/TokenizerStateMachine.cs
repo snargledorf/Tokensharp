@@ -4,28 +4,29 @@ using Tokenizer.TokenTree;
 
 namespace Tokenizer
 {
-    internal static class TokenizerStateMachineFactory
+    internal static class TokenizerStateMachine<TTokenType>
+        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        internal static StateMachine<TTokenType, char> Create<TTokenType>() 
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+        internal static readonly StateMachine<TTokenType, char> Instance;
+
+        static TokenizerStateMachine()
         {
             DuplicateTokenLexemeException<TTokenType>.ThrowIfDuplicateLexemes();
             
-            TokenTree<TTokenType> tree = CreateTokenTree<TTokenType>();
+            TokenTree<TTokenType> tree = CreateTokenTree();
             
-            return new StateMachine<TTokenType, char>(builder =>
+            Instance = new StateMachine<TTokenType, char>(builder =>
             {
                 BuildStartState(builder, tree);
                 BuildWhiteSpaceState(builder, tree);
                 BuildTextState(builder, tree);
-                BuildNumberState(builder, tree);
+                BuildNumberState(builder);
             });
         }
 
-        private static void BuildStartState<TTokenType>(
+        private static void BuildStartState(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder,
             TokenTree<TTokenType> tree)
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
             IStateTransitionMapBuilder<TTokenType, char> startBuilder = builder.From(TokenType<TTokenType>.Start);
 
@@ -40,27 +41,24 @@ namespace Tokenizer
                 .Default(TokenType<TTokenType>.Text);
         }
 
-        private static void BuildWhiteSpaceState<TTokenType>(
+        private static void BuildWhiteSpaceState(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder, 
             TokenTree<TTokenType> tree)
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
             BuildTextOrWhiteSpaceState(builder, tree, true);
         }
 
-        private static void BuildTextState<TTokenType>(
+        private static void BuildTextState(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder,
             TokenTree<TTokenType> tree)
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
             BuildTextOrWhiteSpaceState(builder, tree, false);
         }
 
-        private static void BuildTextOrWhiteSpaceState<TTokenType>(
+        private static void BuildTextOrWhiteSpaceState(
             IStateMachineTransitionMapBuilder<TTokenType, char> builder, 
             TokenTree<TTokenType> tree, 
             bool whiteSpace)
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
             TTokenType currentTokenType = whiteSpace ? TokenType<TTokenType>.WhiteSpace : TokenType<TTokenType>.Text;
             TTokenType nextTokenType = whiteSpace ? TokenType<TTokenType>.EndOfWhiteSpace : TokenType<TTokenType>.EndOfText;
@@ -94,19 +92,15 @@ namespace Tokenizer
             return expression;
         }
 
-        private static void BuildNumberState<TTokenType>(
-            IStateMachineTransitionMapBuilder<TTokenType, char> builder,
-            TokenTree<TTokenType> tree) 
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+        private static void BuildNumberState(IStateMachineTransitionMapBuilder<TTokenType, char> builder)
         {
             IStateTransitionMapBuilder<TTokenType,char> numberBuilder = builder.From(TokenType<TTokenType>.Number);
             
             numberBuilder.When(c => !char.IsDigit(c), TokenType<TTokenType>.EndOfNumber);
         }
 
-        private static void BuildTransitions<TTokenType>(TokenTreeNode<TTokenType> node,
+        private static void BuildTransitions(TokenTreeNode<TTokenType> node,
             IStateTransitionMapBuilder<TTokenType, char> currentMapBuilder, ref TTokenType tokenType)
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
             // If this node has a state then it should be treated as a final node
             // This breaks instances where a control string may be the start of another control string
@@ -203,8 +197,7 @@ namespace Tokenizer
             }
         }
 
-        private static TokenTree<TTokenType> CreateTokenTree<TTokenType>() 
-            where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+        private static TokenTree<TTokenType> CreateTokenTree()
         {
             var tree = new TokenTree<TTokenType>();
 
