@@ -76,7 +76,7 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
                 int newMinBufferLength = _buffer.Length < (int.MaxValue / 2) ? _buffer.Length * 2 : int.MaxValue;
                 char[] newBuffer = ArrayPool<char>.Shared.Rent(newMinBufferLength);
                 
-                Buffer.BlockCopy(oldBuffer, charsConsumed, newBuffer, 0, _count);
+                oldBuffer.AsSpan(charsConsumed).CopyTo(newBuffer.AsSpan(0, _count));
                 
                 _buffer = newBuffer;
                 
@@ -84,7 +84,7 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
             }
             else if (_count != 0)
             {
-                Buffer.BlockCopy(_buffer, charsConsumed, _buffer, 0, _count);
+                _buffer.AsSpan(charsConsumed).CopyTo(_buffer.AsSpan(0, _count));
             }
         }
     }
