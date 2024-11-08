@@ -82,7 +82,7 @@ namespace Tokensharp
             // depending if we are currently on white space or not
             Expression<Func<char, bool>> isWhiteSpaceExpression = whiteSpace
                 ? GetExpression(c => !char.IsWhiteSpace(c))
-                : GetExpression(c => char.IsWhiteSpace(c));
+                : GetExpression(c => char.IsWhiteSpace(c) || char.IsDigit(c));
 
             textOrWhiteSpaceBuilder.When(isWhiteSpaceExpression, nextTokenType);
         }
