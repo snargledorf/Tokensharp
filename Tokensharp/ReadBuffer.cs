@@ -79,7 +79,7 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
                 
                 _buffer = newBuffer;
                 
-                ArrayPool<char>.Shared.Return(oldBuffer);
+                ArrayPool<char>.Shared.Return(oldBuffer, true);
             }
             else if (_count != 0)
             {
@@ -98,6 +98,6 @@ internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenTyp
         char[] toReturn = _buffer;
         _buffer = null!;
         
-        ArrayPool<char>.Shared.Return(toReturn);
+        ArrayPool<char>.Shared.Return(toReturn, true);
     }
 }
