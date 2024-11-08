@@ -5,7 +5,7 @@ public record ScriptingLanguageTokenTypes(string Lexeme, int Id) : TokenType<Scr
     public static readonly ScriptingLanguageTokenTypes Fun = new("fun", 0);
     public static readonly ScriptingLanguageTokenTypes OpenParenthesis = Fun.Next("(");
     public static readonly ScriptingLanguageTokenTypes CloseParenthesis = OpenParenthesis.Next(")");
-    public static readonly ScriptingLanguageTokenTypes OpenBrace = OpenParenthesis.Next("{");
+    public static readonly ScriptingLanguageTokenTypes OpenBrace = CloseParenthesis.Next("{");
     public static readonly ScriptingLanguageTokenTypes CloseBrace = OpenBrace.Next("}");
 
     public static IEnumerable<ScriptingLanguageTokenTypes> TokenTypes { get; } =

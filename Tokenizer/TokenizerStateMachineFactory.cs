@@ -9,6 +9,8 @@ namespace Tokenizer
         internal static StateMachine<TTokenType, char> Create<TTokenType>() 
             where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
         {
+            ValidateTokenTypes<TTokenType>();
+            
             TokenTree<TTokenType> tree = CreateTokenTree<TTokenType>();
             
             return new StateMachine<TTokenType, char>(builder =>
@@ -18,6 +20,12 @@ namespace Tokenizer
                 BuildTextState(builder, tree);
                 BuildNumberState(builder, tree);
             });
+        }
+
+        private static void ValidateTokenTypes<TTokenType>() where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+        {
+            DuplicateTokenIdException<TTokenType>.ThrowIfDuplicateIds();
+            DuplicateTokenLexemeException<TTokenType>.ThrowIfDuplicateLexemes();;
         }
 
         private static void BuildStartState<TTokenType>(
