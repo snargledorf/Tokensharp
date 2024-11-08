@@ -1,6 +1,9 @@
-﻿namespace Tokensharp.Tests;
+﻿using System.Buffers;
+using System.Text;
 
-public class EmptyTestTokensTests : TokenizerTestBase<EmptyTokens>
+namespace Tokensharp.Tests;
+
+public class BasicTests : TokenizerTestBase<EmptyTokens>
 {
     [Test]
     public void Number()
