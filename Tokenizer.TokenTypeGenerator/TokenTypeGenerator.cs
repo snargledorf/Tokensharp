@@ -81,14 +81,14 @@ namespace Tokenizer.TokenTypeGenerator
                                       
                                       namespace {{definition.TokenClass.TypeSymbol.ContainingNamespace}}
                                       {
-                                          partial record {{className}}(string Lexeme, int Id) 
-                                              : TokenType<{{className}}>(Lexeme, Id), ITokenType<{{className}}>
+                                          partial record {{className}}(string Lexeme) 
+                                              : TokenType<{{className}}>(Lexeme), ITokenType<{{className}}>
                                           {
                                               {{
-                                                  string.Join("\r\n        ", definition.TokenDefinition.Tokens.Select((def, index) => GenerateFieldDefinition(className, def, index, "        ")))
+                                                  string.Join("\r\n        ", definition.TokenDefinition.Tokens.Select((def) => GenerateFieldDefinition(className, def, "        ")))
                                               }}
                                           
-                                              public static {{className}} Create(string lexeme, int id) => new(lexeme, id);
+                                              public static {{className}} Create(string lexeme) => new(lexeme);
                                               
                                               public static IEnumerable<{{className}}> TokenTypes { get; } =
                                               [
@@ -110,14 +110,14 @@ namespace Tokenizer.TokenTypeGenerator
             spc.AddSource(fileName, namespaceAndClass);
         }
 
-        private static string GenerateFieldDefinition(string className, KeyValuePair<string, string> arg, int index,
+        private static string GenerateFieldDefinition(string className, KeyValuePair<string, string> arg,
             string indentPadding)
         {
             return $""""
                     public static readonly {className} {arg.Key} = new(
                     {indentPadding}"""
                     {indentPadding}{arg.Value}
-                    {indentPadding}""", {index});
+                    {indentPadding}""");
                     """";
         }
     }

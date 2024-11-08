@@ -1,8 +1,8 @@
 ﻿namespace Tokenizer.Tests;
 
-public record TemplateLanguageTokenTypes(string Lexeme, int Id) : TokenType<TemplateLanguageTokenTypes>(Lexeme, Id), ITokenType<TemplateLanguageTokenTypes>
+public record TemplateLanguageTokenTypes(string Lexeme) : TokenType<TemplateLanguageTokenTypes>(Lexeme), ITokenType<TemplateLanguageTokenTypes>
 {
-    public static readonly TemplateLanguageTokenTypes StartBinding = new("{{", 0);
+    public static readonly TemplateLanguageTokenTypes StartBinding = new("{{");
     public static readonly TemplateLanguageTokenTypes EndBinding = StartBinding.Next("}}");
 
     public static IEnumerable<TemplateLanguageTokenTypes> TokenTypes { get; } =
@@ -11,7 +11,7 @@ public record TemplateLanguageTokenTypes(string Lexeme, int Id) : TokenType<Temp
         EndBinding,
     ];
     
-    public static TemplateLanguageTokenTypes Create(string token, int id) => new(token, id);
+    public static TemplateLanguageTokenTypes Create(string token) => new(token);
 }
 
 public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenTypes>

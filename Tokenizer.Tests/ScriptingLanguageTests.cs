@@ -1,8 +1,8 @@
 namespace Tokenizer.Tests;
 
-public record ScriptingLanguageTokenTypes(string Lexeme, int Id) : TokenType<ScriptingLanguageTokenTypes>(Lexeme, Id), ITokenType<ScriptingLanguageTokenTypes>
+public record ScriptingLanguageTokenTypes(string Lexeme) : TokenType<ScriptingLanguageTokenTypes>(Lexeme), ITokenType<ScriptingLanguageTokenTypes>
 {
-    public static readonly ScriptingLanguageTokenTypes Fun = new("fun", 0);
+    public static readonly ScriptingLanguageTokenTypes Fun = new("fun");
     public static readonly ScriptingLanguageTokenTypes OpenParenthesis = Fun.Next("(");
     public static readonly ScriptingLanguageTokenTypes CloseParenthesis = OpenParenthesis.Next(")");
     public static readonly ScriptingLanguageTokenTypes OpenBrace = CloseParenthesis.Next("{");
@@ -17,7 +17,7 @@ public record ScriptingLanguageTokenTypes(string Lexeme, int Id) : TokenType<Scr
         CloseBrace
     ];
 
-    public static ScriptingLanguageTokenTypes Create(string token, int id) => new(token, id);
+    public static ScriptingLanguageTokenTypes Create(string token) => new(token);
 }
 
 public class ScriptingLanguageTests : TokenizerTestBase<ScriptingLanguageTokenTypes>

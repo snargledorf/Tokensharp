@@ -1,9 +1,9 @@
 ﻿namespace Tokenizer.Tests;
 
-public record CsvTokenTypes(string Lexeme, int Id) : TokenType<CsvTokenTypes>(Lexeme, Id), ITokenType<CsvTokenTypes>
+public record CsvTokenTypes(string Lexeme) : TokenType<CsvTokenTypes>(Lexeme), ITokenType<CsvTokenTypes>
 {
-    public static readonly CsvTokenTypes Comma = new(",", 0);
-    public static readonly CsvTokenTypes EndOfRecord = new("\r\n", 1);
+    public static readonly CsvTokenTypes Comma = new(",");
+    public static readonly CsvTokenTypes EndOfRecord = new("\r\n");
     public static readonly CsvTokenTypes DoubleQuote = EndOfRecord.Next("\"");
 
     public static IEnumerable<CsvTokenTypes> TokenTypes { get; } =
@@ -13,7 +13,7 @@ public record CsvTokenTypes(string Lexeme, int Id) : TokenType<CsvTokenTypes>(Le
         DoubleQuote
     ];
     
-    public static CsvTokenTypes Create(string token, int id) => new(token, id);
+    public static CsvTokenTypes Create(string token) => new(token);
 }
 
 public class CsvTests : TokenizerTestBase<CsvTokenTypes>

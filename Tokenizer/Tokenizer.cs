@@ -10,7 +10,7 @@ namespace Tokenizer
 
         public bool TryParseToken(ReadOnlyMemory<char> buffer, bool moreDataAvailable, out Token<TTokenType> token)
         {
-            if (TryParseToken(buffer.Span, moreDataAvailable, out var tokenType, out int tokenLength))
+            if (TryParseToken(buffer.Span, moreDataAvailable, out TTokenType? tokenType, out int tokenLength))
             {
                 token = new Token<TTokenType>(tokenType, buffer[..tokenLength]);
                 return true;
@@ -53,7 +53,7 @@ namespace Tokenizer
                     if (tokenType != TokenType<TTokenType>.Text &&
                         tokenType != TokenType<TTokenType>.Number &&
                         tokenType != TokenType<TTokenType>.WhiteSpace &&
-                        tokenType.IsDefined)
+                        !tokenType.IsGenerated)
                     {
                         token = tokenType;
                         return true;
@@ -98,7 +98,7 @@ namespace Tokenizer
                 return true;
             }
 
-            if (tokenType.IsDefined)
+            if (!tokenType.IsGenerated)
             {
                 token = tokenType;
                 return true;
