@@ -16,6 +16,17 @@ public abstract class TokenizerTestBase<TTokenType>
     {
         foreach (TestCase<TTokenType> expectedToken in expectedTokens)
             text = text[RunTest(text, expectedToken, moreDataAvailable)..];
+        
+        bool parsed =
+            Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False, "Parsed additional tokens");
+            Assert.That(token.Type, Is.Null);
+            Assert.That(token.Lexeme, Is.EqualTo(ReadOnlyMemory<char>.Empty));
+            Assert.That(token.Length, Is.EqualTo(0));
+        });
     }
     
     protected int RunTest(string input, TestCase<TTokenType> testCase, bool moreDataAvailable = false) =>

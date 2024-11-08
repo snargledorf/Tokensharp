@@ -21,11 +21,11 @@ public class CsvTests : TokenizerTestBase<CsvTokenTypes>
     [Test]
     public void CsvWithQuotesAndNewLine()
     {
-        var testStr = """
-                      test, 123
-                      foo,"bar
-                      bizz"
-                      """;
+        const string testStr = """
+                               test, 123
+                               foo,"bar
+                               bizz"
+                               """;
 
         RunTest(testStr, 
         [
@@ -39,7 +39,8 @@ public class CsvTests : TokenizerTestBase<CsvTokenTypes>
             new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "bar"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "bizz")
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "bizz"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote)
         ]);
     }
 }
