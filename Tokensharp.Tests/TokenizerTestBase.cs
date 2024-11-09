@@ -16,7 +16,7 @@ public abstract class TokenizerTestBase<TTokenType>
             text = text[RunTest(text, expectedToken, moreDataAvailable)..];
         
         bool parsed =
-            Tokenizer<TTokenType>.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
+            Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
 
         Assert.Multiple(() =>
         {
@@ -43,7 +43,7 @@ public abstract class TokenizerTestBase<TTokenType>
             lexeme = expectedTokenType.Lexeme;
 
         bool parsed =
-            Tokenizer<TTokenType>.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
+            Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
 
         Assert.Multiple(() =>
         {
@@ -71,7 +71,7 @@ public abstract class TokenizerTestBase<TTokenType>
     {
         var exception = Assert.Throws<TExceptionType>(() =>
         {
-            while (Tokenizer<TTokenType>.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token))
+            while (Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token))
                 text = text[token.Lexeme.Length..];
         });
         

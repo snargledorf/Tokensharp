@@ -7,7 +7,7 @@ public class EnumerateTokensTests
     [Test]
     public void EnumerateSpan()
     {
-        Token<EmptyTokens>[] tokens = Tokenizer<EmptyTokens>.EnumerateTokens("Hello World").ToArray();
+        Token<EmptyTokens>[] tokens = Tokenizer.EnumerateTokens<EmptyTokens>("Hello World").ToArray();
         
         var expectedTokens = new[] 
         {
@@ -25,7 +25,7 @@ public class EnumerateTokensTests
         await using var ms = new MemoryStream("Hello World"u8.ToArray());
         ms.Position = 0;
 
-        Token<EmptyTokens>[] tokens = await Tokenizer<EmptyTokens>.EnumerateTokensAsync(ms).ToArrayAsync();
+        Token<EmptyTokens>[] tokens = await Tokenizer.EnumerateTokensAsync<EmptyTokens>(ms).ToArrayAsync();
 
         var expectedTokens = new[] 
         {
