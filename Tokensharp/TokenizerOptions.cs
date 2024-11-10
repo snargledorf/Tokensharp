@@ -6,6 +6,8 @@ public class TokenizerOptions
 {
     private int _defaultBufferSize = 1024;
     
+    public bool IgnoreWhiteSpace { get; set; }
+    
     public Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
 
     public int DefaultBufferSize

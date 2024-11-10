@@ -1,11 +1,10 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using FastState;
 
 namespace Tokensharp;
 
-public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDataAvailable = false)
+public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDataAvailable = false, TokenReaderOptions options = default)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private static readonly StateMachine<TTokenType, char> StateMachine;
@@ -13,20 +12,32 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
     private readonly ReadOnlySpan<char> _buffer = buffer;
 
     static TokenReader() => StateMachine = TokenizerStateMachine<TTokenType>.Instance;
-    
-    private int _consumed;
-    public readonly int Consumed => _consumed;
+
+    public int Consumed { get; private set; }
 
     public bool Read([MaybeNullWhen(false)] out TTokenType tokenType, out ReadOnlySpan<char> lexeme)
     {
+        while (ReadInternal(out tokenType, out lexeme))
+        {
+            if (options.IgnoreWhiteSpace && tokenType == TokenType<TTokenType>.WhiteSpace)
+                continue;
+            
+            return true;
+        }
+        
+        return false;
+    }
+
+    private bool ReadInternal([MaybeNullWhen(false)] out TTokenType tokenType, out ReadOnlySpan<char> lexeme)
+    {
         tokenType = default;
-        int tokenLength = 0;
+        int lexemeLength = 0;
 
         TTokenType? currentTokenType = TokenType<TTokenType>.Start;
-
+        
         try
         {
-            foreach (char c in _buffer[_consumed..])
+            foreach (char c in _buffer[Consumed..])
             {
                 if (StateMachine.TryTransition(currentTokenType, c, out TTokenType newTokenType))
                 {
@@ -60,13 +71,12 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
                     }
                 }
 
-                tokenLength++;
+                lexemeLength++;
             }
 
             if (currentTokenType == TokenType<TTokenType>.Start)
             {
                 Debug.Assert(tokenType == default);
-                tokenLength = 0;
                 return false;
             }
             
@@ -75,7 +85,6 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
             if (moreDataAvailable && StateMachine.StateHasInputTransitions(currentTokenType))
             {
                 Debug.Assert(tokenType == default);
-                tokenLength = 0;
                 return false;
             }
 
@@ -106,14 +115,13 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
                 return true;
             }
 
-            tokenLength = 0;
             Debug.Assert(tokenType == default);
             return false;
         }
         finally
         {
-            lexeme = _buffer.Slice(_consumed, tokenLength);
-            _consumed += tokenLength;
+            lexeme = _buffer.Slice(Consumed, lexemeLength);
+            Consumed += lexemeLength;
         }
     }
 }
