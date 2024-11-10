@@ -4,15 +4,17 @@ public abstract class TokenizerTestBase<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     protected void RunTest(string input,
-        IEnumerable<TestCase<TTokenType>> expectedTokens,
-        bool moreDataAvailable = false) =>
-        RunTest(input.AsMemory(), expectedTokens, moreDataAvailable);
-    
-    protected void RunTest(ReadOnlyMemory<char> text,
-        IEnumerable<TestCase<TTokenType>> expectedTokens,
+        IEnumerable<TestCase<TTokenType>> testCases,
         bool moreDataAvailable = false)
     {
-        foreach (TestCase<TTokenType> expectedToken in expectedTokens)
+        RunTest(input.AsMemory(), testCases, moreDataAvailable);
+    }
+
+    protected void RunTest(ReadOnlyMemory<char> text,
+        IEnumerable<TestCase<TTokenType>> testCases,
+        bool moreDataAvailable = false)
+    {
+        foreach (TestCase<TTokenType> expectedToken in testCases)
             text = text[RunTest(text, expectedToken, moreDataAvailable)..];
         
         bool parsed =
@@ -29,18 +31,32 @@ public abstract class TokenizerTestBase<TTokenType>
     protected int RunTest(string input, TestCase<TTokenType> testCase, bool moreDataAvailable = false) =>
         RunTest(input.AsMemory(), testCase, moreDataAvailable);
 
-    protected int RunTest(ReadOnlyMemory<char> text, TestCase<TTokenType> testCase, bool moreDataAvailable = false) =>
-        RunTest(text, testCase.TokenType, testCase.Lexeme, testCase.MoreDataAvailable || moreDataAvailable, testCase.ExpectToParse);
-
-
-    protected int RunTest(string text, TTokenType expectedTokenType, string? lexeme = null,
-        bool moreDataAvailable = false, bool expectToParse = true) => RunTest(text.AsMemory(), expectedTokenType,
-        lexeme, moreDataAvailable, expectToParse);
-
-    protected int RunTest(ReadOnlyMemory<char> text, TTokenType expectedTokenType, string? lexeme = null, bool moreDataAvailable = false, bool expectToParse = true)
+    protected int RunTest(ReadOnlyMemory<char> text, TestCase<TTokenType> testCase, bool moreDataAvailable = false)
     {
-        if (lexeme is null)
-            lexeme = expectedTokenType.Lexeme;
+        return RunTest(
+            text, 
+            testCase.TokenType, 
+            testCase.Lexeme, 
+            testCase.MoreDataAvailable || moreDataAvailable,
+            testCase.ExpectToParse);
+    }
+
+
+    protected int RunTest(
+        string text, 
+        TTokenType expectedTokenType,
+        string? expectedLexeme = null,
+        bool moreDataAvailable = false, 
+        bool expectToParse = true)
+    {
+        return RunTest(text.AsMemory(), expectedTokenType, expectedLexeme, moreDataAvailable, expectToParse);
+    }
+
+    protected int RunTest(ReadOnlyMemory<char> text, TTokenType expectedTokenType,
+        string? expectedLexeme = null, bool moreDataAvailable = false, bool expectToParse = true)
+    {
+        if (expectedLexeme is null)
+            expectedLexeme = expectedTokenType.Lexeme;
 
         bool parsed =
             Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
@@ -51,8 +67,8 @@ public abstract class TokenizerTestBase<TTokenType>
             {
                 Assert.That(parsed, Is.True);
                 Assert.That(token.Type, Is.Not.Null.And.EqualTo(expectedTokenType));
-                Assert.That(token.Lexeme, Is.EqualTo(lexeme));
-                Assert.That(token.Length, Is.EqualTo(lexeme.Length));
+                Assert.That(token.Lexeme, Is.EqualTo(expectedLexeme));
+                Assert.That(token.Length, Is.EqualTo(expectedLexeme.Length));
             }
             else
             {

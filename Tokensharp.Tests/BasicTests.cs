@@ -8,7 +8,7 @@ public class BasicTests : TokenizerTestBase<EmptyTokens>
     [Test]
     public void Number()
     {
-        RunTest("1", EmptyTokens.Number, lexeme: "1");
+        RunTest("1", EmptyTokens.Number, expectedLexeme: "1");
     }
 
     [Test]
