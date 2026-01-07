@@ -5,7 +5,7 @@ namespace Tokensharp.StateMachine;
 public sealed class TokenizerState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly IReadOnlyDictionary<char, TokenizerState<TTokenType>> _directInputTransitions;
-    private readonly IReadOnlyCollection<Transition<TTokenType>>? _transitions;
+    private readonly IReadOnlyCollection<Transition<TTokenType>> _transitions;
     private readonly TokenizerState<TTokenType>? _defaultState;
 
     public TokenizerState(TTokenType? tokenType, IReadOnlyDictionary<char, TokenizerState<TTokenType>> directInputTransitions, IReadOnlyCollection<Transition<TTokenType>> transitions, TokenizerState<TTokenType>? defaultState)
@@ -31,14 +31,18 @@ public sealed class TokenizerState<TTokenType> where TTokenType : TokenType<TTok
     {
         if (_directInputTransitions.TryGetValue(input, out newState))
             return true;
-        
-        newState = FindTransitionForInput(input)?.State ?? _defaultState;
-        return newState is not null;
-    }
 
-    private Transition<TTokenType>? FindTransitionForInput(char input)
-    {
-        return _transitions?.FirstOrDefault(t => t.Condition(input));
+        foreach (Transition<TTokenType> transition in _transitions)
+        {
+            if (!transition.Condition(input))
+                continue;
+            
+            newState = transition.State;
+            return true;
+        }
+        
+        newState = _defaultState;
+        return newState is not null;
     }
 
     public bool TryGetDefault([NotNullWhen(true)] out TTokenType? tokenType)
