@@ -15,7 +15,7 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
 
     public int Consumed { get; private set; }
 
-    public bool Read([MaybeNullWhen(false)] out TTokenType tokenType, out ReadOnlySpan<char> lexeme)
+    public bool Read([NotNullWhen(true)] out TTokenType? tokenType, out ReadOnlySpan<char> lexeme)
     {
         while (ReadInternal(out tokenType, out lexeme))
         {
@@ -28,7 +28,7 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
         return false;
     }
 
-    private bool ReadInternal([MaybeNullWhen(false)] out TTokenType tokenType, out ReadOnlySpan<char> lexeme)
+    private bool ReadInternal([NotNullWhen(true)] out TTokenType? tokenType, out ReadOnlySpan<char> lexeme)
     {
         tokenType = null;
         int lexemeLength = 0;
