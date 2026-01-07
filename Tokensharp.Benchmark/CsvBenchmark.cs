@@ -15,8 +15,8 @@ public class CsvBenchmark
                                bizz"
                                """;
 
-        ReadOnlyMemory<char> csvMemory = testStr.AsMemory();
-        while (Tokenizer.TryParseToken(csvMemory, false, out Token<CsvTokenTypes> token))
-            csvMemory = csvMemory[token.Lexeme.Length..];
+        ReadOnlySpan<char> csvSpan = testStr.AsSpan();
+        while (Tokenizer.TryParseToken(csvSpan, false, out CsvTokenTypes? _, out ReadOnlySpan<char> lexeme))
+            csvSpan = csvSpan[lexeme.Length..];
     }
 }
