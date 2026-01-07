@@ -23,9 +23,7 @@ public class TokenizerStateBuilder<TTokenType>(TTokenType tokenType) where TToke
 
     public void When(char c, TokenizerStateBuilder<TTokenType> tokenizerStateBuilder)
     {
-        if (_state is not null)
-            throw new InvalidOperationException("Builder has already been built");
-        
+        CheckIfAlreadyBuilt();
         _charToStateBuilder[c] = tokenizerStateBuilder;
     }
 
@@ -40,9 +38,7 @@ public class TokenizerStateBuilder<TTokenType>(TTokenType tokenType) where TToke
 
     public void When(Expression<Func<char, bool>> condition, TokenizerStateBuilder<TTokenType> tokenTypeStateBuilder)
     {
-        if (_state is not null)
-            throw new InvalidOperationException("Builder has already been built");
-        
+        CheckIfAlreadyBuilt();
         _conditionToStateBuilders.Add(new ConditionToStateBuilder(condition, tokenTypeStateBuilder));
     }
 
@@ -55,9 +51,7 @@ public class TokenizerStateBuilder<TTokenType>(TTokenType tokenType) where TToke
 
     public void Default(TokenizerStateBuilder<TTokenType> defaultTokenizerStateBuilder)
     {
-        if (_state is not null)
-            throw new InvalidOperationException("Builder has already been built");
-        
+        CheckIfAlreadyBuilt();
         _defaultTokenStateBuilder = defaultTokenizerStateBuilder;
     }
 
@@ -83,6 +77,12 @@ public class TokenizerStateBuilder<TTokenType>(TTokenType tokenType) where TToke
             directInputTransitions, 
             conditionTransitions,
             defaultTransitionState);
+    }
+
+    private void CheckIfAlreadyBuilt()
+    {
+        if (_state is not null)
+            throw new InvalidOperationException("Builder has already been built");
     }
 
     private readonly record struct ConditionToStateBuilder(
