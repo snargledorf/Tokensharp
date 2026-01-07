@@ -4,19 +4,18 @@ namespace Tokensharp.StateMachine;
 
 public sealed class TokenizerState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    private readonly IReadOnlyDictionary<char, TokenizerState<TTokenType>> _directInputTransitions;
     private readonly IReadOnlyCollection<Transition<TTokenType>>? _transitions;
+    private readonly TokenizerState<TTokenType>? _defaultState;
 
-    public TokenizerState(IReadOnlyCollection<Transition<TTokenType>>? transitions = null) 
-        : this(null, transitions)
-    {
-    }
-
-    public TokenizerState(TTokenType? tokenType, IReadOnlyCollection<Transition<TTokenType>>? transitions = null)
+    public TokenizerState(TTokenType? tokenType, IReadOnlyDictionary<char, TokenizerState<TTokenType>> directInputTransitions, IReadOnlyCollection<Transition<TTokenType>> transitions, TokenizerState<TTokenType>? defaultState)
     {
         TokenType = tokenType;
+        _directInputTransitions = directInputTransitions;
         _transitions = transitions;
+        _defaultState = defaultState;
         HasTokenType = tokenType is not null;
-        HasInputTransitions = transitions?.Count > 0;
+        HasInputTransitions = transitions.Count > 0;
         IsFinalState = HasTokenType && !HasInputTransitions;
     }
 
@@ -30,12 +29,21 @@ public sealed class TokenizerState<TTokenType> where TTokenType : TokenType<TTok
 
     public bool TryTransition(char input, [NotNullWhen(true)] out TokenizerState<TTokenType>? newState)
     {
-        newState = FindTransitionForInput(input)?.State;
+        if (_directInputTransitions.TryGetValue(input, out newState))
+            return true;
+        
+        newState = FindTransitionForInput(input)?.State ?? _defaultState;
         return newState is not null;
     }
 
     private Transition<TTokenType>? FindTransitionForInput(char input)
     {
         return _transitions?.FirstOrDefault(t => t.Condition(input));
+    }
+
+    public bool TryGetDefault([NotNullWhen(true)] out TTokenType? tokenType)
+    {
+        tokenType = _defaultState?.TokenType;
+        return tokenType is not null;
     }
 }

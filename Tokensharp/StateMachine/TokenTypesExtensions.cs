@@ -17,7 +17,7 @@ internal static class TokenTypesExtensions
                 if (currentNode is null)
                 {
                     if (!tree.TryGetChild(nodeKey, out currentNode))
-                        tree.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey));
+                        tree.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, tree));
                 }
                 else
                 {
@@ -27,7 +27,7 @@ internal static class TokenTypesExtensions
                     }
                     else
                     {
-                        currentNode.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, currentNode));
+                        currentNode.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, tree, currentNode));
                     }
                 }
             }

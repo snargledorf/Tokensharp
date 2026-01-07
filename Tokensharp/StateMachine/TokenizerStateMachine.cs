@@ -154,7 +154,8 @@ namespace Tokensharp.StateMachine
                 ? TokenType<TTokenType>.WhiteSpace
                 : TokenType<TTokenType>.Text;
 
-            currentTokenizerStateBuilder.Default(defaultTokenType);
+            TokenizerStateBuilder<TTokenType> defaultStateBuilder = currentTokenizerStateBuilder.Default(defaultTokenType);
+            BuildTextOrWhiteSpaceState(defaultStateBuilder, node.Tree, node.IsWhiteSpaceToRoot());
 
             // The dummy state just defaults to the final state from the node Value
             subStateBuilder.Default(node.TokenType);

@@ -3,16 +3,12 @@
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <TargetFrameworks>net10.0;net7.0;net8.0;net9.0</TargetFrameworks>
+        <TargetFrameworks>net10.0;net8.0;net9.0</TargetFrameworks>
         <LangVersion>default</LangVersion>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/snargledorf/Tokensharp.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <Version>1.2.0</Version>
     </PropertyGroup>
-
-    <ItemGroup>
-      <PackageReference Include="FastState" Version="1.1.0" />
-    </ItemGroup>
 
 </Project>

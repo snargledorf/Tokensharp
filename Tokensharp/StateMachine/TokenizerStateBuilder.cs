@@ -1,11 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Frozen;
+using System.Linq.Expressions;
 
 namespace Tokensharp.StateMachine;
 
 public class TokenizerStateBuilder<TTokenType>(TTokenType tokenType) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private static readonly Expression<Func<char, bool>> DefaultCondition = _ => true;
-    
+    private readonly Dictionary<char, TokenizerStateBuilder<TTokenType>> _charToStateBuilder = new();
     private readonly List<ConditionToStateBuilder<TTokenType>> _conditionToStateBuilders = [];
     
     private TokenizerStateBuilder<TTokenType>? _defaultTokenStateBuilder;
@@ -14,8 +14,7 @@ public class TokenizerStateBuilder<TTokenType>(TTokenType tokenType) where TToke
 
     public TokenizerStateBuilder<TTokenType> When(char c, TTokenType tokenType)
     {
-        Expression<Func<char, bool>> condition = InputEqualsExpression(c);
-        return When(condition, tokenType);
+        return _charToStateBuilder[c] = new TokenizerStateBuilder<TTokenType>(tokenType);
     }
 
     public TokenizerStateBuilder<TTokenType> When(Expression<Func<char, bool>> condition, TTokenType tokenType)
@@ -36,38 +35,20 @@ public class TokenizerStateBuilder<TTokenType>(TTokenType tokenType) where TToke
     {
         var transitions = new List<Transition<TTokenType>>();
 
-        IEnumerable<ConditionExpressionToState<TTokenType>> conditionExpressionToStates = _conditionToStateBuilders
-            .Select(cdb => cdb.Build());
-
-        if (_defaultTokenStateBuilder is { } defaultTokenStateBuilder)
-        {
-            conditionExpressionToStates = conditionExpressionToStates.Append(
-                new ConditionExpressionToState<TTokenType>(DefaultCondition, defaultTokenStateBuilder.Build()));
-        }
-
-        foreach (ConditionExpressionToState<TTokenType> conditionExpressionToState in conditionExpressionToStates)
+        foreach (ConditionToStateBuilder<TTokenType> conditionExpressionToState in _conditionToStateBuilders)
         {
             Func<char, bool> condition = conditionExpressionToState.ConditionExpression.Compile();
-            transitions.Add(new Transition<TTokenType>(condition, conditionExpressionToState.State));
+            TokenizerState<TTokenType> state = conditionExpressionToState.TokenizerStateBuilder.Build();
+            transitions.Add(new Transition<TTokenType>(condition, state));
         }
-        
-        return new TokenizerState<TTokenType>(TokenType, transitions);
-    }
 
-    private static Expression<Func<char, bool>> InputEqualsExpression(char c)
-    {
-        return (input) => input.Equals(c);
+        return new TokenizerState<TTokenType>(TokenType,
+            _charToStateBuilder.ToFrozenDictionary(kvp => kvp.Key, kvp => kvp.Value.Build()), transitions,
+            _defaultTokenStateBuilder?.Build());
     }
 }
 
-internal record struct ConditionExpressionToState<TTokenType>(
+internal readonly record struct ConditionToStateBuilder<TTokenType>(
     Expression<Func<char, bool>> ConditionExpression,
-    TokenizerState<TTokenType> State) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>;
-
-internal record struct ConditionToStateBuilder<TTokenType>(
-    Expression<Func<char, bool>> Condition,
     TokenizerStateBuilder<TTokenType> TokenizerStateBuilder)
-    where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
-{
-    public ConditionExpressionToState<TTokenType> Build() => new(Condition, TokenizerStateBuilder.Build());
-}
+    where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>;
