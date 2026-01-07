@@ -27,7 +27,7 @@ namespace Tokensharp.StateMachine
             StartState = startStateBuilder.Build();
         }
 
-        public static void BuildTreeTransitions(TokenizerStateBuilder<TTokenType> builder, TokenTree<TTokenType> tree)
+        private static void BuildTreeTransitions(TokenizerStateBuilder<TTokenType> builder, TokenTree<TTokenType> tree)
         {
             // Start at the generated token types
             TTokenType generatedTokenType = TokenType<TTokenType>.StartOfGeneratedTokenTypes.Next();
