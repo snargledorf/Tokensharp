@@ -58,7 +58,7 @@ namespace Tokensharp.TokenTypeGenerator
             var tokens = new Dictionary<string, string>();
             JsonDocument jsonDocument = JsonDocument.Parse(sourceText.ToString());
             foreach (JsonProperty property in jsonDocument.RootElement.EnumerateObject())
-                tokens.Add(property.Name, property.Value.GetString());
+                tokens.Add(property.Name, property.Value.GetString()!);
             
             return new TokenDefinition(className, tokens);
         }

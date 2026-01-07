@@ -1,26 +1,26 @@
 namespace Tokensharp.TokenTree;
 
-public sealed class TokenTreeNode<TTokenType>(char key, TokenTreeNode<TTokenType>? parent = null) : TokenTreeNodeCollection<TTokenType>
+public sealed class TokenTreeNode<TTokenType>(char key, TokenTree<TTokenType> tree, TokenTreeNode<TTokenType>? parent = null) : TokenTreeNodeCollection<TTokenType>
 {
-    private TTokenType? _tokenType;
-
     public char Key { get; } = key;
 
     public TokenTreeNode<TTokenType>? Parent { get; } = parent;
     
-    public TokenTreeNode<TTokenType> RootNode => Parent?.Parent ?? this;
+    public TokenTreeNode<TTokenType> RootNode => Parent?.RootNode ?? this;
+
+    public TokenTree<TTokenType> Tree { get; } = tree;
 
     public TTokenType? TokenType
     {
-        get => _tokenType;
+        get;
         set
         {
             ArgumentNullException.ThrowIfNull(value);
-            
-            if (_tokenType is not null)
+
+            if (field is not null)
                 throw new InvalidOperationException("Node already has a token type");
 
-            _tokenType = value;
+            field = value;
         }
     }
 

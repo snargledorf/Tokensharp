@@ -88,7 +88,8 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
                 return false;
             }
 
-            if (currentState.TryGetDefaultForState(out TTokenType defaultType))
+            TTokenType? currentTokenType = currentState.TokenType;
+            if (currentState.TryGetDefault(out TTokenType? defaultType))
                 currentTokenType = defaultType;
 
             if (currentTokenType == TokenType<TTokenType>.EndOfText)
@@ -109,7 +110,7 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
                 return true;
             }
 
-            if (!currentTokenType.IsGenerated)
+            if (currentTokenType is { IsGenerated: false })
             {
                 tokenType = currentTokenType;
                 return true;
