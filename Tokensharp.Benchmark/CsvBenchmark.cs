@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 namespace Tokensharp.Benchmark;
 
 [SimpleJob]
+[MemoryDiagnoser]
 public class CsvBenchmark
 {
     [Benchmark]
