@@ -8,7 +8,7 @@ public sealed class TokenTreeNode<TTokenType>(char key, TokenTreeNode<TTokenType
 
     public TokenTreeNode<TTokenType>? Parent { get; } = parent;
     
-    public TokenTreeNode<TTokenType> RootNode => Parent?.Parent ?? this;
+    public TokenTreeNode<TTokenType> RootNode => Parent?.RootNode ?? this;
 
     public TTokenType? TokenType
     {
