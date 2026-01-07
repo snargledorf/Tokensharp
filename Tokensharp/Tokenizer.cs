@@ -14,7 +14,7 @@ public static class Tokenizer
     public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, bool moreDataAvailable, out Token<TTokenType> token)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        if (TryParseToken<TTokenType>(buffer.Span, moreDataAvailable, out TTokenType? tokenType, out ReadOnlySpan<char> lexeme))
+        if (TryParseToken(buffer.Span, moreDataAvailable, out TTokenType? tokenType, out ReadOnlySpan<char> lexeme))
         {
             token = new Token<TTokenType>(tokenType, lexeme.ToString());
             return true;
@@ -30,13 +30,13 @@ public static class Tokenizer
         out ReadOnlySpan<char> lexeme)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        return TryParseToken(buffer, default, out tokenType, out lexeme);
+        return TryParseToken(buffer, false, out tokenType, out lexeme);
     }
 
     public static bool TryParseToken<TTokenType>(
         ReadOnlySpan<char> buffer,
         bool moreDataAvailable,
-        [MaybeNullWhen(false)] out TTokenType tokenType, 
+        [NotNullWhen(true)] out TTokenType? tokenType, 
         out ReadOnlySpan<char> lexeme)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
@@ -49,7 +49,7 @@ public static class Tokenizer
 
     public static IEnumerable<Token<TTokenType>> EnumerateTokens<TTokenType>(
         ReadOnlyMemory<char> buffer,
-        TokenizerOptions? options = default)
+        TokenizerOptions? options = null)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
         options ??= new TokenizerOptions();
@@ -79,7 +79,7 @@ public static class Tokenizer
 
     public static async IAsyncEnumerable<Token<TTokenType>> EnumerateTokensAsync<TTokenType>(
         Stream tokenStream,
-        TokenizerOptions? options = default, 
+        TokenizerOptions? options = null, 
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
