@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokensharp.TokenTypeGenerat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokensharp.TokenTypeGenerator.Test", "Tokensharp.TokenTypeGenerator.Test\Tokensharp.TokenTypeGenerator.Test.csproj", "{754C0727-09E3-43C8-9439-AF15DBB28336}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokensharp.Benchmark", "Tokensharp.Benchmark\Tokensharp.Benchmark.csproj", "{7F408271-443D-43F8-A387-1A1FEB7B8FF8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{754C0727-09E3-43C8-9439-AF15DBB28336}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{754C0727-09E3-43C8-9439-AF15DBB28336}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{754C0727-09E3-43C8-9439-AF15DBB28336}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F408271-443D-43F8-A387-1A1FEB7B8FF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F408271-443D-43F8-A387-1A1FEB7B8FF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F408271-443D-43F8-A387-1A1FEB7B8FF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F408271-443D-43F8-A387-1A1FEB7B8FF8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
