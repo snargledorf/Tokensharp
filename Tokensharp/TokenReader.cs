@@ -1,21 +1,22 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using FastState;
+using SwiftState;
+using Tokensharp.StateMachine;
 
 namespace Tokensharp;
 
 public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDataAvailable = false, TokenReaderOptions options = default)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private static readonly StateMachine<TTokenType, char> StateMachine;
+    private static readonly State<char, TTokenType> StartState;
     
     private readonly ReadOnlySpan<char> _buffer = buffer;
 
-    static TokenReader() => StateMachine = TokenizerStateMachine<TTokenType>.Instance;
+    static TokenReader() => StartState = TokenizerStateMachine<TTokenType>.StartState;
 
     public int Consumed { get; private set; }
 
-    public bool Read([MaybeNullWhen(false)] out TTokenType tokenType, out ReadOnlySpan<char> lexeme)
+    public bool Read([NotNullWhen(true)] out TTokenType? tokenType, out ReadOnlySpan<char> lexeme)
     {
         while (ReadInternal(out tokenType, out lexeme))
         {
@@ -28,45 +29,45 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
         return false;
     }
 
-    private bool ReadInternal([MaybeNullWhen(false)] out TTokenType tokenType, out ReadOnlySpan<char> lexeme)
+    private bool ReadInternal([NotNullWhen(true)] out TTokenType? tokenType, out ReadOnlySpan<char> lexeme)
     {
-        tokenType = default;
+        tokenType = null;
         int lexemeLength = 0;
 
-        TTokenType? currentTokenType = TokenType<TTokenType>.Start;
+        State<char, TTokenType> currentState = StartState;
         
         try
         {
             foreach (char c in _buffer[Consumed..])
             {
-                if (StateMachine.TryTransition(currentTokenType, c, out TTokenType newTokenType))
+                if (currentState.TryTransition(c, out State<char, TTokenType>? newState))
                 {
-                    currentTokenType = newTokenType;
+                    currentState = newState;
 
-                    if (currentTokenType == TokenType<TTokenType>.EndOfText)
+                    if (currentState.Id == TokenType<TTokenType>.EndOfText)
                     {
                         tokenType = TokenType<TTokenType>.Text;
                         return true;
                     }
 
-                    if (currentTokenType == TokenType<TTokenType>.EndOfNumber)
+                    if (currentState.Id == TokenType<TTokenType>.EndOfNumber)
                     {
                         tokenType = TokenType<TTokenType>.Number;
                         return true;
                     }
 
-                    if (currentTokenType == TokenType<TTokenType>.EndOfWhiteSpace)
+                    if (currentState.Id == TokenType<TTokenType>.EndOfWhiteSpace)
                     {
                         tokenType = TokenType<TTokenType>.WhiteSpace;
                         return true;
                     }
 
-                    if (currentTokenType != TokenType<TTokenType>.Text &&
-                        currentTokenType != TokenType<TTokenType>.Number &&
-                        currentTokenType != TokenType<TTokenType>.WhiteSpace &&
-                        !currentTokenType.IsGenerated)
+                    if (currentState.Id != TokenType<TTokenType>.Text &&
+                        currentState.Id != TokenType<TTokenType>.Number &&
+                        currentState.Id != TokenType<TTokenType>.WhiteSpace &&
+                        currentState.Id is { IsGenerated: false })
                     {
-                        tokenType = currentTokenType;
+                        tokenType = currentState.Id;
                         return true;
                     }
                 }
@@ -74,22 +75,23 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
                 lexemeLength++;
             }
 
-            if (currentTokenType == TokenType<TTokenType>.Start)
+            if (currentState.Id == TokenType<TTokenType>.Start)
             {
-                Debug.Assert(tokenType == default);
+                Debug.Assert(tokenType == null);
                 return false;
             }
             
             // If we have more data, check if this current token type is the start of another token type
             // If it is, then we should wait for more data to be available
-            if (moreDataAvailable && StateMachine.StateHasInputTransitions(currentTokenType))
+            if (moreDataAvailable && StartState.HasTransitions)
             {
-                Debug.Assert(tokenType == default);
+                Debug.Assert(tokenType == null);
                 return false;
             }
 
-            if (StateMachine.TryGetDefaultForState(currentTokenType, out TTokenType defaultType))
-                currentTokenType = defaultType;
+            TTokenType? currentTokenType = currentState.Id;
+            if (currentState.TryGetDefault(out State<char, TTokenType>? defaultState))
+                currentTokenType = defaultState.Id;
 
             if (currentTokenType == TokenType<TTokenType>.EndOfText)
             {
@@ -109,13 +111,13 @@ public ref struct TokenReader<TTokenType>(ReadOnlySpan<char> buffer, bool moreDa
                 return true;
             }
 
-            if (!currentTokenType.IsGenerated)
+            if (currentTokenType is { IsGenerated: false })
             {
                 tokenType = currentTokenType;
                 return true;
             }
 
-            Debug.Assert(tokenType == default);
+            Debug.Assert(tokenType == null);
             return false;
         }
         finally
