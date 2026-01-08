@@ -6,11 +6,13 @@
         <IncludeBuldOutput>false</IncludeBuldOutput>
         <ImplicitUsings>true</ImplicitUsings>
         <LangVersion>default</LangVersion>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/snargledorf/Tokensharp.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <Version>1.0.1</Version>
         <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,5 +28,13 @@
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true"
               PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(SolutionDir)\Tokensharp.TokenTypeGenerator.README.md" Pack="true" PackagePath="README.md" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(SolutionDir)\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 </Project>
