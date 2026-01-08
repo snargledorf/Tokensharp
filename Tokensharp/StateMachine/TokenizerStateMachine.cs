@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using SwiftState;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine
@@ -6,19 +7,19 @@ namespace Tokensharp.StateMachine
     internal static class TokenizerStateMachine<TTokenType>
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        internal static readonly TokenizerState<TTokenType> StartState;
+        internal static readonly State<char, TTokenType> StartState;
 
         static TokenizerStateMachine()
         {
             DuplicateTokenLexemeException<TTokenType>.ThrowIfDuplicateLexemes();
 
             TokenTree<TTokenType> tree = TTokenType.TokenTypes.ToTokenTree();
+            
+            var startStateBuilder = new StateBuilder<char, TTokenType>(TokenType<TTokenType>.Start);
 
-            var startStateBuilder = new TokenizerStateBuilder<TTokenType>(TokenType<TTokenType>.Start);
-
-            TokenizerStateBuilder<TTokenType> whiteSpaceStateBuilder = BuildWhiteSpaceStateBuilder(tree);
-            TokenizerStateBuilder<TTokenType> numberStateBuilder = BuildNumberStateBuilder();
-            TokenizerStateBuilder<TTokenType> textStateBuilder = BuildTextStateBuilder(tree);
+            StateBuilder<char, TTokenType> whiteSpaceStateBuilder = BuildWhiteSpaceStateBuilder(tree);
+            StateBuilder<char, TTokenType> numberStateBuilder = BuildNumberStateBuilder();
+            StateBuilder<char, TTokenType> textStateBuilder = BuildTextStateBuilder(tree);
 
             var context = new TreeTransitionsContext(tree, whiteSpaceStateBuilder, numberStateBuilder, textStateBuilder);
             
@@ -31,7 +32,7 @@ namespace Tokensharp.StateMachine
             StartState = startStateBuilder.Build();
         }
 
-        private static void BuildTreeTransitions(TokenizerStateBuilder<TTokenType> builder, TreeTransitionsContext context)
+        private static void BuildTreeTransitions(StateBuilder<char, TTokenType> builder, TreeTransitionsContext context)
         {
             // Start at the generated token types
             TTokenType generatedTokenType = TokenType<TTokenType>.StartOfGeneratedTokenTypes.Next();
@@ -39,28 +40,28 @@ namespace Tokensharp.StateMachine
                 BuildNodeTransitions(node, builder, context, ref generatedTokenType);
         }
 
-        private static TokenizerStateBuilder<TTokenType> BuildWhiteSpaceStateBuilder(TokenTree<TTokenType> tree)
+        private static StateBuilder<char, TTokenType> BuildWhiteSpaceStateBuilder(TokenTree<TTokenType> tree)
         {
-            var whiteSpaceBuilder = new TokenizerStateBuilder<TTokenType>(TokenType<TTokenType>.WhiteSpace);
+            var whiteSpaceBuilder = new StateBuilder<char, TTokenType>(TokenType<TTokenType>.WhiteSpace);
             BuildTextOrWhiteSpaceState(whiteSpaceBuilder, tree, true);
             return whiteSpaceBuilder;
         }
 
-        private static TokenizerStateBuilder<TTokenType> BuildTextStateBuilder(TokenTree<TTokenType> tree)
+        private static StateBuilder<char, TTokenType> BuildTextStateBuilder(TokenTree<TTokenType> tree)
         {
-            var textBuilder = new TokenizerStateBuilder<TTokenType>(TokenType<TTokenType>.Text);
+            var textBuilder = new StateBuilder<char, TTokenType>(TokenType<TTokenType>.Text);
             BuildTextOrWhiteSpaceState(textBuilder, tree, false);
             return textBuilder;
         }
 
-        private static TokenizerStateBuilder<TTokenType> BuildNumberStateBuilder()
+        private static StateBuilder<char, TTokenType> BuildNumberStateBuilder()
         {
-            var numberBuilder = new TokenizerStateBuilder<TTokenType>(TokenType<TTokenType>.Number);
+            var numberBuilder = new StateBuilder<char, TTokenType>(TokenType<TTokenType>.Number);
             numberBuilder.When(c => !char.IsDigit(c), TokenType<TTokenType>.EndOfNumber);
             return numberBuilder;
         }
 
-        private static void BuildTextOrWhiteSpaceState(TokenizerStateBuilder<TTokenType> builder,
+        private static void BuildTextOrWhiteSpaceState(StateBuilder<char, TTokenType> builder,
             TokenTree<TTokenType> tree, bool whiteSpace)
         {
             TTokenType nextTokenType =
@@ -89,7 +90,7 @@ namespace Tokensharp.StateMachine
         }
 
         private static void BuildNodeTransitions(TokenTreeNode<TTokenType> node,
-            TokenizerStateBuilder<TTokenType> currentTokenizerStateBuilder,
+            IStateBuilder<char, TTokenType> currentTokenizerStateBuilder,
             TreeTransitionsContext context,
             ref TTokenType generatedTokenType)
         {
@@ -103,7 +104,7 @@ namespace Tokensharp.StateMachine
             }
         }
 
-        private static void BuildTransitionForNodeWithToken(TokenTreeNode<TTokenType> node, TokenizerStateBuilder<TTokenType> currentTokenizerStateBuilder, TreeTransitionsContext context, ref TTokenType generatedTokenType)
+        private static void BuildTransitionForNodeWithToken(TokenTreeNode<TTokenType> node, IStateBuilder<char, TTokenType> currentTokenizerStateBuilder, TreeTransitionsContext context, ref TTokenType generatedTokenType)
         {
             if (node.HasChildren)
             {
@@ -116,7 +117,7 @@ namespace Tokensharp.StateMachine
         }
 
         private static void BuildTransitionsForNodeWithTokenAndChildren(TokenTreeNode<TTokenType> node,
-            TokenizerStateBuilder<TTokenType> currentTokenizerStateBuilder,
+            IStateBuilder<char, TTokenType> currentTokenizerStateBuilder,
             TreeTransitionsContext context, ref TTokenType generatedTokenType)
         {
             if (node.TokenType is null)
@@ -128,7 +129,7 @@ namespace Tokensharp.StateMachine
             //-------------------------------------------------------------------------------
             // Ex 2. <Foo vs. <FooB vs. <FooBar
 
-            TokenizerStateBuilder<TTokenType> subTokenizerStateBuilder = 
+            IStateBuilder<char, TTokenType> subTokenizerStateBuilder = 
                 currentTokenizerStateBuilder.When(node.Key, generatedTokenType);
 
             // Move to the next token type
@@ -140,7 +141,7 @@ namespace Tokensharp.StateMachine
             subTokenizerStateBuilder.Default(node.TokenType);
         }
 
-        private static void BuildTransitionsForNodeWithTokenAndNoChildren(TokenTreeNode<TTokenType> node, TokenizerStateBuilder<TTokenType> currentTokenizerStateBuilder, TreeTransitionsContext context, ref TTokenType generatedTokenType)
+        private static void BuildTransitionsForNodeWithTokenAndNoChildren(TokenTreeNode<TTokenType> node, IStateBuilder<char, TTokenType> currentTokenizerStateBuilder, TreeTransitionsContext context, ref TTokenType generatedTokenType)
         {
             if (node.TokenType is null)
                 throw new InvalidOperationException("node has no token type");
@@ -149,11 +150,11 @@ namespace Tokensharp.StateMachine
             
             // If this node had no children, then we need to switch to a dummy state
             // to ensure the character is read
-            TokenizerStateBuilder<TTokenType> subStateBuilder = 
+            IStateBuilder<char, TTokenType> subStateBuilder = 
                 currentTokenizerStateBuilder.When(node.Key, generatedTokenType);
 
             // Add a default in case we don't match on the nodes key
-            TokenizerStateBuilder<TTokenType> defaultStateBuilder = node.IsWhiteSpaceToRoot()
+            IStateBuilder<char, TTokenType> defaultStateBuilder = node.IsWhiteSpaceToRoot()
                 ? context.WhiteSpaceStateBuilder
                 : context.TextStateBuilder;
 
@@ -179,7 +180,7 @@ namespace Tokensharp.StateMachine
         }
 
         private static void BuildTransitionsForNodeWithNoTokenType(TokenTreeNode<TTokenType> node,
-            TokenizerStateBuilder<TTokenType> currentTokenizerStateBuilder, TreeTransitionsContext context,
+            IStateBuilder<char, TTokenType> currentTokenizerStateBuilder, TreeTransitionsContext context,
             ref TTokenType generatedTokenType)
         {
             if (node.TokenType is not null)
@@ -204,8 +205,8 @@ namespace Tokensharp.StateMachine
 
         private record TreeTransitionsContext(
             TokenTree<TTokenType> Tree,
-            TokenizerStateBuilder<TTokenType> WhiteSpaceStateBuilder,
-            TokenizerStateBuilder<TTokenType> NumberStateBuilder,
-            TokenizerStateBuilder<TTokenType> TextStateBuilder);
+            IStateBuilder<char, TTokenType> WhiteSpaceStateBuilder,
+            IStateBuilder<char, TTokenType> NumberStateBuilder,
+            IStateBuilder<char, TTokenType> TextStateBuilder);
     }
 }
