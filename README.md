@@ -26,11 +26,12 @@ dotnet add package Tokensharp
 ```csharp
 public record MyTokenType(string Lexeme) : TokenType<MyTokenType>(Lexeme), ITokenType<MyTokenType>
 {
-    public static readonly MyTokenType Identifier = new("identifier");
-    public static readonly MyTokenType Number = new("number");
+    public static readonly MyTokenType Var = new("var");
+    public static readonly MyTokenType Assign = new("=");
+    public static readonly MyTokenType EndStatement = new(";");
     
     public static MyTokenType Create(string lexeme) => new(lexeme);
-    public static IEnumerable<MyTokenType> TokenTypes => [Identifier, Number];
+    public static IEnumerable<MyTokenType> TokenTypes => [Var, Assign, EndStatement];
 }
 ```
 
