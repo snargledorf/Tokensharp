@@ -25,8 +25,7 @@ dotnet add package Tokensharp.TokenTypeGenerator
 ```json
 {
   "Plus": "+",
-  "Minus": "-",
-  "Number": "[0-9]+"
+  "Minus": "-"
 }
 ```
 
