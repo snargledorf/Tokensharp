@@ -3,10 +3,10 @@ namespace Tokensharp.Tests;
 public record ScriptingLanguageTokenTypes(string Lexeme) : TokenType<ScriptingLanguageTokenTypes>(Lexeme), ITokenType<ScriptingLanguageTokenTypes>
 {
     public static readonly ScriptingLanguageTokenTypes Fun = new("fun");
-    public static readonly ScriptingLanguageTokenTypes OpenParenthesis = Fun.Next("(");
-    public static readonly ScriptingLanguageTokenTypes CloseParenthesis = OpenParenthesis.Next(")");
-    public static readonly ScriptingLanguageTokenTypes OpenBrace = CloseParenthesis.Next("{");
-    public static readonly ScriptingLanguageTokenTypes CloseBrace = OpenBrace.Next("}");
+    public static readonly ScriptingLanguageTokenTypes OpenParenthesis = new("(");
+    public static readonly ScriptingLanguageTokenTypes CloseParenthesis = new(")");
+    public static readonly ScriptingLanguageTokenTypes OpenBrace = new("{");
+    public static readonly ScriptingLanguageTokenTypes CloseBrace = new("}");
 
     public static IEnumerable<ScriptingLanguageTokenTypes> TokenTypes { get; } =
     [

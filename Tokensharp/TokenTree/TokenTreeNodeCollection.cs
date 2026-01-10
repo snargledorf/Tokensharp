@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.TokenTree;
 
-public class TokenTreeNodeCollection<TState> : ITokenTreeNodeCollection<TState>
+internal class TokenTreeNodeCollection<TState> : ITokenTreeNodeCollection<TState> where TState : TokenType<TState>, ITokenType<TState>
 {
     private readonly Dictionary<char, TokenTreeNode<TState>> _children = [];
 

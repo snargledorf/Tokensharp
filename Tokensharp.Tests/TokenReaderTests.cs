@@ -22,7 +22,7 @@ public class TokenReaderTests : TokenizerTestBase<SimpleTokenTypes>
         var memory = input.AsMemory();
         
         var tokenReader = new TokenReader<SimpleTokenTypes>(memory.Span, moreDataAvailable: true);
-        bool result = tokenReader.Read(out SimpleTokenTypes? tokenType, out ReadOnlySpan<char> lexeme);
+        bool result = tokenReader.Read(out TokenType<SimpleTokenTypes>? tokenType, out ReadOnlySpan<char> lexeme);
 
         using (Assert.EnterMultipleScope())
         {

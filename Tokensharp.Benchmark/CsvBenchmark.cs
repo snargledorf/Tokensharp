@@ -16,7 +16,7 @@ public class CsvBenchmark
                                """;
 
         ReadOnlySpan<char> csvSpan = testStr.AsSpan();
-        while (Tokenizer.TryParseToken(csvSpan, false, out CsvTokenTypes? _, out ReadOnlySpan<char> lexeme))
+        while (Tokenizer.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out ReadOnlySpan<char> lexeme))
             csvSpan = csvSpan[lexeme.Length..];
     }
 }
