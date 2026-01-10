@@ -17,11 +17,10 @@ public class DuplicateTokensTests : TokenizerTestBase<DuplicateLexemeTokens>
     {
         RunTestShouldThrow<TypeInitializationException>(ReadOnlyMemory<char>.Empty, exception =>
         {
-            Assert.That(exception, Has.InnerException.TypeOf<TypeInitializationException>());
-            Assert.That(exception.InnerException, Has.InnerException.TypeOf<DuplicateTokenLexemeException<DuplicateLexemeTokens>>());
+            Assert.That(exception, Has.InnerException.TypeOf<DuplicateTokenLexemeException<DuplicateLexemeTokens>>());
 
             DuplicateLexemeTokens[]? duplicateTokenTypes =
-                (exception.InnerException.InnerException as DuplicateTokenLexemeException<DuplicateLexemeTokens>)
+                (exception.InnerException as DuplicateTokenLexemeException<DuplicateLexemeTokens>)
                 ?.TokenTypes.SelectMany(g => g).ToArray();
             
             Assert.That(duplicateTokenTypes, Has.Exactly(2).EqualTo(new DuplicateLexemeTokens("lexeme")));

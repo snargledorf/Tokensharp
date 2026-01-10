@@ -1,7 +1,12 @@
+using Tokensharp.StateMachine;
+
 namespace Tokensharp;
 
-public interface ITokenType<out T> where T : ITokenType<T>
+public interface ITokenType<out TTokenType> where TTokenType : ITokenType<TTokenType>
 {
-    static abstract T Create(string lexeme);
-    static abstract IEnumerable<T> TokenTypes { get; }
+    static abstract TTokenType Create(string lexeme);
+    static abstract IEnumerable<TTokenType> TokenTypes { get; }
+
+    public static TokenConfiguration<TTokenType> DefaultConfiguration =>
+        field ??= new TokenConfiguration<TTokenType>(TTokenType.TokenTypes);
 }

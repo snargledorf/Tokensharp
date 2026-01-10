@@ -6,25 +6,19 @@ namespace Tokensharp.StateMachine
     internal static class TokenizerStateMachine<TTokenType>
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        internal static State<char, TokenizerStateId<TTokenType>> StartState
+        internal static State<char, TokenizerStateId<TTokenType>> BuildStartState(TokenConfiguration<TTokenType> tokenConfiguration)
         {
-            get
-            {
-                if (field is not null)
-                    return field;
-
-                TokenTree<TTokenType> tree = TTokenType.TokenTypes.ToTokenTree();
+            TokenTree<TTokenType> tree = tokenConfiguration.TokenTypes.ToTokenTree();
             
-                var startStateBuilder = new StateBuilder<char, TokenizerStateId<TTokenType>>(TokenizerStateId<TTokenType>.Start);
+            var startStateBuilder = new StateBuilder<char, TokenizerStateId<TTokenType>>(TokenizerStateId<TTokenType>.Start);
 
-                var context = new TokenizerStateMachineContext(tree);
+            var context = new TokenizerStateMachineContext(tree);
             
-                BuildTreeTransitions(startStateBuilder, context);
+            BuildTreeTransitions(startStateBuilder, context);
 
-                BuildTextWhiteSpaceAndNumberTransitions(startStateBuilder, context);
+            BuildTextWhiteSpaceAndNumberTransitions(startStateBuilder, context);
 
-                return field = startStateBuilder.Build();
-            }
+            return startStateBuilder.Build();
         }
         
         static TokenizerStateMachine()
