@@ -1,4 +1,5 @@
-﻿using Tokensharp.TokenTree;
+﻿using System.Text;
+using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
@@ -9,15 +10,24 @@ internal static class TokenTypesExtensions
     {
         var tree = new TokenTree<TTokenType>();
 
+        var stateNameBuilder = new StringBuilder();
         foreach (TTokenType tokenDefinition in tokenDefinitions)
         {
             TokenTreeNode<TTokenType>? currentNode = null;
+            
+            stateNameBuilder.Append($"({tokenDefinition.Lexeme})_");
+            
             foreach (char nodeKey in tokenDefinition.Lexeme)
             {
+                stateNameBuilder.Append(nodeKey);
+                
                 if (currentNode is null)
                 {
-                    if (!tree.TryGetChild(nodeKey, out currentNode))
-                        tree.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, tree));
+                    if (tree.TryGetChild(nodeKey, out currentNode))
+                        continue;
+                    
+                    TokenizerStateId<TTokenType> stateId = TokenizerStateId<TTokenType>.Create(stateNameBuilder.ToString(), tokenDefinition);
+                    tree.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, stateId, tree));
                 }
                 else
                 {
@@ -27,14 +37,17 @@ internal static class TokenTypesExtensions
                     }
                     else
                     {
-                        currentNode.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, tree, currentNode));
+                        TokenizerStateId<TTokenType> stateId = TokenizerStateId<TTokenType>.Create(stateNameBuilder.ToString(), tokenDefinition);
+                        currentNode.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, stateId, tree, currentNode));
                     }
                 }
             }
 
-            // This is the final node in this branch, set the state
+            // This is the final node in this branch, set the token type to terminal
             if (currentNode is { } endNode)
-                endNode.TokenType = tokenDefinition;
+                endNode.IsEndOfToken = true;
+            
+            stateNameBuilder.Clear();
         }
             
         return tree;

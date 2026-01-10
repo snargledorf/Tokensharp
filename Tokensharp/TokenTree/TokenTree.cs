@@ -1,5 +1,5 @@
 ﻿namespace Tokensharp.TokenTree;
 
-public class TokenTree<TValue> : TokenTreeNodeCollection<TValue>
+internal class TokenTree<TValue> : TokenTreeNodeCollection<TValue> where TValue : TokenType<TValue>, ITokenType<TValue>
 {
 }

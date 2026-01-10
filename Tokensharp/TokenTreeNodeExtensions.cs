@@ -2,10 +2,12 @@
 
 namespace Tokensharp;
 
-public static class TokenTreeNodeExtensions
+internal static class TokenTreeNodeExtensions
 {
-    public static bool IsWhiteSpaceToRoot<TTokenType>(this TokenTreeNode<TTokenType> node)
+    extension<TTokenType>(TokenTreeNode<TTokenType> node) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        return char.IsWhiteSpace(node.Key) && (node.Parent?.IsWhiteSpaceToRoot() ?? true);
+        public bool IsWhiteSpaceToRoot => char.IsWhiteSpace(node.Key) && (node.Parent?.IsWhiteSpaceToRoot ?? true);
+
+        public bool IsDigitsToRoot => char.IsDigit(node.Key) && (node.Parent?.IsDigitsToRoot ?? true);
     }
 }

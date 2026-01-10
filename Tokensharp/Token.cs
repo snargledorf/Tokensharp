@@ -1,6 +1,6 @@
 ﻿namespace Tokensharp;
 
-public readonly record struct Token<TTokenType>(TTokenType Type, string Lexeme)
+public readonly record struct Token<TTokenType>(TokenType<TTokenType> Type, string Lexeme)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public bool IsNumber => Type.IsNumber;

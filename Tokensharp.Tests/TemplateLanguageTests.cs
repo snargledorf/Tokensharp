@@ -3,7 +3,7 @@
 public record TemplateLanguageTokenTypes(string Lexeme) : TokenType<TemplateLanguageTokenTypes>(Lexeme), ITokenType<TemplateLanguageTokenTypes>
 {
     public static readonly TemplateLanguageTokenTypes StartBinding = new("{{");
-    public static readonly TemplateLanguageTokenTypes EndBinding = StartBinding.Next("}}");
+    public static readonly TemplateLanguageTokenTypes EndBinding = new("}}");
 
     public static IEnumerable<TemplateLanguageTokenTypes> TokenTypes { get; } =
     [
