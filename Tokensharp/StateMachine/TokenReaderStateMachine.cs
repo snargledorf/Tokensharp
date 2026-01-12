@@ -9,6 +9,8 @@ namespace Tokensharp.StateMachine
             StartState = startState;
         }
 
+        public static TokenReaderStateMachine<TTokenType> Default { get; } = For(TTokenType.Configuration);
+
         internal State<char, TokenizerStateId<TTokenType>> StartState { get; }
 
         public static TokenReaderStateMachine<TTokenType> For(TokenConfiguration<TTokenType> tokenConfiguration)

@@ -7,9 +7,6 @@ namespace Tokensharp.Benchmark;
 [MemoryDiagnoser]
 public class CsvBenchmark
 {
-    private static readonly TokenReaderStateMachine<CsvTokenTypes> TokenReaderStateMachine =
-        TokenReaderStateMachine<CsvTokenTypes>.For(CsvTokenTypes.Configuration);
-    
     [Benchmark]
     public void ParseCsv()
     {
@@ -21,7 +18,7 @@ public class CsvBenchmark
 
         ReadOnlySpan<char> csvSpan = testStr.AsSpan();
         
-        while (Tokenizer.TryParseToken(csvSpan, TokenReaderStateMachine, false, out TokenType<CsvTokenTypes>? _, out ReadOnlySpan<char> lexeme))
+        while (Tokenizer.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out ReadOnlySpan<char> lexeme))
             csvSpan = csvSpan[lexeme.Length..];
     }
 }
