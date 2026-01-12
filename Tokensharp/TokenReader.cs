@@ -50,7 +50,9 @@ public ref struct TokenReader<TTokenType>(
 
                 if (currentState.IsTerminal)
                 {
-                    if (previousLongestState is not null && (!previousLongestState.Id.TokenType.IsUserDefined || currentState.Id.TokenType == previousLongestState.Id.TokenType))
+                    if (previousLongestState is not null && (!previousLongestState.Id.TokenType.IsUserDefined ||
+                                                             currentState.Id.TokenType ==
+                                                             previousLongestState.Id.TokenType))
                     {
                         tokenType = previousLongestState.Id.TokenType;
                         lexemeLength = previousLongestLexemeLength;
@@ -63,10 +65,10 @@ public ref struct TokenReader<TTokenType>(
 
                     break;
                 }
-                
+
                 if (previousState != stateMachine.StartState && previousState.Id.TokenType != currentState.Id.TokenType)
                 {
-                    // Is our new state matches our previous longest, then we've fallen back to the previous token type
+                    // If our new state matches our previous longest, then we've fallen back to the previous token type
                     // This is most common when parsing text when a potential token fails and falls back to text.
                     if (previousLongestState == currentState)
                     {
@@ -75,6 +77,15 @@ public ref struct TokenReader<TTokenType>(
                     }
                     else
                     {
+                        if (previousLongestState is not null && (!previousLongestState.Id.TokenType.IsUserDefined ||
+                                                                 currentState.Id.TokenType ==
+                                                                 previousLongestState.Id.TokenType))
+                        {
+                            tokenType = previousLongestState.Id.TokenType;
+                            lexemeLength = previousLongestLexemeLength;
+                            break;
+                        }
+
                         previousLongestState = previousState;
                         previousLongestLexemeLength = characterCount;
                     }
