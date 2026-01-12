@@ -2,14 +2,8 @@
 
 namespace Tokensharp;
 
-public partial class TokenConfiguration<TTokenType> : IEnumerable<TTokenType>, IEnumerable<LexemeToTokenType<TTokenType>>
+public partial class TokenConfiguration<TTokenType> : IEnumerable<TTokenType>
 {
-    public TTokenType this[string lexeme]
-    {
-        get => _tokenDefinitions[lexeme];
-        set => _tokenDefinitions[lexeme] = value;
-    }
-    
     public void Add(string lexeme, TTokenType tokenType)
     {
         if (!_tokenDefinitions.TryAdd(lexeme, tokenType))

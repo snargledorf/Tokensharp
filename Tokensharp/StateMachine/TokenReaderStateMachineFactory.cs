@@ -5,7 +5,7 @@ namespace Tokensharp.StateMachine;
 
 internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public static TokenReaderStateMachine<TTokenType> BuildStateMachine(TokenConfiguration<TTokenType> tokenConfiguration)
+    public static TokenReaderStateMachine<TTokenType> BuildStateMachine(ITokenConfiguration<TTokenType> tokenConfiguration)
     {
         TokenTree<TTokenType> tree = tokenConfiguration.ToTokenTree();
             

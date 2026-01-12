@@ -117,11 +117,11 @@ public static class Tokenizer
         CancellationToken cancellationToken = default)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        return EnumerateTokensAsync(tokenStream, TTokenType.Configuration, options, cancellationToken);
+        return EnumerateTokensAsync(tokenStream, TokenReaderStateMachine<TTokenType>.Default, options, cancellationToken);
     }
 
     private static async IAsyncEnumerable<Token<TTokenType>> EnumerateTokensAsync<TTokenType>(Stream tokenStream,
-        TokenConfiguration<TTokenType> tokenConfiguration,
+        TokenReaderStateMachine<TTokenType> tokenReaderStateMachine,
         TokenizerOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
@@ -136,8 +136,6 @@ public static class Tokenizer
         
         try
         {
-            TokenReaderStateMachine<TTokenType> tokenReaderStateMachine = TokenReaderStateMachine<TTokenType>.For(tokenConfiguration);
-            
             do
             {
                 readBuffer = await readBuffer.ReadAsync(sr, cancellationToken).ConfigureAwait(false);

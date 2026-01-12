@@ -13,7 +13,7 @@ namespace Tokensharp.StateMachine
 
         internal State<char, TokenizerStateId<TTokenType>> StartState { get; }
 
-        public static TokenReaderStateMachine<TTokenType> For(TokenConfiguration<TTokenType> tokenConfiguration)
+        public static TokenReaderStateMachine<TTokenType> For(ITokenConfiguration<TTokenType> tokenConfiguration)
         {
             return TokenReaderStateMachineFactory<TTokenType>.BuildStateMachine(tokenConfiguration);
         }
