@@ -9,7 +9,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <Version>2.1.0</Version>
+        <Version>3.0.0</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
@@ -23,6 +23,12 @@
 
     <ItemGroup>
         <None Include="$(SolutionDir)\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="TokenConfiguration.Collection.cs">
+        <DependentUpon>TokenConfiguration.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 </Project>

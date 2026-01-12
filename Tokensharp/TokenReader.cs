@@ -7,23 +7,12 @@ namespace Tokensharp;
 
 public ref struct TokenReader<TTokenType>(
     ReadOnlySpan<char> buffer,
-    TokenConfiguration<TTokenType> tokenConfiguration,
+    TokenReaderStateMachine<TTokenType> stateMachine,
     bool moreDataAvailable = false,
     TokenReaderOptions options = default)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly State<char, TokenizerStateId<TTokenType>> _startState =
-        TokenizerStateMachine<TTokenType>.BuildStartState(tokenConfiguration);
-    
     private readonly ReadOnlySpan<char> _buffer = buffer;
-
-    public TokenReader(
-        ReadOnlySpan<char> buffer,
-        bool moreDataAvailable = false,
-        TokenReaderOptions options = default) 
-        : this(buffer, ITokenType<TTokenType>.DefaultConfiguration, moreDataAvailable, options)
-    {
-    }
 
     public int Consumed { get; private set; }
 
@@ -50,7 +39,7 @@ public ref struct TokenReader<TTokenType>(
         int characterCount = 0;
         int lexemeLength = 0;
 
-        State<char, TokenizerStateId<TTokenType>> currentState = _startState;
+        State<char, TokenizerStateId<TTokenType>> currentState = stateMachine.StartState;
 
         foreach (char c in _buffer[Consumed..])
         {
@@ -75,7 +64,7 @@ public ref struct TokenReader<TTokenType>(
                     break;
                 }
                 
-                if (previousState != _startState && previousState.Id.TokenType != currentState.Id.TokenType)
+                if (previousState != stateMachine.StartState && previousState.Id.TokenType != currentState.Id.TokenType)
                 {
                     // Is our new state matches our previous longest, then we've fallen back to the previous token type
                     // This is most common when parsing text when a potential token fails and falls back to text.

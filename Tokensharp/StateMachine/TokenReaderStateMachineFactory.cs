@@ -1,32 +1,26 @@
 ﻿using SwiftState;
 using Tokensharp.TokenTree;
 
-namespace Tokensharp.StateMachine
+namespace Tokensharp.StateMachine;
+
+internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    internal static class TokenizerStateMachine<TTokenType>
-        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+    public static TokenReaderStateMachine<TTokenType> BuildStateMachine(TokenConfiguration<TTokenType> tokenConfiguration)
     {
-        internal static State<char, TokenizerStateId<TTokenType>> BuildStartState(TokenConfiguration<TTokenType> tokenConfiguration)
-        {
-            TokenTree<TTokenType> tree = tokenConfiguration.TokenTypes.ToTokenTree();
+        TokenTree<TTokenType> tree = tokenConfiguration.ToTokenTree();
             
-            var startStateBuilder = new StateBuilder<char, TokenizerStateId<TTokenType>>(TokenizerStateId<TTokenType>.Start);
+        var startStateBuilder = new StateBuilder<char, TokenizerStateId<TTokenType>>(TokenizerStateId<TTokenType>.Start);
 
-            var context = new TokenizerStateMachineContext(tree);
+        var context = new TokenizerStateMachineContext(tree);
             
-            BuildTreeTransitions(startStateBuilder, context);
+        BuildTreeTransitions(startStateBuilder, context);
 
-            BuildTextWhiteSpaceAndNumberTransitions(startStateBuilder, context);
+        BuildTextWhiteSpaceAndNumberTransitions(startStateBuilder, context);
 
-            return startStateBuilder.Build();
-        }
-        
-        static TokenizerStateMachine()
-        {
-            DuplicateTokenLexemeException<TTokenType>.ThrowIfDuplicateLexemes();
-        }
+        return new TokenReaderStateMachine<TTokenType>(startStateBuilder.Build());
+    }
 
-        private static void BuildTextWhiteSpaceAndNumberTransitions(
+    private static void BuildTextWhiteSpaceAndNumberTransitions(
             StateBuilder<char, TokenizerStateId<TTokenType>> startStateBuilder, 
             TokenizerStateMachineContext context)
         {
@@ -191,5 +185,4 @@ namespace Tokensharp.StateMachine
                 TokenizerStateId<TTokenType> stateId) =>
                 new StateBuilder<char, TokenizerStateId<TTokenType>>(stateId, stateId.IsTerminal);
         }
-    }
 }

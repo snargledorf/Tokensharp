@@ -1,11 +1,13 @@
+using Tokensharp.StateMachine;
+
 namespace Tokensharp.Tests;
 
-public record SimpleTokenTypes(string Lexeme) : TokenType<SimpleTokenTypes>(Lexeme), ITokenType<SimpleTokenTypes>
+public record SimpleTokenTypes(string Identifier) : TokenType<SimpleTokenTypes>(Identifier), ITokenType<SimpleTokenTypes>
 {
     public static readonly SimpleTokenTypes A = new("A");
     public static readonly SimpleTokenTypes AB = new("AB");
 
-    public static IEnumerable<SimpleTokenTypes> TokenTypes { get; } = [A, AB];
+    public static TokenConfiguration<SimpleTokenTypes> Configuration { get; } = [A, AB];
     
     public static SimpleTokenTypes Create(string token) => new(token);
 }
@@ -21,12 +23,13 @@ public class TokenReaderTests : TokenizerTestBase<SimpleTokenTypes>
         string input = "A";
         var memory = input.AsMemory();
         
-        var tokenReader = new TokenReader<SimpleTokenTypes>(memory.Span, moreDataAvailable: true);
+        TokenReaderStateMachine<SimpleTokenTypes> tokenReaderStateMachine = TokenReaderStateMachine<SimpleTokenTypes>.For(SimpleTokenTypes.Configuration);
+        
+        var tokenReader = new TokenReader<SimpleTokenTypes>(memory.Span, tokenReaderStateMachine, moreDataAvailable: true);
         bool result = tokenReader.Read(out TokenType<SimpleTokenTypes>? tokenType, out ReadOnlySpan<char> lexeme);
 
         using (Assert.EnterMultipleScope())
         {
-            
             Assert.That(result, Is.False, "Should return false because we are waiting for more data");
             Assert.That(tokenType, Is.Null);
             Assert.That(lexeme.Length, Is.Zero, "Lexeme should be empty if no token was read");

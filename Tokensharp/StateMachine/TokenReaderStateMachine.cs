@@ -1,0 +1,19 @@
+﻿using SwiftState;
+
+namespace Tokensharp.StateMachine
+{
+    public class TokenReaderStateMachine<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+    {
+        internal TokenReaderStateMachine(State<char, TokenizerStateId<TTokenType>> startState)
+        {
+            StartState = startState;
+        }
+
+        internal State<char, TokenizerStateId<TTokenType>> StartState { get; }
+
+        public static TokenReaderStateMachine<TTokenType> For(TokenConfiguration<TTokenType> tokenConfiguration)
+        {
+            return TokenReaderStateMachineFactory<TTokenType>.BuildStateMachine(tokenConfiguration);
+        }
+    }
+}
