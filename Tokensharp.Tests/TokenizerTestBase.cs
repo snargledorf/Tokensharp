@@ -56,12 +56,12 @@ public abstract class TokenizerTestBase<TTokenType>
         string? expectedLexeme = null, bool moreDataAvailable = false, bool expectToParse = true)
     {
         if (expectedLexeme is null)
-            expectedLexeme = expectedTokenType.Lexeme;
+            expectedLexeme = expectedTokenType.Identifier;
 
         bool parsed =
             Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             if (expectToParse)
             {
@@ -77,7 +77,7 @@ public abstract class TokenizerTestBase<TTokenType>
                 Assert.That(token.Lexeme, Is.Null);
                 Assert.That(token.Length, Is.Zero);
             }
-        });
+        }
 
         return token.Length;
     }

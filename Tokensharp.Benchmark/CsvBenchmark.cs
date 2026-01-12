@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using Tokensharp.StateMachine;
 
 namespace Tokensharp.Benchmark;
 
@@ -16,6 +17,7 @@ public class CsvBenchmark
                                """;
 
         ReadOnlySpan<char> csvSpan = testStr.AsSpan();
+        
         while (Tokenizer.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out ReadOnlySpan<char> lexeme))
             csvSpan = csvSpan[lexeme.Length..];
     }

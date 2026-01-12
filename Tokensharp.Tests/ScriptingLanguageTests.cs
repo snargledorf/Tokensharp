@@ -1,6 +1,6 @@
 namespace Tokensharp.Tests;
 
-public record ScriptingLanguageTokenTypes(string Lexeme) : TokenType<ScriptingLanguageTokenTypes>(Lexeme), ITokenType<ScriptingLanguageTokenTypes>
+public record ScriptingLanguageTokenTypes(string Identifier) : TokenType<ScriptingLanguageTokenTypes>(Identifier), ITokenType<ScriptingLanguageTokenTypes>
 {
     public static readonly ScriptingLanguageTokenTypes Fun = new("fun");
     public static readonly ScriptingLanguageTokenTypes OpenParenthesis = new("(");
@@ -8,14 +8,15 @@ public record ScriptingLanguageTokenTypes(string Lexeme) : TokenType<ScriptingLa
     public static readonly ScriptingLanguageTokenTypes OpenBrace = new("{");
     public static readonly ScriptingLanguageTokenTypes CloseBrace = new("}");
 
-    public static IEnumerable<ScriptingLanguageTokenTypes> TokenTypes { get; } =
-    [
-        Fun,
-        OpenParenthesis,
-        CloseParenthesis,
-        OpenBrace,
-        CloseBrace
-    ];
+    public static TokenConfiguration<ScriptingLanguageTokenTypes> Configuration { get; } =
+        new TokenConfigurationBuilder<ScriptingLanguageTokenTypes>
+        {
+            Fun,
+            OpenParenthesis,
+            CloseParenthesis,
+            OpenBrace,
+            CloseBrace
+        }.Build();
 
     public static ScriptingLanguageTokenTypes Create(string token) => new(token);
 }

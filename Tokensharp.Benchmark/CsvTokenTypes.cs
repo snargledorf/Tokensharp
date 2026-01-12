@@ -1,17 +1,17 @@
 namespace Tokensharp.Benchmark;
 
-public record CsvTokenTypes(string Lexeme) : TokenType<CsvTokenTypes>(Lexeme), ITokenType<CsvTokenTypes>
+public record CsvTokenTypes(string Identifier) : TokenType<CsvTokenTypes>(Identifier), ITokenType<CsvTokenTypes>
 {
     public static readonly CsvTokenTypes Comma = new(",");
     public static readonly CsvTokenTypes EndOfRecord = new("\r\n");
     public static readonly CsvTokenTypes DoubleQuote = new("\"");
 
-    public static IEnumerable<CsvTokenTypes> TokenTypes { get; } =
+    public static TokenConfiguration<CsvTokenTypes> Configuration { get; } = new TokenConfigurationBuilder<CsvTokenTypes>(
     [
         Comma,
         EndOfRecord,
         DoubleQuote
-    ];
+    ]).Build();
     
     public static CsvTokenTypes Create(string token) => new(token);
 }

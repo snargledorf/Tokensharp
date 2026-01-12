@@ -1,15 +1,16 @@
 ﻿namespace Tokensharp.Tests;
 
-public record TemplateLanguageTokenTypes(string Lexeme) : TokenType<TemplateLanguageTokenTypes>(Lexeme), ITokenType<TemplateLanguageTokenTypes>
+public record TemplateLanguageTokenTypes(string Identifier) : TokenType<TemplateLanguageTokenTypes>(Identifier), ITokenType<TemplateLanguageTokenTypes>
 {
     public static readonly TemplateLanguageTokenTypes StartBinding = new("{{");
     public static readonly TemplateLanguageTokenTypes EndBinding = new("}}");
 
-    public static IEnumerable<TemplateLanguageTokenTypes> TokenTypes { get; } =
-    [
-        StartBinding,
-        EndBinding,
-    ];
+    public static TokenConfiguration<TemplateLanguageTokenTypes> Configuration { get; } =
+        new TokenConfigurationBuilder<TemplateLanguageTokenTypes>()
+        {
+            StartBinding,
+            EndBinding,
+        }.Build();
     
     public static TemplateLanguageTokenTypes Create(string token) => new(token);
 }

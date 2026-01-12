@@ -9,12 +9,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Tokensharp.TokenTypeGenerator\Tokensharp.TokenTypeGenerator.csproj" OutputItemType="Analyzer" />
-      <ProjectReference Include="..\Tokensharp\Tokensharp.csproj" />
+      <AdditionalFiles Include="TestTokenTypes.json" />
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="TestTokenTypes.json" />
+      <PackageReference Include="Tokensharp" Version="3.0.0" />
+      <PackageReference Include="Tokensharp.TokenTypeGenerator" Version="1.0.2" />
     </ItemGroup>
 
 </Project>

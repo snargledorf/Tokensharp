@@ -1,13 +1,15 @@
 namespace Tokensharp.Tests;
 
-public record DuplicateLexemeTokens(string Lexeme) : TokenType<DuplicateLexemeTokens>(Lexeme), ITokenType<DuplicateLexemeTokens>
+public record DuplicateLexemeTokens(string Identifier)
+    : TokenType<DuplicateLexemeTokens>(Identifier), ITokenType<DuplicateLexemeTokens>
 {
     public static DuplicateLexemeTokens Create(string lexeme) => new(lexeme);
 
-    public static IEnumerable<DuplicateLexemeTokens> TokenTypes { get; } = [
-        new("lexeme"),
-        new("lexeme")
-    ];
+    public static TokenConfiguration<DuplicateLexemeTokens> Configuration { get; } = new TokenConfigurationBuilder<DuplicateLexemeTokens>()
+    {
+        { "lexeme", Create("lexeme") },
+        { "lexeme", Create("lexeme") }
+    }.Build();
 }
 
 public class DuplicateTokensTests : TokenizerTestBase<DuplicateLexemeTokens>
@@ -17,14 +19,13 @@ public class DuplicateTokensTests : TokenizerTestBase<DuplicateLexemeTokens>
     {
         RunTestShouldThrow<TypeInitializationException>(ReadOnlyMemory<char>.Empty, exception =>
         {
-            Assert.That(exception, Has.InnerException.TypeOf<TypeInitializationException>());
-            Assert.That(exception.InnerException, Has.InnerException.TypeOf<DuplicateTokenLexemeException<DuplicateLexemeTokens>>());
+            Assert.That(exception, Has.InnerException.TypeOf<DuplicateLexemeException>());
 
-            DuplicateLexemeTokens[]? duplicateTokenTypes =
-                (exception.InnerException.InnerException as DuplicateTokenLexemeException<DuplicateLexemeTokens>)
-                ?.TokenTypes.SelectMany(g => g).ToArray();
+            string? duplicateLexeme =
+                (exception.InnerException as DuplicateLexemeException)
+                ?.Lexeme;
             
-            Assert.That(duplicateTokenTypes, Has.Exactly(2).EqualTo(new DuplicateLexemeTokens("lexeme")));
+            Assert.That(duplicateLexeme, Is.EqualTo("lexeme"));
         });
     }
 }

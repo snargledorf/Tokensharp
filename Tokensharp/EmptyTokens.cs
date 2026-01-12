@@ -1,8 +1,8 @@
 namespace Tokensharp;
 
-public record EmptyTokens(string Lexeme) : TokenType<EmptyTokens>(Lexeme), ITokenType<EmptyTokens>
+public record EmptyTokens(string Identifier) : TokenType<EmptyTokens>(Identifier), ITokenType<EmptyTokens>
 {
-    public static EmptyTokens Create(string lexeme) => new(lexeme);
+    public static EmptyTokens Create(string identifier) => new(identifier);
 
-    public static IEnumerable<EmptyTokens> TokenTypes { get; } = [];
+    public static TokenConfiguration<EmptyTokens> Configuration { get; } = new TokenConfigurationBuilder<EmptyTokens>().Build();
 }

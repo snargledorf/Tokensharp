@@ -3,29 +3,20 @@ using System.Diagnostics;
 
 namespace Tokensharp;
 
-internal struct ReadBuffer<TTokenType> : IDisposable where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal struct ReadBuffer(int initialBufferSize) : IDisposable
 {
-    private char[] _buffer;
+    private char[] _buffer = ArrayPool<char>.Shared.Rent(initialBufferSize);
     
     private int _count;
     private bool _endOfReader;
-
-    public ReadBuffer(int initialBufferSize)
-    {
-        int largestLexeme = TTokenType.TokenTypes.Any()
-            ? TTokenType.TokenTypes.Max(tt => tt.Lexeme.Length)
-            : 0;
-        
-        _buffer = ArrayPool<char>.Shared.Rent(Math.Max(largestLexeme, initialBufferSize));
-    }
 
     public readonly bool EndOfReader => _endOfReader;
 
     public readonly ReadOnlySpan<char> Chars => _buffer.AsSpan(0, _count);
 
-    public readonly async ValueTask<ReadBuffer<TTokenType>> ReadAsync(TextReader reader, CancellationToken cancellationToken = default)
+    public readonly async ValueTask<ReadBuffer> ReadAsync(TextReader reader, CancellationToken cancellationToken = default)
     {
-        ReadBuffer<TTokenType> readBuffer = this;
+        ReadBuffer readBuffer = this;
 
         do
         {
