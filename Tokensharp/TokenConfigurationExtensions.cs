@@ -15,7 +15,7 @@ internal static class TokenConfigurationExtensions
 
             var stateNameBuilder = new StringBuilder();
 
-            foreach (LexemeToTokenType<TTokenType> tokenDefinition in tokenConfiguration)
+            foreach (LexemeToTokenType<TTokenType> tokenDefinition in tokenConfiguration.OrderBy(t => t.Lexeme.Length))
             {
                 TokenTreeNode<TTokenType>? currentNode = null;
             
