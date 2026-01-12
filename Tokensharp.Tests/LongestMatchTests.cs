@@ -4,12 +4,14 @@ public record LongestMatchTokenTypes(string Identifier)
     : TokenType<LongestMatchTokenTypes>(Identifier), ITokenType<LongestMatchTokenTypes>
 {
     public static readonly LongestMatchTokenTypes Foo = new("foo");
+    public static readonly LongestMatchTokenTypes Foob = new("foob");
     public static readonly LongestMatchTokenTypes Foobar = new("foobar");
 
     public static TokenConfiguration<LongestMatchTokenTypes> Configuration { get; } =
         new TokenConfigurationBuilder<LongestMatchTokenTypes>
         {
             Foo,
+            Foob,
             Foobar
         }.Build();
     
@@ -38,9 +40,9 @@ public class LongestMatchTests : TokenizerTestBase<LongestMatchTokenTypes>
         // Since "b" is not a valid token start, the next call might fail or return text if configured.
         // But here we just check the first token.
         
-        RunTest("foob", [
+        RunTest("fooc", [
             new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foo),
-            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "b")
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "c")
         ]);
     }
 
@@ -48,8 +50,8 @@ public class LongestMatchTests : TokenizerTestBase<LongestMatchTokenTypes>
     public void TestLongestMatch_Foobac()
     {
         RunTest("foobac", [
-            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foo),
-            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "bac")
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foob),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "ac")
         ]);
     }
 
@@ -57,9 +59,28 @@ public class LongestMatchTests : TokenizerTestBase<LongestMatchTokenTypes>
     public void TestLongestMatch_FoobacWithSpace()
     {
         RunTest("foobac ", [
-            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foo),
-            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "bac"),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foob),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "ac"),
             new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.WhiteSpace, " ")
+        ]);
+    }
+
+    [Test]
+    public void TestLongestMatch_FoobWithNumber()
+    {
+        RunTest("foob1", [
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foob),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Number, "1")
+        ]);
+    }
+
+    [Test]
+    public void TestLongestMatch_WhiteSpaceThenFoobWithNumber()
+    {
+        RunTest(" foob1", [
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.WhiteSpace, " "),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foob),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Number, "1")
         ]);
     }
 

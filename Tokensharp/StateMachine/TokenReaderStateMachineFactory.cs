@@ -104,7 +104,7 @@ internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenTyp
             {
                 TokenizerStateId<TTokenType> terminalStateId =
                     TokenizerStateId<TTokenType>.CreateTerminal(node.StateId.TokenType);
-                
+
                 currentNodeStateBuilder.Default(terminalStateId, true);
 
                 fallbackStateId = terminalStateId;
