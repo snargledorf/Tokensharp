@@ -13,8 +13,8 @@ public record LessThanFooTokenTypes(string Identifier)
         new TokenConfigurationBuilder<LessThanFooTokenTypes>
         {
             LessThanFoo,
-            LessThanFooB,
-            LessThanFooBar
+            LessThanFooBar,
+            LessThanFooB
         }.Build();
     
     public static LessThanFooTokenTypes Create(string token) => new(token);
