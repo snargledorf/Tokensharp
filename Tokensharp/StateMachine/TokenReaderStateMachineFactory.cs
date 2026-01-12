@@ -10,66 +10,85 @@ internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenTyp
         TokenTree<TTokenType> tree = tokenConfiguration.ToTokenTree();
             
         var startStateBuilder = new StateBuilder<char, TokenizerStateId<TTokenType>>(TokenizerStateId<TTokenType>.Start);
-
-        var context = new TokenizerStateMachineContext(tree);
             
-        BuildTreeTransitions(startStateBuilder, context);
+        BuildTreeTransitions(startStateBuilder, tree);
 
-        BuildTextWhiteSpaceAndNumberTransitions(startStateBuilder, context);
+        BuildTextWhiteSpaceAndNumberTransitions(startStateBuilder, tree);
 
         return new TokenReaderStateMachine<TTokenType>(startStateBuilder.Build());
     }
 
     private static void BuildTextWhiteSpaceAndNumberTransitions(
-            StateBuilder<char, TokenizerStateId<TTokenType>> startStateBuilder, 
-            TokenizerStateMachineContext context)
+        IStateBuilder<char, TokenizerStateId<TTokenType>> startStateBuilder,
+        TokenTree<TTokenType> tree)
         {
-            startStateBuilder.When(c => char.IsWhiteSpace(c), context.WhiteSpaceStateBuilder);
-            startStateBuilder.When(c => char.IsDigit(c), context.NumberStateBuilder);
-            startStateBuilder.Default(context.TextStateBuilder);
+            IStateBuilder<char, TokenizerStateId<TTokenType>> whiteSpaceStateBuilder = startStateBuilder.When(c => char.IsWhiteSpace(c), TokenizerStateId<TTokenType>.WhiteSpace);
+            IStateBuilder<char, TokenizerStateId<TTokenType>> numberStateBuilder = startStateBuilder.When(c => char.IsDigit(c), TokenizerStateId<TTokenType>.Number);
+            IStateBuilder<char, TokenizerStateId<TTokenType>> textStateBuilder = startStateBuilder.Default(TokenizerStateId<TTokenType>.Text);
 
-            context.WhiteSpaceStateBuilder.When(c => !char.IsWhiteSpace(c), context.EndOfWhiteSpaceStateBuilder);
-            context.NumberStateBuilder.When(c => !char.IsDigit(c), context.EndOfNumberStateBuilder);
-            context.TextStateBuilder.When(c => char.IsDigit(c) || char.IsWhiteSpace(c), context.EndOfTextStateBuilder);
+            whiteSpaceStateBuilder.When(c => !char.IsWhiteSpace(c), TokenizerStateId<TTokenType>.EndOfWhiteSpace, true);
+            numberStateBuilder.When(c => !char.IsDigit(c), TokenizerStateId<TTokenType>.EndOfNumber, true);
+            textStateBuilder.When(c => char.IsDigit(c) || char.IsWhiteSpace(c), TokenizerStateId<TTokenType>.EndOfText, true);
 
-            foreach (TokenTreeNode<TTokenType> node in context.Tree)
+            foreach (TokenTreeNode<TTokenType> node in tree)
             {
-                BuildNodeTransitions(node, context.WhiteSpaceStateBuilder, context,
-                    TokenizerStateId<TTokenType>.WhiteSpace);
-                BuildNodeTransitions(node, context.NumberStateBuilder, context, TokenizerStateId<TTokenType>.Number);
-                BuildNodeTransitions(node, context.TextStateBuilder, context, TokenizerStateId<TTokenType>.Text);
+                TokenizerStateId<TTokenType> fallbackStateId;
+                if (node.IsWhiteSpaceToRoot)
+                {
+                    fallbackStateId = TokenizerStateId<TTokenType>.WhiteSpace;
+                }
+                else if (node.IsDigitsToRoot)
+                {
+                    fallbackStateId = TokenizerStateId<TTokenType>.Number;
+                }
+                else
+                {
+                    fallbackStateId = TokenizerStateId<TTokenType>.Text;
+                }
+                
+                IStateBuilder<char, TokenizerStateId<TTokenType>> fallbackStateBuilder = startStateBuilder.GetBuilderForState(fallbackStateId);
+
+                if (node.IsEndOfToken)
+                {
+                    TokenizerStateId<TTokenType> terminalStateId =
+                        TokenizerStateId<TTokenType>.CreateTerminal(fallbackStateId.TokenType);
+
+                    fallbackStateBuilder.When(node.Key, terminalStateId, true);
+                }
+                
+                BuildNodeTransitions(node, fallbackStateBuilder, fallbackStateId);
             }
         }
 
-        private static void BuildTreeTransitions(IStateBuilder<char, TokenizerStateId<TTokenType>> builder, TokenizerStateMachineContext context)
+        private static void BuildTreeTransitions(
+            IStateBuilder<char, TokenizerStateId<TTokenType>> builder,
+            TokenTree<TTokenType> tree)
         {
-            foreach (TokenTreeNode<TTokenType> node in context.Tree)
+            foreach (TokenTreeNode<TTokenType> node in tree)
             {
                 TokenizerStateId<TTokenType> fallbackStateId = GetFallBackStateId(node);
-                BuildNodeTransitions(node, builder, context, fallbackStateId);
+                BuildNodeTransitions(node, builder, fallbackStateId);
             }
         }
 
         private static void BuildNodeTransitions(
             TokenTreeNode<TTokenType> node,
             IStateBuilder<char, TokenizerStateId<TTokenType>> currentTokenizerStateBuilder,
-            TokenizerStateMachineContext context,
             TokenizerStateId<TTokenType> fallbackStateId)
         {
             if (node.HasChildren)
             {
-                BuildTransitionsForNodeWithChildren(node, currentTokenizerStateBuilder, context, fallbackStateId);
+                BuildTransitionsForNodeWithChildren(node, currentTokenizerStateBuilder, fallbackStateId);
             }
             else
             {
-                BuildTransitionsForNodeWithNoChildren(node, currentTokenizerStateBuilder, context);
+                BuildTransitionsForNodeWithNoChildren(node, currentTokenizerStateBuilder);
             }
         }
 
         private static void BuildTransitionsForNodeWithChildren(
             TokenTreeNode<TTokenType> node,
             IStateBuilder<char, TokenizerStateId<TTokenType>> previousNodeStateBuilder,
-            TokenizerStateMachineContext context,
             TokenizerStateId<TTokenType> fallbackStateId)
         {
             if (!node.HasChildren)
@@ -79,39 +98,32 @@ internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenTyp
             //-------------------------------------------------------------------------------
             // Ex 2. <Foo vs. <FooB vs. <FooBar
 
-            IStateBuilder<char, TokenizerStateId<TTokenType>> currentNodeStateBuilder = context.GetStateBuilder(node.StateId);
-
-            previousNodeStateBuilder.When(node.Key, currentNodeStateBuilder);
+            IStateBuilder<char, TokenizerStateId<TTokenType>> currentNodeStateBuilder = previousNodeStateBuilder.When(node.Key, node.StateId);
 
             if (node.IsEndOfToken)
             {
                 TokenizerStateId<TTokenType> terminalStateId =
                     TokenizerStateId<TTokenType>.CreateTerminal(node.StateId.TokenType);
                 
-                IStateBuilder<char, TokenizerStateId<TTokenType>> fallbackTerminalStateBuilder = context.GetStateBuilder(terminalStateId);
-
-                currentNodeStateBuilder.Default(fallbackTerminalStateBuilder);
+                currentNodeStateBuilder.Default(terminalStateId, true);
 
                 fallbackStateId = terminalStateId;
             }
             else
             {
                 // Add a default in case we don't match on the nodes key
-                IStateBuilder<char, TokenizerStateId<TTokenType>> fallbackStateBuilder = context.GetStateBuilder(fallbackStateId);
-
-                currentNodeStateBuilder.Default(fallbackStateBuilder);
+                currentNodeStateBuilder.Default(fallbackStateId, fallbackStateId.IsTerminal);
             }
 
             foreach (TokenTreeNode<TTokenType> childNode in node)
             {
-                BuildNodeTransitions(childNode, currentNodeStateBuilder, context, fallbackStateId);
+                BuildNodeTransitions(childNode, currentNodeStateBuilder, fallbackStateId);
             }
         }
 
         private static void BuildTransitionsForNodeWithNoChildren(
             TokenTreeNode<TTokenType> node,
-            IStateBuilder<char, TokenizerStateId<TTokenType>> previousNodeStateBuilder, 
-            TokenizerStateMachineContext context)
+            IStateBuilder<char, TokenizerStateId<TTokenType>> previousNodeStateBuilder)
         {
             if (node.HasChildren)
                 throw new InvalidOperationException("node has children");
@@ -121,14 +133,13 @@ internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenTyp
             // If this node had no children, then we need to switch to a dummy state
             // to ensure the character is read
             IStateBuilder<char, TokenizerStateId<TTokenType>> currentNodeStateBuilder =
-                context.GetStateBuilder(node.StateId);
-            
-            previousNodeStateBuilder.When(node.Key, currentNodeStateBuilder);
+                previousNodeStateBuilder.When(node.Key, node.StateId);
 
             // Default to terminal state for the final node
-            TokenizerStateId<TTokenType> terminalStateId = TokenizerStateId<TTokenType>.CreateTerminal(node.StateId.TokenType);
-            IStateBuilder<char, TokenizerStateId<TTokenType>> terminalStateBuilder = context.GetStateBuilder(terminalStateId);
-            currentNodeStateBuilder.Default(terminalStateBuilder);
+            TokenizerStateId<TTokenType> terminalStateId =
+                TokenizerStateId<TTokenType>.CreateTerminal(node.StateId.TokenType);
+            
+            currentNodeStateBuilder.Default(terminalStateId, true);
 
             // If this whole branch is whitespace, then add checks for WhiteSpace situations
             if (node.IsWhiteSpaceToRoot)
@@ -136,10 +147,10 @@ internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenTyp
                 TokenTreeNode<TTokenType> rootNode = node.RootNode;
 
                 // We might be starting another one of these branches \r\r\n = \r {whitespace} \r\n {record}
-                previousNodeStateBuilder.When(rootNode.Key, context.EndOfWhiteSpaceStateBuilder);
+                previousNodeStateBuilder.When(rootNode.Key, TokenizerStateId<TTokenType>.EndOfWhiteSpace, true);
 
                 // Or there could be some other type of whitespace character \r\t = {whitespace}
-                previousNodeStateBuilder.When(c => char.IsWhiteSpace(c), context.WhiteSpaceStateBuilder);
+                previousNodeStateBuilder.When(c => char.IsWhiteSpace(c), TokenizerStateId<TTokenType>.WhiteSpace);
             }
         }
 
@@ -151,38 +162,5 @@ internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenTyp
                 return TokenizerStateId<TTokenType>.Number;
             
             return TokenizerStateId<TTokenType>.Text;
-        }
-
-        private class TokenizerStateMachineContext(TokenTree<TTokenType> tree)
-        {
-            public readonly TokenTree<TTokenType> Tree = tree;
-
-            private readonly Dictionary<TokenizerStateId<TTokenType>, IStateBuilder<char, TokenizerStateId<TTokenType>>>
-                _stateBuilders = new();
-
-            public IStateBuilder<char, TokenizerStateId<TTokenType>> WhiteSpaceStateBuilder => field ??=
-                GetStateBuilder(TokenizerStateId<TTokenType>.WhiteSpace);
-
-            public IStateBuilder<char, TokenizerStateId<TTokenType>> NumberStateBuilder => field ??=
-                GetStateBuilder(TokenizerStateId<TTokenType>.Number);
-
-            public IStateBuilder<char, TokenizerStateId<TTokenType>> TextStateBuilder => field ??=
-                GetStateBuilder(TokenizerStateId<TTokenType>.Text);
-
-            public IStateBuilder<char, TokenizerStateId<TTokenType>> EndOfWhiteSpaceStateBuilder => field ??=
-                GetStateBuilder(TokenizerStateId<TTokenType>.EndOfWhiteSpace);
-
-            public IStateBuilder<char, TokenizerStateId<TTokenType>> EndOfNumberStateBuilder => field ??=
-                GetStateBuilder(TokenizerStateId<TTokenType>.EndOfNumber);
-
-            public IStateBuilder<char, TokenizerStateId<TTokenType>> EndOfTextStateBuilder => field ??=
-                GetStateBuilder(TokenizerStateId<TTokenType>.EndOfText);
-
-            public IStateBuilder<char, TokenizerStateId<TTokenType>> GetStateBuilder(
-                TokenizerStateId<TTokenType> stateId) => _stateBuilders.GetOrAdd(stateId, CreateStateBuilder);
-
-            private static IStateBuilder<char, TokenizerStateId<TTokenType>> CreateStateBuilder(
-                TokenizerStateId<TTokenType> stateId) =>
-                new StateBuilder<char, TokenizerStateId<TTokenType>>(stateId, stateId.IsTerminal);
         }
 }
