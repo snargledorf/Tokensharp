@@ -25,10 +25,4 @@
         <None Include="$(SolutionDir)\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="TokenConfiguration.Collection.cs">
-        <DependentUpon>TokenConfiguration.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
-
 </Project>

@@ -1,15 +1,17 @@
 namespace Tokensharp.Tests;
 
-public record LongestMatchTokenTypes(string Identifier) : TokenType<LongestMatchTokenTypes>(Identifier), ITokenType<LongestMatchTokenTypes>
+public record LongestMatchTokenTypes(string Identifier)
+    : TokenType<LongestMatchTokenTypes>(Identifier), ITokenType<LongestMatchTokenTypes>
 {
     public static readonly LongestMatchTokenTypes Foo = new("foo");
     public static readonly LongestMatchTokenTypes Foobar = new("foobar");
 
     public static TokenConfiguration<LongestMatchTokenTypes> Configuration { get; } =
-    [
-        Foo,
-        Foobar
-    ];
+        new TokenConfigurationBuilder<LongestMatchTokenTypes>
+        {
+            Foo,
+            Foobar
+        }.Build();
     
     public static LongestMatchTokenTypes Create(string token) => new(token);
 }

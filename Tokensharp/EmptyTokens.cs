@@ -4,5 +4,5 @@ public record EmptyTokens(string Identifier) : TokenType<EmptyTokens>(Identifier
 {
     public static EmptyTokens Create(string identifier) => new(identifier);
 
-    public static TokenConfiguration<EmptyTokens> Configuration { get; } = [];
+    public static TokenConfiguration<EmptyTokens> Configuration { get; } = new TokenConfigurationBuilder<EmptyTokens>().Build();
 }

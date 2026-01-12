@@ -9,13 +9,14 @@ public record ScriptingLanguageTokenTypes(string Identifier) : TokenType<Scripti
     public static readonly ScriptingLanguageTokenTypes CloseBrace = new("}");
 
     public static TokenConfiguration<ScriptingLanguageTokenTypes> Configuration { get; } =
-    [
-        Fun,
-        OpenParenthesis,
-        CloseParenthesis,
-        OpenBrace,
-        CloseBrace
-    ];
+        new TokenConfigurationBuilder<ScriptingLanguageTokenTypes>
+        {
+            Fun,
+            OpenParenthesis,
+            CloseParenthesis,
+            OpenBrace,
+            CloseBrace
+        }.Build();
 
     public static ScriptingLanguageTokenTypes Create(string token) => new(token);
 }

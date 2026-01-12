@@ -6,10 +6,11 @@ public record TemplateLanguageTokenTypes(string Identifier) : TokenType<Template
     public static readonly TemplateLanguageTokenTypes EndBinding = new("}}");
 
     public static TokenConfiguration<TemplateLanguageTokenTypes> Configuration { get; } =
-    [
-        StartBinding,
-        EndBinding,
-    ];
+        new TokenConfigurationBuilder<TemplateLanguageTokenTypes>()
+        {
+            StartBinding,
+            EndBinding,
+        }.Build();
     
     public static TemplateLanguageTokenTypes Create(string token) => new(token);
 }

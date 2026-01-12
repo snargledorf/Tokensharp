@@ -90,12 +90,12 @@ namespace Tokensharp.TokenTypeGenerator
                                           
                                               public static {{className}} Create(string lexeme) => new(lexeme);
                                               
-                                              public static TokenConfiguration<{{className}}> Configuration { get; } =
-                                              [
+                                              public static TokenConfiguration<{{className}}> Configuration { get; } = new TokenConfigurationBuilder<{{className}}>()
+                                              {
                                                   {{
                                                       string.Join(",\r\n            ", definition.TokenDefinition.Tokens.Select(def => def.Key))
                                                   }}
-                                              ];
+                                              }.Build();
                                           }
                                       }
                                       """;

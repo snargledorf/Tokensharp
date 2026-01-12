@@ -7,7 +7,12 @@ public record SimpleTokenTypes(string Identifier) : TokenType<SimpleTokenTypes>(
     public static readonly SimpleTokenTypes A = new("A");
     public static readonly SimpleTokenTypes AB = new("AB");
 
-    public static TokenConfiguration<SimpleTokenTypes> Configuration { get; } = [A, AB];
+    public static TokenConfiguration<SimpleTokenTypes> Configuration { get; } =
+        new TokenConfigurationBuilder<SimpleTokenTypes>
+        {
+            A, 
+            AB
+        }.Build();
     
     public static SimpleTokenTypes Create(string token) => new(token);
 }

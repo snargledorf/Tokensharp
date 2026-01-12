@@ -5,11 +5,11 @@ public record DuplicateLexemeTokens(string Identifier)
 {
     public static DuplicateLexemeTokens Create(string lexeme) => new(lexeme);
 
-    public static TokenConfiguration<DuplicateLexemeTokens> Configuration { get; } = new()
+    public static TokenConfiguration<DuplicateLexemeTokens> Configuration { get; } = new TokenConfigurationBuilder<DuplicateLexemeTokens>()
     {
         { "lexeme", Create("lexeme") },
         { "lexeme", Create("lexeme") }
-    };
+    }.Build();
 }
 
 public class DuplicateTokensTests : TokenizerTestBase<DuplicateLexemeTokens>
