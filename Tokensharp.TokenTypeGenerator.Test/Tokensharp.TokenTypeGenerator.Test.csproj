@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Tokensharp" Version="3.0.0" />
+      <PackageReference Include="Tokensharp" Version="3.0.1" />
       <PackageReference Include="Tokensharp.TokenTypeGenerator" Version="1.0.2" />
     </ItemGroup>
 

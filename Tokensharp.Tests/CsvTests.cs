@@ -2,15 +2,17 @@
 
 public record CsvTokenTypes(string Identifier) : TokenType<CsvTokenTypes>(Identifier), ITokenType<CsvTokenTypes>
 {
-    public static readonly CsvTokenTypes Comma = new(",");
-    public static readonly CsvTokenTypes EndOfRecord = new("\r\n");
-    public static readonly CsvTokenTypes DoubleQuote = new("\"");
+    public static readonly CsvTokenTypes Comma = new("comma");
+    public static readonly CsvTokenTypes EndOfRecord = new("endOfRecord");
+    public static readonly CsvTokenTypes DoubleQuote = new("doubleQuote");
+    public static readonly CsvTokenTypes Escape = new("escape");
 
     public static TokenConfiguration<CsvTokenTypes> Configuration { get; } = new TokenConfigurationBuilder<CsvTokenTypes>()
     {
-        Comma,
-        EndOfRecord,
-        DoubleQuote
+        { ",", Comma },
+        { "\r\n", EndOfRecord },
+        { "\"", DoubleQuote },
+        { "\"\"", Escape }
     }.Build();
     
     public static CsvTokenTypes Create(string token) => new(token);
@@ -30,17 +32,38 @@ public class CsvTests : TokenizerTestBase<CsvTokenTypes>
         RunTest(testStr, 
         [
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "test"),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma, ","),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.WhiteSpace, " "),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Number, "123"),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord, "\r\n"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "foo"),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma, ","),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote, "\""),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "bar"),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord, "\r\n"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "bizz"),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote)
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote, "\"")
+        ]);
+    }
+
+    [Test]
+    public void CsvWithEscapedQuotes()
+    {   
+        const string testStr = "123, \"\"\"Bar\"\"\" ,ABC";
+        
+        RunTest(testStr, 
+        [
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Number, "123"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma, ","),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.WhiteSpace, " "),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Escape, "\"\""),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote, "\""),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "Bar"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Escape, "\"\""),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.DoubleQuote, "\""),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.WhiteSpace, " "),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma, ","),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "ABC")
         ]);
     }
 }
