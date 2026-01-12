@@ -31,7 +31,12 @@ public record MyTokenType(string Lexeme) : TokenType<MyTokenType>(Lexeme), IToke
     public static readonly MyTokenType EndStatement = new(";");
     
     public static MyTokenType Create(string lexeme) => new(lexeme);
-    public static IEnumerable<MyTokenType> TokenTypes => [Var, Assign, EndStatement];
+    public static TokenConfiguration<MyTokenType> Configuration => new TokenConfigurationBuilder<MyTokenType>
+    {
+        Var,
+        Assign,
+        EndStatement
+    }.Build();
 }
 ```
 
