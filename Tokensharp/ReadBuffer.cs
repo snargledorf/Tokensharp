@@ -75,8 +75,12 @@ internal struct ReadBuffer(int initialBufferSize) : IDisposable
             }
             else if (_count != 0)
             {
-                _buffer.AsSpan(charsConsumed).CopyTo(_buffer.AsSpan(0, _count));
+                _buffer.AsSpan(charsConsumed, _count).CopyTo(_buffer.AsSpan(0, _count));
             }
+        }
+        else if (_count != 0)
+        {
+            _buffer.AsSpan(charsConsumed, _count).CopyTo(_buffer.AsSpan(0, _count));
         }
     }
 
