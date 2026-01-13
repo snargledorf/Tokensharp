@@ -9,8 +9,8 @@ public static class Tokenizer
     public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, out Token<TTokenType> token)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        TokenReaderStateMachine<TTokenType> tokenReaderStateMachine = TokenReaderStateMachine<TTokenType>.For(TTokenType.Configuration);
-        return TryParseToken(buffer, tokenReaderStateMachine, out token);
+        TokenReaderStateMachine<TTokenType> tokenParserStateMachine = TokenReaderStateMachine<TTokenType>.For(TTokenType.Configuration);
+        return TryParseToken(buffer, tokenParserStateMachine, out token);
     }
 
     public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, TokenReaderStateMachine<TTokenType> tokenReaderStateMachine, out Token<TTokenType> token)
@@ -64,8 +64,8 @@ public static class Tokenizer
         out ReadOnlySpan<char> lexeme)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        var tokenReader = new TokenReader<TTokenType>(buffer, tokenReaderStateMachine, moreDataAvailable);
-        return tokenReader.Read(out tokenType, out lexeme);
+        var tokenParser = new TokenParser<TTokenType>(tokenReaderStateMachine);
+        return tokenParser.TryParseToken(buffer, moreDataAvailable, out tokenType, out lexeme);
     }
 
     public static IEnumerable<Token<TTokenType>> EnumerateTokens<TTokenType>(string str, TokenizerOptions? options = null)
@@ -89,27 +89,16 @@ public static class Tokenizer
     {
         options ??= new TokenizerOptions();
 
-        using var sr = new StringReader(buffer.ToString());
-
-        var readBuffer = new ReadBuffer(options.DefaultBufferSize);
         var readerOptions = new TokenReaderOptions(IgnoreWhiteSpace: options.IgnoreWhiteSpace);
-        var tokenQueue = new Queue<Token<TTokenType>>();
-        try
-        {
-            do
-            {
-                readBuffer.Read(sr);
+        var tokenLocationQueue = new Queue<Token<TTokenType>>();
 
-                ParseTokens(tokenReaderStateMachine, ref readBuffer, ref readerOptions, ref tokenQueue);
-
-                while (tokenQueue.TryDequeue(out Token<TTokenType> token))
-                    yield return token;
-            } while (!readBuffer.EndOfReader);
-        }
-        finally
-        {
-            readBuffer.Dispose();
-        }
+        ReadOnlySpan<char> bufferSpan = buffer.Span;
+        var moreDataAvailable = false;
+        CancellationToken cancellationToken = CancellationToken.None;
+        
+        ParseTokens(tokenReaderStateMachine, ref bufferSpan, ref moreDataAvailable, ref readerOptions, tokenLocationQueue, ref cancellationToken);
+        while (tokenLocationQueue.TryDequeue(out Token<TTokenType> token))
+            yield return token;
     }
 
     public static IAsyncEnumerable<Token<TTokenType>> EnumerateTokensAsync<TTokenType>(Stream tokenStream,
@@ -140,13 +129,19 @@ public static class Tokenizer
             {
                 readBuffer = await readBuffer.ReadAsync(sr, cancellationToken).ConfigureAwait(false);
 
-                ParseTokens(tokenReaderStateMachine, ref readBuffer, ref readerOptions, ref tokenQueue, cancellationToken);
+                ReadOnlySpan<char> buffer = readBuffer.Chars;
+
+                bool moreDataAvailable = !readBuffer.EndOfReader;
+                
+                int consumed = ParseTokens(tokenReaderStateMachine, ref buffer, ref moreDataAvailable, ref readerOptions, tokenQueue, ref cancellationToken);
 
                 while (tokenQueue.TryDequeue(out Token<TTokenType> token))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     yield return token;
                 }
+                
+                readBuffer.AdvanceBuffer(consumed);
             } while (!readBuffer.EndOfReader);
         }
         finally
@@ -155,18 +150,23 @@ public static class Tokenizer
         }
     }
 
-    private static void ParseTokens<TTokenType>(TokenReaderStateMachine<TTokenType> tokenReaderStateMachine,
-        ref ReadBuffer readBuffer, ref TokenReaderOptions options, ref Queue<Token<TTokenType>> tokens,
-        CancellationToken cancellationToken = default)
+    private static int ParseTokens<TTokenType>(TokenReaderStateMachine<TTokenType> tokenReaderStateMachine,
+        ref ReadOnlySpan<char> buffer, 
+        ref bool moreDataAvailable, 
+        ref TokenReaderOptions options, 
+        Queue<Token<TTokenType>> tokens,
+        ref CancellationToken cancellationToken)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        var tokenReader = new TokenReader<TTokenType>(readBuffer.Chars, tokenReaderStateMachine, !readBuffer.EndOfReader, options);
-        while (tokenReader.Read(out TokenType<TTokenType>? tokenType, out ReadOnlySpan<char> lexeme))
+        var tokenReader = new TokenReader<TTokenType>(buffer, tokenReaderStateMachine, moreDataAvailable, options);
+        
+        while (tokenReader.Read(out TokenType<TTokenType>? tokenType, out int index, out int length))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            tokens.Enqueue(new Token<TTokenType>(tokenType, lexeme.ToString()));
+            ReadOnlySpan<char> lexeme = buffer.Slice(index, length);
+            tokens.Enqueue(new Token<TTokenType>(tokenType, new string(lexeme)));
         }
 
-        readBuffer.AdvanceBuffer(tokenReader.Consumed);
+        return tokenReader.Consumed;
     }
 }

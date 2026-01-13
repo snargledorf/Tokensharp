@@ -5,7 +5,7 @@ namespace Tokensharp.StateMachine;
 
 internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public static TokenReaderStateMachine<TTokenType> BuildStateMachine(ITokenConfiguration<TTokenType> tokenConfiguration)
+    public static State<char, TokenizerStateId<TTokenType>> BuildStateMachineStartState(ITokenConfiguration<TTokenType> tokenConfiguration)
     {
         TokenTree<TTokenType> tree = tokenConfiguration.ToTokenTree();
             
@@ -15,7 +15,7 @@ internal static class TokenReaderStateMachineFactory<TTokenType> where TTokenTyp
 
         BuildTextWhiteSpaceAndNumberTransitions(startStateBuilder, tree);
 
-        return new TokenReaderStateMachine<TTokenType>(startStateBuilder.Build());
+        return startStateBuilder.Build();
     }
 
     private static void BuildTextWhiteSpaceAndNumberTransitions(
