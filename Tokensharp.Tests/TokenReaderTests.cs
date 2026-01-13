@@ -26,7 +26,7 @@ public class TokenReaderTests : TokenizerTestBase<SimpleTokenTypes>
         // If we have "A" and moreDataAvailable is true, we should wait because "B" might come next.
         
         string input = "A";
-        var memory = input.AsMemory();
+        ReadOnlyMemory<char> memory = input.AsMemory();
         
         TokenReaderStateMachine<SimpleTokenTypes> tokenReaderStateMachine = TokenReaderStateMachine<SimpleTokenTypes>.For(SimpleTokenTypes.Configuration);
         
