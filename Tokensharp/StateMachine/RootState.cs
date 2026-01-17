@@ -26,10 +26,7 @@ internal abstract class RootState<TTokenType>(ITokenTreeNode<TTokenType> rootNod
                 return true;
             }
             
-            IState<TTokenType> fallbackState = GetFallbackState(childNode);
-            
-            nextState = new PotentialTokenState<TTokenType>(childNode, fallbackState, WhiteSpaceStateInstance,
-                NumberStateInstance, TextStateInstance);
+            nextState = GetStateForChildNode(childNode);
 
             _transitions.Add(c, nextState);
             return true;
@@ -37,6 +34,13 @@ internal abstract class RootState<TTokenType>(ITokenTreeNode<TTokenType> rootNod
 
         nextState = null;
         return false;
+    }
+
+    protected virtual IState<TTokenType> GetStateForChildNode(ITokenTreeNode<TTokenType> childNode)
+    {
+        IState<TTokenType> fallbackState = GetFallbackState(childNode);
+        return new PotentialTokenState<TTokenType>(childNode, fallbackState, WhiteSpaceStateInstance,
+            NumberStateInstance, TextStateInstance);
     }
 
     private IState<TTokenType> GetFallbackState(ITokenTreeNode<TTokenType> node)
@@ -51,9 +55,4 @@ internal abstract class RootState<TTokenType>(ITokenTreeNode<TTokenType> rootNod
     }
 
     protected abstract IState<TTokenType> GetFallbackEndOfTokenState(ITokenTreeNode<TTokenType> node);
-
-    public override void OnEnter(StateMachineContext<TTokenType> context)
-    {
-        context.ConfirmedLexemeLength++;
-    }
 }

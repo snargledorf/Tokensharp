@@ -13,8 +13,10 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
         return true;
     }
 
-    protected abstract bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState);
-
+    protected virtual bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    {
+        return TryGetDefaultState(out nextState);
+    }
 
     public virtual bool TryDefaultTransition(StateMachineContext<TTokenType> context, [NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
@@ -33,13 +35,12 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 
     public virtual void OnEnter(StateMachineContext<TTokenType> context)
     {
-        if (context.ConfirmedLexemeLength < context.PotentialLexemeLength)
-        {
+        if (context.PotentialLexemeLength > context.ConfirmedLexemeLength)
             context.ConfirmedLexemeLength = context.PotentialLexemeLength;
-        }
         else
         {
             context.ConfirmedLexemeLength++;
+            context.PotentialLexemeLength = context.ConfirmedLexemeLength;
         }
     }
 }
