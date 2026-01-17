@@ -15,6 +15,7 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 
     protected abstract bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState);
 
+
     public virtual bool TryDefaultTransition(StateMachineContext<TTokenType> context, [NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
         if (!TryGetDefaultState(out defaultState))

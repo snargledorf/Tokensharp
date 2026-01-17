@@ -3,21 +3,20 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class WhiteSpaceState<TTokenType>(ITokenTreeNode<TTokenType> node) 
-    : State<TTokenType>
+internal class WhiteSpaceState<TTokenType>(ITokenTreeNode<TTokenType> rootNode) 
+    : RootState<TTokenType>(rootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public static readonly EndOfTokenState<TTokenType> EndOfWhiteSpaceState = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.WhiteSpace);
-    
-    private readonly Dictionary<char, IState<TTokenType>> _states = new();
-    
+    private static readonly EndOfTokenState<TTokenType> EndOfTokenState = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.WhiteSpace);
+
     private TextState<TTokenType>? _textState;
     private NumberState<TTokenType>? _numberState;
 
     private static WhiteSpaceState<TTokenType>? _instance;
 
-    private TextState<TTokenType> TextState => _textState ?? throw new InvalidOperationException($"{nameof(TextState)} not initialized");
-    private NumberState<TTokenType> NumberState => _numberState ?? throw new InvalidOperationException($"{nameof(NumberState)} not initialized");
+    internal override WhiteSpaceState<TTokenType> WhiteSpaceStateInstance => this;
+    internal override NumberState<TTokenType> NumberStateInstance => _numberState ?? throw new InvalidOperationException($"{nameof(NumberStateInstance)} not initialized");
+    internal override TextState<TTokenType> TextStateInstance => _textState ?? throw new InvalidOperationException($"{nameof(TextStateInstance)} not initialized");
 
     internal static WhiteSpaceState<TTokenType> For(ITokenTreeNode<TTokenType> treeNode)
     {
@@ -33,38 +32,20 @@ internal class WhiteSpaceState<TTokenType>(ITokenTreeNode<TTokenType> node)
 
     private void Initialize()
     {
-        _textState = TextState<TTokenType>.For(node);
-        _numberState = NumberState<TTokenType>.For(node);
+        _textState = TextState<TTokenType>.For(RootNode);
+        _numberState = NumberState<TTokenType>.For(RootNode);
     }
-    
+
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         if (!char.IsWhiteSpace(c))
         {
-            nextState = EndOfWhiteSpaceState;
+            nextState = EndOfTokenState;
             return true;
         }
-
-        if (_states.TryGetValue(c, out nextState))
-            return true;
         
-        if (node.RootNode.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
-        {
-            if (childNode.IsEndOfToken)
-            {
-                nextState = EndOfTokenState<TTokenType>.For(childNode.TokenType);
-                return true;
-            }
-            
-            if (char.IsWhiteSpace(c))
-                nextState = new CheckForWhiteSpaceTokenState<TTokenType>(childNode, this, NumberState, TextState);
-            else
-                nextState = new CheckForMixedTypeTokenState<TTokenType>(childNode, this, TextState,
-                    this, NumberState);
-
-            _states.Add(c, nextState);
+        if (base.TryGetStateNextState(c, out nextState))
             return true;
-        }
         
         nextState = this;
         return true;
@@ -72,8 +53,13 @@ internal class WhiteSpaceState<TTokenType>(ITokenTreeNode<TTokenType> node)
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        defaultState = EndOfWhiteSpaceState;
+        defaultState = EndOfTokenState;
         return true;
+    }
+
+    protected override IState<TTokenType> GetFallbackEndOfTokenState(ITokenTreeNode<TTokenType> node)
+    {
+        return EndOfTokenState;
     }
 
     public override void OnEnter(StateMachineContext<TTokenType> context)

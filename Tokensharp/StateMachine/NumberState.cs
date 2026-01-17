@@ -3,10 +3,10 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> node) : State<TTokenType>
+internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> rootNode) : RootState<TTokenType>(rootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public static readonly EndOfTokenState<TTokenType> EndOfNumberState = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Number);
+    public static readonly EndOfTokenState<TTokenType> EndOfTokenState = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Number);
     
     private readonly Dictionary<char, IState<TTokenType>> _states = new();
     
@@ -15,8 +15,9 @@ internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> node) : State<
 
     private static NumberState<TTokenType>? _instance;
 
-    private WhiteSpaceState<TTokenType> WhiteSpaceState => _whiteSpaceState ?? throw new InvalidOperationException($"{nameof(WhiteSpaceState)} not initialized");
-    private TextState<TTokenType> TextState => _textState ?? throw new InvalidOperationException($"{nameof(TextState)} not initialized");
+    internal override WhiteSpaceState<TTokenType> WhiteSpaceStateInstance => _whiteSpaceState ?? throw new InvalidOperationException($"{nameof(WhiteSpaceStateInstance)} not initialized");
+    internal override NumberState<TTokenType> NumberStateInstance => this;
+    internal override TextState<TTokenType> TextStateInstance => _textState ?? throw new InvalidOperationException($"{nameof(TextStateInstance)} not initialized");
 
     internal static NumberState<TTokenType> For(ITokenTreeNode<TTokenType> treeNode)
     {
@@ -32,38 +33,20 @@ internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> node) : State<
 
     private void Initialize()
     {
-        _whiteSpaceState = WhiteSpaceState<TTokenType>.For(node);
-        _textState = TextState<TTokenType>.For(node);
+        _whiteSpaceState = WhiteSpaceState<TTokenType>.For(RootNode);
+        _textState = TextState<TTokenType>.For(RootNode);
     }
-    
+
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         if (!char.IsDigit(c))
         {
-            nextState = EndOfNumberState;
+            nextState = EndOfTokenState;
             return true;
         }
-
-        if (_states.TryGetValue(c, out nextState))
-            return true;
         
-        if (node.RootNode.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
-        {
-            if (childNode.IsEndOfToken)
-            {
-                nextState = EndOfTokenState<TTokenType>.For(childNode.TokenType);
-                return true;
-            }
-            
-            if (char.IsDigit(c))
-                nextState = new CheckForNumberTokenState<TTokenType>(childNode, this, WhiteSpaceState, TextState);
-            else
-                nextState = new CheckForMixedTypeTokenState<TTokenType>(childNode, this, TextState,
-                    WhiteSpaceState, this);
-
-            _states.Add(c, nextState);
+        if (base.TryGetStateNextState(c, out nextState))
             return true;
-        }
         
         nextState = this;
         return true;
@@ -71,8 +54,13 @@ internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> node) : State<
 
     public override bool TryDefaultTransition(StateMachineContext<TTokenType> context, [NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        defaultState = EndOfNumberState;
+        defaultState = EndOfTokenState;
         return true;
+    }
+
+    protected override IState<TTokenType> GetFallbackEndOfTokenState(ITokenTreeNode<TTokenType> node)
+    {
+        return EndOfTokenState;
     }
 
     public override void OnEnter(StateMachineContext<TTokenType> context)

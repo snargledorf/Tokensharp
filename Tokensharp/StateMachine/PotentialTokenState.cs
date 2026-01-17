@@ -3,28 +3,76 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal abstract class PotentialTokenState<TTokenType>(
+internal class PotentialTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
-    IState<TTokenType> defaultState,
+    IState<TTokenType> fallbackState,
     WhiteSpaceState<TTokenType> whiteSpaceState,
     NumberState<TTokenType> numberState,
     TextState<TTokenType> textState)
-    : BaseState<TTokenType>(node, whiteSpaceState, numberState, textState)
+    : State<TTokenType>()
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly IState<TTokenType> _defaultState = defaultState;
+    private readonly IState<TTokenType> _fallbackState = fallbackState;
+    
+    private readonly Dictionary<char, IState<TTokenType>> _transitions = new();
+
+    internal ITokenTreeNode<TTokenType> Node { get; } = node;
+    internal WhiteSpaceState<TTokenType> WhiteSpaceState { get; } = whiteSpaceState;
+    internal NumberState<TTokenType> NumberState { get; } = numberState;
+    internal TextState<TTokenType> TextState { get; } = textState;
     
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (base.TryGetStateNextState(c, out nextState))
+        if (Node.IsEndOfToken)
+        {
+            nextState = EndOfTokenState<TTokenType>.For(Node.TokenType);
+            return true;
+        }
+        
+        if (_transitions.TryGetValue(c, out nextState)) 
             return true;
 
-        return TryGetDefaultState(out nextState);
+        if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
+        {
+            IState<TTokenType>? fallbackState;
+            if (node.IsEndOfToken)
+                fallbackState = EndOfTokenState<TTokenType>.For(Node.TokenType);
+            else
+                fallbackState = null;
+            
+            if (char.IsWhiteSpace(c))
+            {
+                nextState = new PotentialTokenState<TTokenType>(childNode, fallbackState ?? WhiteSpaceState, WhiteSpaceState,
+                    NumberState, TextState);
+            }
+            else if (char.IsDigit(c))
+            {
+                nextState = new PotentialTokenState<TTokenType>(childNode, fallbackState ?? NumberState, WhiteSpaceState,
+                    NumberState, TextState);
+            }
+            else
+            {
+                nextState = new PotentialTokenState<TTokenType>(childNode, fallbackState ?? TextState, WhiteSpaceState,
+                    NumberState, TextState);
+            }
+
+            _transitions.Add(c, nextState);
+            return true;
+        }
+
+        nextState = null;
+        return false;
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        defaultState = _defaultState;
+        if (Node.IsEndOfToken)
+        {
+            defaultState = EndOfTokenState<TTokenType>.For(Node.TokenType);
+            return true;
+        }
+        
+        defaultState = _fallbackState;
         return true;
     }
 
