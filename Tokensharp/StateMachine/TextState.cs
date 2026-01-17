@@ -10,7 +10,7 @@ internal class TextState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
     private static TextState<TTokenType>? _instance;
 
     protected override TTokenType TokenType => TokenType<TTokenType>.Text;
-    protected override EndOfTokenState<TTokenType> EndOfTokenState { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Text);
+    public override EndOfTokenState<TTokenType> EndOfTokenState { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Text);
 
     internal override WhiteSpaceState<TTokenType> WhiteSpaceStateInstance => field ??= WhiteSpaceState<TTokenType>.For(RootNode);
 
@@ -26,7 +26,7 @@ internal class TextState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
         return _instance = new TextState<TTokenType>(treeNode.RootNode);
     }
 
-    protected override bool CharacterIsValidForToken(char c)
+    public override bool CharacterIsValidForToken(char c)
     {
         return !char.IsWhiteSpace(c) && !char.IsDigit(c);
     }

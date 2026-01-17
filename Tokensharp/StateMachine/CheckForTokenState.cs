@@ -5,14 +5,11 @@ namespace Tokensharp.StateMachine;
 
 internal class CheckForTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
-    IState<TTokenType> fallbackState,
-    IState<TTokenType> endOfFallbackState)
+    TextWhiteSpaceNumberStateBase<TTokenType> fallbackState)
     : NodeStateBase<TTokenType>(node)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly Dictionary<char, IState<TTokenType>> _transitions = new();
-    
-    private readonly FailedTokenCheckState<TTokenType> _state = new(fallbackState);
     
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
@@ -29,18 +26,24 @@ internal class CheckForTokenState<TTokenType>(
         {
             if (childNode.IsEndOfToken)
             {
-                nextState = new FoundTokenState<TTokenType>(endOfFallbackState);
+                nextState = new FoundTokenState<TTokenType>(fallbackState.EndOfTokenState);
             }
             else
             {
-                nextState = new CheckForTokenState<TTokenType>(childNode, fallbackState, endOfFallbackState);
+                nextState = new CheckForTokenState<TTokenType>(childNode, fallbackState);
             }
 
             _transitions.Add(c, nextState);
             return true;
         }
 
-        nextState = _state;
+        IState<TTokenType> failedFallbackState;
+        if (fallbackState.CharacterIsValidForToken(c))
+            failedFallbackState= fallbackState;
+        else
+            failedFallbackState = fallbackState.EndOfTokenState;
+        
+        nextState = new FailedTokenCheckState<TTokenType>(failedFallbackState);
         return true;
     }
 

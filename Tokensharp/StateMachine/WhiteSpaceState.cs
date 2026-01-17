@@ -14,7 +14,7 @@ internal class WhiteSpaceState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
     internal override TextState<TTokenType> TextStateInstance => field ??= TextState<TTokenType>.For(RootNode);
 
     protected override TTokenType TokenType => TokenType<TTokenType>.WhiteSpace;
-    protected override EndOfTokenState<TTokenType> EndOfTokenState { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.WhiteSpace);
+    public override EndOfTokenState<TTokenType> EndOfTokenState { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.WhiteSpace);
 
     internal static WhiteSpaceState<TTokenType> For(ITokenTreeNode<TTokenType> treeNode)
     {
@@ -39,7 +39,7 @@ internal class WhiteSpaceState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
         return true;
     }
 
-    protected override bool CharacterIsValidForToken(char c)
+    public override bool CharacterIsValidForToken(char c)
     {
         return char.IsWhiteSpace(c);
     }
