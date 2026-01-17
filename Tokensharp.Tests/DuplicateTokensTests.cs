@@ -12,20 +12,15 @@ public record DuplicateLexemeTokens(string Identifier)
     }.Build();
 }
 
-public class DuplicateTokensTests : TokenizerTestBase<DuplicateLexemeTokens>
+public class DuplicateTokensTests
 {
     [Test]
     public void DuplicateLexeme()
     {
-        RunTestShouldThrow<TypeInitializationException>(ReadOnlyMemory<char>.Empty, exception =>
-        {
-            Assert.That(exception, Has.InnerException.TypeOf<DuplicateLexemeException>());
-
-            string? duplicateLexeme =
-                (exception.InnerException as DuplicateLexemeException)
-                ?.Lexeme;
-            
-            Assert.That(duplicateLexeme, Is.EqualTo("lexeme"));
-        });
+        var typeInitException = Assert.Throws<TypeInitializationException>(() => _ = DuplicateLexemeTokens.Configuration);
+        Assert.That(typeInitException, Has.InnerException.TypeOf<DuplicateLexemeException>());
+        
+        var duplicateLexemeException = (typeInitException.InnerException as DuplicateLexemeException);
+        Assert.That(duplicateLexemeException?.Lexeme, Is.EqualTo("lexeme"));
     }
 }

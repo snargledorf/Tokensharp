@@ -1,4 +1,5 @@
-﻿namespace Tokensharp.Tests;
+﻿
+namespace Tokensharp.Tests;
 
 public abstract class TokenizerTestBase<TTokenType> 
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
@@ -20,12 +21,12 @@ public abstract class TokenizerTestBase<TTokenType>
         bool parsed =
             Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parsed, Is.False, "Parsed additional tokens");
             Assert.That(token.Type, Is.Null);
             Assert.That(token.Lexeme, Is.Null);
-        });
+        }
     }
     
     protected int RunTest(string input, TestCase<TTokenType> testCase, bool moreDataAvailable = false) =>

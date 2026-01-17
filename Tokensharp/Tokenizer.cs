@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using Tokensharp.StateMachine;
 
 namespace Tokensharp;
 
@@ -9,27 +8,25 @@ public static class Tokenizer
     public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, out Token<TTokenType> token)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        TokenReaderStateMachine<TTokenType> tokenParserStateMachine = TokenReaderStateMachine<TTokenType>.For(TTokenType.Configuration);
-        return TryParseToken(buffer, tokenParserStateMachine, out token);
+        return TryParseToken(buffer, TTokenType.Configuration, out token);
     }
 
-    public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, TokenReaderStateMachine<TTokenType> tokenReaderStateMachine, out Token<TTokenType> token)
+    public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, TokenConfiguration<TTokenType> tokenConfiguration, out Token<TTokenType> token)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        return TryParseToken(buffer, tokenReaderStateMachine, false, out token);
+        return TryParseToken(buffer, tokenConfiguration, false, out token);
     }
 
     public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, bool moreDataAvailable, out Token<TTokenType> token)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        TokenReaderStateMachine<TTokenType> tokenReaderStateMachine = TokenReaderStateMachine<TTokenType>.For(TTokenType.Configuration);
-        return TryParseToken(buffer, tokenReaderStateMachine, moreDataAvailable, out token);
+        return TryParseToken(buffer, TTokenType.Configuration, moreDataAvailable, out token);
     }
 
-    public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, TokenReaderStateMachine<TTokenType> tokenReaderStateMachine, bool moreDataAvailable, out Token<TTokenType> token)
+    public static bool TryParseToken<TTokenType>(ReadOnlyMemory<char> buffer, TokenConfiguration<TTokenType> tokenConfiguration, bool moreDataAvailable, out Token<TTokenType> token)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        if (TryParseToken(buffer.Span, tokenReaderStateMachine, moreDataAvailable, out TokenType<TTokenType>? tokenType, out ReadOnlySpan<char> lexeme))
+        if (TryParseToken(buffer.Span, tokenConfiguration, moreDataAvailable, out TokenType<TTokenType>? tokenType, out ReadOnlySpan<char> lexeme))
         {
             token = new Token<TTokenType>(tokenType, lexeme.ToString());
             return true;
@@ -54,36 +51,36 @@ public static class Tokenizer
         out ReadOnlySpan<char> lexeme)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        return TryParseToken(buffer, TokenReaderStateMachine<TTokenType>.Default, moreDataAvailable, out tokenType, out lexeme);
+        return TryParseToken(buffer, TTokenType.Configuration, moreDataAvailable, out tokenType, out lexeme);
     }
 
     public static bool TryParseToken<TTokenType>(ReadOnlySpan<char> buffer,
-        TokenReaderStateMachine<TTokenType> tokenReaderStateMachine,
+        TokenConfiguration<TTokenType> tokenConfiguration,
         bool moreDataAvailable,
         [NotNullWhen(true)] out TokenType<TTokenType>? tokenType, 
         out ReadOnlySpan<char> lexeme)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        var tokenParser = new TokenParser<TTokenType>(tokenReaderStateMachine);
+        var tokenParser = new TokenParser<TTokenType>(tokenConfiguration);
         return tokenParser.TryParseToken(buffer, moreDataAvailable, out tokenType, out lexeme);
     }
 
     public static IEnumerable<Token<TTokenType>> EnumerateTokens<TTokenType>(string str, TokenizerOptions? options = null)
-        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType> => EnumerateTokens(str, TokenReaderStateMachine<TTokenType>.Default, options);
+        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType> => EnumerateTokens(str, TTokenType.Configuration, options);
 
     public static IEnumerable<Token<TTokenType>> EnumerateTokens<TTokenType>(string str,
-        TokenReaderStateMachine<TTokenType> tokenReaderStateMachine, TokenizerOptions? options = null)
-        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType> => EnumerateTokens(str.AsMemory(), tokenReaderStateMachine, options);
+        TokenConfiguration<TTokenType> tokenConfiguration, TokenizerOptions? options = null)
+        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType> => EnumerateTokens(str.AsMemory(), tokenConfiguration, options);
 
     public static IEnumerable<Token<TTokenType>> EnumerateTokens<TTokenType>(ReadOnlyMemory<char> buffer,
         TokenizerOptions? options = null)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        return EnumerateTokens(buffer, TokenReaderStateMachine<TTokenType>.Default, options);
+        return EnumerateTokens(buffer, TTokenType.Configuration, options);
     }
 
     public static IEnumerable<Token<TTokenType>> EnumerateTokens<TTokenType>(ReadOnlyMemory<char> buffer,
-        TokenReaderStateMachine<TTokenType> tokenReaderStateMachine,
+        TokenConfiguration<TTokenType> tokenConfiguration,
         TokenizerOptions? options = null)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
@@ -96,7 +93,7 @@ public static class Tokenizer
         var moreDataAvailable = false;
         CancellationToken cancellationToken = CancellationToken.None;
         
-        ParseTokens(tokenReaderStateMachine, ref bufferSpan, ref moreDataAvailable, ref readerOptions, tokenLocationQueue, ref cancellationToken);
+        ParseTokens(tokenConfiguration, ref bufferSpan, ref moreDataAvailable, ref readerOptions, tokenLocationQueue, ref cancellationToken);
         while (tokenLocationQueue.TryDequeue(out Token<TTokenType> token))
             yield return token;
     }
@@ -106,11 +103,11 @@ public static class Tokenizer
         CancellationToken cancellationToken = default)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        return EnumerateTokensAsync(tokenStream, TokenReaderStateMachine<TTokenType>.Default, options, cancellationToken);
+        return EnumerateTokensAsync(tokenStream, TTokenType.Configuration, options, cancellationToken);
     }
 
     private static async IAsyncEnumerable<Token<TTokenType>> EnumerateTokensAsync<TTokenType>(Stream tokenStream,
-        TokenReaderStateMachine<TTokenType> tokenReaderStateMachine,
+        TokenConfiguration<TTokenType> tokenConfiguration,
         TokenizerOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
@@ -133,7 +130,7 @@ public static class Tokenizer
 
                 bool moreDataAvailable = !readBuffer.EndOfReader;
                 
-                int consumed = ParseTokens(tokenReaderStateMachine, ref buffer, ref moreDataAvailable, ref readerOptions, tokenQueue, ref cancellationToken);
+                int consumed = ParseTokens(tokenConfiguration, ref buffer, ref moreDataAvailable, ref readerOptions, tokenQueue, ref cancellationToken);
 
                 while (tokenQueue.TryDequeue(out Token<TTokenType> token))
                 {
@@ -150,7 +147,7 @@ public static class Tokenizer
         }
     }
 
-    private static int ParseTokens<TTokenType>(TokenReaderStateMachine<TTokenType> tokenReaderStateMachine,
+    private static int ParseTokens<TTokenType>(TokenConfiguration<TTokenType> tokenConfiguration,
         ref ReadOnlySpan<char> buffer, 
         ref bool moreDataAvailable, 
         ref TokenReaderOptions options, 
@@ -158,7 +155,7 @@ public static class Tokenizer
         ref CancellationToken cancellationToken)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        var tokenReader = new TokenReader<TTokenType>(buffer, tokenReaderStateMachine, moreDataAvailable, options);
+        var tokenReader = new TokenReader<TTokenType>(buffer, tokenConfiguration, moreDataAvailable, options);
         
         while (tokenReader.Read(out TokenType<TTokenType>? tokenType, out int index, out int length))
         {

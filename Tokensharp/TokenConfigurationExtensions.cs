@@ -1,60 +1,37 @@
-﻿using System.Text;
-using Tokensharp.StateMachine;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp;
 
 internal static class TokenConfigurationExtensions
 {
-    extension<TTokenType>(ITokenConfiguration<TTokenType> tokenConfiguration)
+    extension<TTokenType>(IEnumerable<LexemeToTokenType<TTokenType>> lexemesToTokens)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        internal TokenTree<TTokenType> ToTokenTree()
+        internal ITokenTreeNode<TTokenType> ToTokenTree()
         {
-            var tree = new TokenTree<TTokenType>();
+            var rootNode = new TokenTreeNodeBuilder<TTokenType>('\0');
 
-            var stateNameBuilder = new StringBuilder();
-
-            foreach (LexemeToTokenType<TTokenType> tokenDefinition in tokenConfiguration.OrderBy(t => t.Lexeme.Length))
+            foreach (LexemeToTokenType<TTokenType> tokenDefinition in lexemesToTokens.OrderBy(t => t.Lexeme.Length))
             {
-                TokenTreeNode<TTokenType>? currentNode = null;
-            
-                stateNameBuilder.Append($"({tokenDefinition.Lexeme})_");
+                ITokenTreeNodeBuilder<TTokenType> currentNodeBuilder = rootNode;
             
                 foreach (char nodeKey in tokenDefinition.Lexeme)
                 {
-                    stateNameBuilder.Append(nodeKey);
-                
-                    if (currentNode is null)
+                    if (currentNodeBuilder.TryGetChild(nodeKey, out ITokenTreeNodeBuilder<TTokenType>? nextNode))
                     {
-                        if (tree.TryGetChild(nodeKey, out currentNode))
-                            continue;
-                    
-                        TokenizerStateId<TTokenType> stateId = TokenizerStateId<TTokenType>.Create(stateNameBuilder.ToString(), tokenDefinition.TokenType);
-                        tree.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, stateId, tree));
+                        currentNodeBuilder = nextNode;
                     }
                     else
                     {
-                        if (currentNode.TryGetChild(nodeKey, out TokenTreeNode<TTokenType>? nextNode))
-                        {
-                            currentNode = nextNode;
-                        }
-                        else
-                        {
-                            TokenizerStateId<TTokenType> stateId = TokenizerStateId<TTokenType>.Create(stateNameBuilder.ToString(), tokenDefinition.TokenType);
-                            currentNode.AddChild(currentNode = new TokenTreeNode<TTokenType>(nodeKey, stateId, tree, currentNode));
-                        }
+                        currentNodeBuilder = currentNodeBuilder.AddChild(nodeKey);
                     }
                 }
 
                 // This is the final node in this branch, set the token type to terminal
-                if (currentNode is { } endNode)
-                    endNode.IsEndOfToken = true;
-            
-                stateNameBuilder.Clear();
+                currentNodeBuilder.TokenType = tokenDefinition.TokenType;
             }
             
-            return tree;
+            return rootNode.Build();
         }
     }
 }

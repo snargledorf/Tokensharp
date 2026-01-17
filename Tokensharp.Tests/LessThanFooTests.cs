@@ -1,5 +1,4 @@
-﻿using Tokensharp.StateMachine;
-
+﻿
 namespace Tokensharp.Tests;
 
 public record LessThanFooTokenTypes(string Identifier)
