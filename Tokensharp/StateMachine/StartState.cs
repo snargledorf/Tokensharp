@@ -1,10 +1,14 @@
-using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class StartState<TTokenType>(ITokenTreeNode<TTokenType> rootNode, FrozenDictionary<char, IState<TTokenType>> states, WhiteSpaceState<TTokenType> whiteSpaceState, NumberState<TTokenType> numberState, TextState<TTokenType> textState)
+internal class StartState<TTokenType>(
+    ITokenTreeNode<TTokenType> rootNode,
+    IStateLookup<TTokenType> states,
+    WhiteSpaceState<TTokenType> whiteSpaceState,
+    NumberState<TTokenType> numberState,
+    TextState<TTokenType> textState)
     : NodeStateBase<TTokenType>(rootNode.RootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
@@ -14,7 +18,7 @@ internal class StartState<TTokenType>(ITokenTreeNode<TTokenType> rootNode, Froze
 
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (states.TryGetValue(c, out nextState))
+        if (states.TryGetState(c, out nextState))
             return true;
 
         if (char.IsWhiteSpace(c))
@@ -63,28 +67,30 @@ internal class StartState<TTokenType>(ITokenTreeNode<TTokenType> rootNode, Froze
         var whiteSpaceState = new WhiteSpaceState<TTokenType>(tokenTree);
         var numberState = new NumberState<TTokenType>(tokenTree);
         var textState = new TextState<TTokenType>(tokenTree);
-        
-        Dictionary<char, IState<TTokenType>> startStates = new();
-        Dictionary<char, IState<TTokenType>> textWhiteSpaceNumberStates = new();
+
+        var startStates = new StateLookupBuilder<TTokenType>();
+        var textWhiteSpaceNumberStates = new StateLookupBuilder<TTokenType>();
 
         foreach (ITokenTreeNode<TTokenType> startNode in tokenTree.RootNode)
         {
             startStates.Add(startNode.Character, PotentialTokenState<TTokenType>.For(startNode, GetFallbackState));
-            
+
             if (startNode.IsEndOfToken)
-                textWhiteSpaceNumberStates.Add(startNode.Character, GetFallbackState(startNode).EndOfTokenStateInstance);
+                textWhiteSpaceNumberStates.Add(startNode.Character,
+                    GetFallbackState(startNode).EndOfTokenStateInstance);
             else
-                textWhiteSpaceNumberStates.Add(startNode.Character, StartOfCheckForTokenState<TTokenType>.For(startNode, GetFallbackState));
+                textWhiteSpaceNumberStates.Add(startNode.Character,
+                    StartOfCheckForTokenState<TTokenType>.For(startNode, GetFallbackState));
         }
 
-        FrozenDictionary<char, IState<TTokenType>> compiledTextWhiteSpaceNumberStates =
-            textWhiteSpaceNumberStates.ToFrozenDictionary();
-        
+        IStateLookup<TTokenType> compiledTextWhiteSpaceNumberStates = textWhiteSpaceNumberStates.Build();
+
         whiteSpaceState.InitializeStates(compiledTextWhiteSpaceNumberStates);
         numberState.InitializeStates(compiledTextWhiteSpaceNumberStates);
         textState.InitializeStates(compiledTextWhiteSpaceNumberStates);
-        
-        return new StartState<TTokenType>(tokenTree.RootNode, startStates.ToFrozenDictionary(), whiteSpaceState, numberState, textState);
+
+        return new StartState<TTokenType>(tokenTree.RootNode, startStates.Build(), whiteSpaceState,
+            numberState, textState);
 
         IEndOfTokenAccessorState<TTokenType> GetFallbackState(ITokenTreeNode<TTokenType> child)
         {

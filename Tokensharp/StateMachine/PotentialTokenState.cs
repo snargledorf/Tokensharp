@@ -7,7 +7,7 @@ namespace Tokensharp.StateMachine;
 internal class PotentialTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
     IEndOfTokenAccessorState<TTokenType> fallbackState,
-    FrozenDictionary<char, IState<TTokenType>> rootStates)
+    IStateLookup<TTokenType> rootStates)
     : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
@@ -26,7 +26,7 @@ internal class PotentialTokenState<TTokenType>(
             return true;
         }
 
-        if (rootStates.TryGetValue(c, out nextState))
+        if (rootStates.TryGetState(c, out nextState))
             return true;
 
         return TryGetDefaultState(out nextState);
@@ -62,7 +62,7 @@ internal class PotentialTokenState<TTokenType>(
         if (node.IsEndOfToken)
             fallbackState = EndOfTokenState<TTokenType>.For(node.TokenType);
 
-        Dictionary<char, IState<TTokenType>> rootStates = new();
+        var rootStates = new StateLookupBuilder<TTokenType>();
 
         foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
         {
@@ -73,6 +73,6 @@ internal class PotentialTokenState<TTokenType>(
                 rootStates.Add(startNode.Character, new StartOfCheckForTokenState<TTokenType>(startNode, fallbackState));
         }
         
-        return new PotentialTokenState<TTokenType>(node, fallbackState, rootStates.ToFrozenDictionary());
+        return new PotentialTokenState<TTokenType>(node, fallbackState, rootStates.Build());
     }
 }

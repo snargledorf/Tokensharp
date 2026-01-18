@@ -8,13 +8,13 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
     : NodeStateBase<TTokenType>(rootNode.RootNode), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private FrozenDictionary<char, IState<TTokenType>>? _states;
+    private IStateLookup<TTokenType>? _states;
     
-    private FrozenDictionary<char, IState<TTokenType>> States => _states ?? throw new InvalidOperationException("States not initialized");
+    private IStateLookup<TTokenType> States => _states ?? throw new InvalidOperationException("States not initialized");
     
     public abstract EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; }
 
-    public void InitializeStates(FrozenDictionary<char, IState<TTokenType>> states)
+    public void InitializeStates(IStateLookup<TTokenType> states)
     {
         _states = states;
     }
@@ -25,7 +25,7 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
         {
             nextState = EndOfTokenStateInstance;
         }
-        else if (!States.TryGetValue(c, out nextState))
+        else if (!States.TryGetState(c, out nextState))
         {
             nextState = this;
         }
