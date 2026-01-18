@@ -64,7 +64,7 @@ internal class PotentialTokenState<TTokenType>(
         
         var childStates = new StateLookupBuilder<TTokenType>();
         foreach (ITokenTreeNode<TTokenType> childNode in node)
-            childStates.Add(childNode.Character, For(childNode, getFallbackState));
+            childStates.Add(childNode.Character, For(childNode, _ => fallbackState));
         
         return new PotentialTokenState<TTokenType>(node, fallbackState, rootStates.Build())
         {
