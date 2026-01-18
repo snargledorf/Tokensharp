@@ -8,20 +8,20 @@ internal abstract class NodeStateBase<TTokenType>(ITokenTreeNode<TTokenType> nod
 {
     protected ITokenTreeNode<TTokenType> Node { get; } = node;
 
+    public IStateLookup<TTokenType> StateLookup
+    {
+        get => field ?? throw new InvalidOperationException("State lookup not initialized");
+        set;
+    }
+
     protected bool TryGetStateForChildNode(char c, [NotNullWhen(true)] out IState<TTokenType>? state)
     {
-        if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? child))
-        {
-            state = CreateStateForChildNode(child);
-            AddStateToCache(c, state);
+        if (StateLookup.TryGetState(c, out state))
             return true;
-        }
 
         state = null;
         return false;
     }
-
-    protected abstract IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode);
 
     public override string ToString()
     {

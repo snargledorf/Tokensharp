@@ -5,7 +5,6 @@ namespace Tokensharp.StateMachine;
 
 internal class StartState<TTokenType>(
     ITokenTreeNode<TTokenType> rootNode,
-    IStateLookup<TTokenType> states,
     WhiteSpaceState<TTokenType> whiteSpaceState,
     NumberState<TTokenType> numberState,
     TextState<TTokenType> textState)
@@ -18,7 +17,7 @@ internal class StartState<TTokenType>(
 
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (states.TryGetState(c, out nextState))
+        if (TryGetStateForChildNode(c, out nextState))
             return true;
 
         if (char.IsWhiteSpace(c))
@@ -43,24 +42,7 @@ internal class StartState<TTokenType>(
         return false;
     }
 
-    protected override IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode)
-    {
-        IEndOfTokenAccessorState<TTokenType> fallbackState = GetFallbackState(childNode.Character);
-        return new PotentialTokenState<TTokenType>(childNode, fallbackState, null);
-    }
-
     public override bool CharacterIsValidForState(char c) => true;
-
-    private IEndOfTokenAccessorState<TTokenType> GetFallbackState(char c)
-    {
-        if (char.IsWhiteSpace(c))
-            return WhiteSpaceStateInstance;
-
-        if (char.IsDigit(c))
-            return NumberStateInstance;
-
-        return TextStateInstance;
-    }
 
     public static StartState<TTokenType> For(ITokenTreeNode<TTokenType> tokenTree)
     {
@@ -76,21 +58,28 @@ internal class StartState<TTokenType>(
             startStates.Add(startNode.Character, PotentialTokenState<TTokenType>.For(startNode, GetFallbackState));
 
             if (startNode.IsEndOfToken)
+            {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    GetFallbackState(startNode).EndOfTokenStateInstance);
+                    GetFallbackState(startNode).EndOfTokenStateInstance);}
             else
+            {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, GetFallbackState));
+                    StartOfCheckForTokenState<TTokenType>.For(startNode, GetFallbackState));}
         }
 
         IStateLookup<TTokenType> compiledTextWhiteSpaceNumberStates = textWhiteSpaceNumberStates.Build();
 
-        whiteSpaceState.InitializeStates(compiledTextWhiteSpaceNumberStates);
-        numberState.InitializeStates(compiledTextWhiteSpaceNumberStates);
-        textState.InitializeStates(compiledTextWhiteSpaceNumberStates);
+        whiteSpaceState.StateLookup = compiledTextWhiteSpaceNumberStates;
+        numberState.StateLookup = compiledTextWhiteSpaceNumberStates;
+        textState.StateLookup = compiledTextWhiteSpaceNumberStates;
 
-        return new StartState<TTokenType>(tokenTree.RootNode, startStates.Build(), whiteSpaceState,
-            numberState, textState);
+        var startState = new StartState<TTokenType>(tokenTree.RootNode, whiteSpaceState,
+            numberState, textState)
+        {
+            StateLookup = startStates.Build()
+        };
+        
+        return startState;
 
         IEndOfTokenAccessorState<TTokenType> GetFallbackState(ITokenTreeNode<TTokenType> child)
         {

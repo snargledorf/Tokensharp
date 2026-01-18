@@ -9,9 +9,9 @@ internal class CheckForTokenState<TTokenType>(
     : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected IEndOfTokenAccessorState<TTokenType> FallbackState { get; } = fallbackState;
+    private IEndOfTokenAccessorState<TTokenType> FallbackState { get; } = fallbackState;
 
-    protected FoundTokenState<TTokenType> FoundTokenState =>
+    private FoundTokenState<TTokenType> FoundTokenState =>
         field ??= new FoundTokenState<TTokenType>(FallbackState.EndOfTokenStateInstance);
 
     private FailedTokenCheckState<TTokenType> FallbackFailedTokenCheckState =>
@@ -51,11 +51,6 @@ internal class CheckForTokenState<TTokenType>(
         return true;
     }
 
-    protected override IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode)
-    {
-        return new CheckForTokenState<TTokenType>(childNode, FallbackState);
-    }
-
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
         if (Node.IsEndOfToken)
@@ -77,5 +72,20 @@ internal class CheckForTokenState<TTokenType>(
     public override void OnEnter(StateMachineContext context)
     {
         context.PotentialLexemeLength++;
+    }
+
+    protected static CheckForTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,
+        Func<ITokenTreeNode<TTokenType>, IEndOfTokenAccessorState<TTokenType>> getFallbackState)
+    {
+        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
+        
+        var childStates = new StateLookupBuilder<TTokenType>();
+        foreach (ITokenTreeNode<TTokenType> childNode in node)
+            childStates.Add(childNode.Character, For(childNode, getFallbackState));
+        
+        return new CheckForTokenState<TTokenType>(node, fallbackState)
+        {
+            StateLookup = childStates.Build()
+        };
     }
 }

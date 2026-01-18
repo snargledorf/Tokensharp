@@ -4,7 +4,7 @@ namespace Tokensharp.StateMachine;
 
 internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly Dictionary<char, IState<TTokenType>> _states = new();
+    private protected readonly Dictionary<char, IState<TTokenType>> _states = new();
     
     public virtual bool TryTransition(char c, StateMachineContext context, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {

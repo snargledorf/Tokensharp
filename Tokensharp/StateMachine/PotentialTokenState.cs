@@ -1,4 +1,3 @@
-using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
@@ -32,15 +31,6 @@ internal class PotentialTokenState<TTokenType>(
         return TryGetDefaultState(out nextState);
     }
 
-    protected override IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode)
-    {
-        IEndOfTokenAccessorState<TTokenType> childFallback = Node.IsEndOfToken
-            ? EndOfTokenState<TTokenType>.For(Node.TokenType)
-            : fallbackState;
-            
-        return new PotentialTokenState<TTokenType>(childNode, childFallback, rootStates);
-    }
-
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
         defaultState = EndOfTokenStateInstance;
@@ -66,13 +56,19 @@ internal class PotentialTokenState<TTokenType>(
 
         foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
         {
-            fallbackState = getFallbackState(startNode);
             if (startNode.IsEndOfToken)
-                rootStates.Add(startNode.Character, fallbackState.EndOfTokenStateInstance);
+                rootStates.Add(startNode.Character, getFallbackState(startNode).EndOfTokenStateInstance);
             else
-                rootStates.Add(startNode.Character, new StartOfCheckForTokenState<TTokenType>(startNode, fallbackState));
+                rootStates.Add(startNode.Character, StartOfCheckForTokenState<TTokenType>.For(startNode, getFallbackState));
         }
         
-        return new PotentialTokenState<TTokenType>(node, fallbackState, rootStates.Build());
+        var childStates = new StateLookupBuilder<TTokenType>();
+        foreach (ITokenTreeNode<TTokenType> childNode in node)
+            childStates.Add(childNode.Character, For(childNode, getFallbackState));
+        
+        return new PotentialTokenState<TTokenType>(node, fallbackState, rootStates.Build())
+        {
+            StateLookup = childStates.Build()
+        };
     }
 }
