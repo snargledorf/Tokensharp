@@ -60,11 +60,13 @@ internal class StartState<TTokenType>(
             if (startNode.IsEndOfToken)
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    GetFallbackState(startNode).EndOfTokenStateInstance);}
+                    GetFallbackState(startNode).EndOfTokenStateInstance);
+            }
             else
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, GetFallbackState));}
+                    StartOfCheckForTokenState<TTokenType>.For(startNode, GetFallbackState));
+            }
         }
 
         IStateLookup<TTokenType> compiledTextWhiteSpaceNumberStates = textWhiteSpaceNumberStates.Build();

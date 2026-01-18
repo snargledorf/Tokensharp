@@ -48,10 +48,6 @@ internal class PotentialTokenState<TTokenType>(
 
     public static IState<TTokenType> For(ITokenTreeNode<TTokenType> node, Func<ITokenTreeNode<TTokenType>, IEndOfTokenAccessorState<TTokenType>> getFallbackState)
     {
-        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
-        if (node.IsEndOfToken)
-            fallbackState = EndOfTokenState<TTokenType>.For(node.TokenType);
-
         var rootStates = new StateLookupBuilder<TTokenType>();
 
         foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
@@ -61,6 +57,10 @@ internal class PotentialTokenState<TTokenType>(
             else
                 rootStates.Add(startNode.Character, StartOfCheckForTokenState<TTokenType>.For(startNode, getFallbackState));
         }
+        
+        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
+        if (node.IsEndOfToken)
+            fallbackState = EndOfTokenState<TTokenType>.For(node.TokenType);
         
         var childStates = new StateLookupBuilder<TTokenType>();
         foreach (ITokenTreeNode<TTokenType> childNode in node)
