@@ -8,10 +8,9 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
     
     public virtual bool TryTransition(char c, StateMachineContext context, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (TryGetStateFromCache(c, out nextState))
-            return true;
-        
-        if (!TryGetStateNextState(c, out nextState) && !TryGetDefaultState(out nextState))
+        if (!TryGetStateFromCache(c, out nextState) &&
+            !TryGetStateNextState(c, out nextState) &&
+            !TryGetDefaultState(out nextState))
             return false;
         
         nextState.OnEnter(context);

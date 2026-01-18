@@ -15,16 +15,8 @@ internal class PotentialTokenState<TTokenType>(
 
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
-        {
-            IEndOfTokenAccessorState<TTokenType> childFallback = Node.IsEndOfToken
-                ? EndOfTokenState<TTokenType>.For(Node.TokenType)
-                : fallbackState;
-            
-            nextState = new PotentialTokenState<TTokenType>(childNode, childFallback);
-
+        if (TryGetStateForChildNode(c, out nextState))
             return true;
-        }
 
         if (!CharacterIsValidForState(c) || Node.IsEndOfToken)
         {
@@ -32,13 +24,22 @@ internal class PotentialTokenState<TTokenType>(
             return true;
         }
 
-        if (Node.RootNode.TryGetChild(c, out childNode))
+        if (Node.RootNode.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
         {
             nextState = new StartOfCheckForTokenState<TTokenType>(childNode, fallbackState);
             return true;
         }
 
         return TryGetDefaultState(out nextState);
+    }
+
+    protected override IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode)
+    {
+        IEndOfTokenAccessorState<TTokenType> childFallback = Node.IsEndOfToken
+            ? EndOfTokenState<TTokenType>.For(Node.TokenType)
+            : fallbackState;
+            
+        return new PotentialTokenState<TTokenType>(childNode, childFallback);
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)

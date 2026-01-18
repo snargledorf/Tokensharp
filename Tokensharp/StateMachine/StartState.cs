@@ -13,14 +13,8 @@ internal class StartState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
 
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
-        {
-            IEndOfTokenAccessorState<TTokenType> fallbackState = GetFallbackState(c);
-            nextState = new PotentialTokenState<TTokenType>(childNode, fallbackState);
-
-            AddStateToCache(c, nextState);
+        if (TryGetStateForChildNode(c, out nextState))
             return true;
-        }
 
         if (char.IsWhiteSpace(c))
         {
@@ -42,6 +36,12 @@ internal class StartState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
     {
         defaultState = null;
         return false;
+    }
+
+    protected override IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode)
+    {
+        IEndOfTokenAccessorState<TTokenType> fallbackState = GetFallbackState(childNode.Character);
+        return new PotentialTokenState<TTokenType>(childNode, fallbackState);
     }
 
     public override bool CharacterIsValidForState(char c) => true;

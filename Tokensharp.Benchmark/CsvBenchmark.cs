@@ -7,7 +7,7 @@ using BenchmarkDotNet.Loggers;
 namespace Tokensharp.Benchmark;
 
 [MemoryDiagnoser]
-[Config(typeof(Config))]
+//[Config(typeof(Config))]
 public class CsvBenchmark
 {
     private const string TestStr = """
@@ -62,6 +62,7 @@ public class CsvBenchmark
         return tokenParser.TryParseToken(TestStr, false, out TokenType<CsvTokenTypes>? _, out int _);
     }
 
+/*
     [Benchmark]
     public void TokenParser_Small()
     {
@@ -70,7 +71,6 @@ public class CsvBenchmark
         while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
             csvSpan = csvSpan[length..];
     }
-
     [Benchmark]
     public void TokenParser_Large()
     {
@@ -78,8 +78,8 @@ public class CsvBenchmark
         var tokenParser = new TokenParser<CsvTokenTypes>();
         while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
             csvSpan = csvSpan[length..];
-    }/*
-    
+    }
+
     [Benchmark]
     public void ParseCsv_Small()
     {

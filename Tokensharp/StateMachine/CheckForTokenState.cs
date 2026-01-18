@@ -36,22 +36,24 @@ internal class CheckForTokenState<TTokenType>(
         {
             nextState = FoundTokenState;
         }
-        else if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
+        else if (!TryGetStateForChildNode(c, out nextState))
         {
-            nextState = new CheckForTokenState<TTokenType>(childNode, FallbackState);
-
-            AddStateToCache(c, nextState);
-        }
-        else if (CharacterIsValidForState(c))
-        {
-            nextState = FallbackFailedTokenCheckState;
-        }
-        else
-        {
-            nextState = EndOfFallbackFailedTokenCheckState;
+            if (CharacterIsValidForState(c))
+            {
+                nextState = FallbackFailedTokenCheckState;
+            }
+            else
+            {
+                nextState = EndOfFallbackFailedTokenCheckState;
+            }
         }
 
         return true;
+    }
+
+    protected override IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode)
+    {
+        return new CheckForTokenState<TTokenType>(childNode, FallbackState);
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
@@ -71,7 +73,7 @@ internal class CheckForTokenState<TTokenType>(
 
         return true;
     }
-    
+
     public override void OnEnter(StateMachineContext context)
     {
         context.PotentialLexemeLength++;

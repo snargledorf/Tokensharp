@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;

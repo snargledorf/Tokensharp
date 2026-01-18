@@ -4,8 +4,7 @@ using Tokensharp.Benchmark;
 
 #if DEBUG
 var config = new DebugInProcessConfig();
-#else
-var config = new CsvBenchmark.Config();
-#endif
-
 BenchmarkRunner.Run<CsvBenchmark>(config, args);
+#else
+BenchmarkRunner.Run<CsvBenchmark>();
+#endif

@@ -15,16 +15,20 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
         {
             nextState = EndOfTokenStateInstance;
         }
-        else if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
-        {
-            nextState = new StartOfCheckForTokenState<TTokenType>(childNode, this);
-        }
-        else
+        else if (!TryGetStateForChildNode(c, out nextState))
         {
             nextState = this;
         }
 
         return true;
+    }
+
+    protected override IState<TTokenType> CreateStateForChildNode(ITokenTreeNode<TTokenType> childNode)
+    {
+        if (childNode.IsEndOfToken)
+            return EndOfTokenStateInstance;
+
+        return new StartOfCheckForTokenState<TTokenType>(childNode, this);
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
