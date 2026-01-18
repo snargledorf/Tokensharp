@@ -2,32 +2,34 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.StateMachine;
 
-internal class EndOfTokenState<TTokenType> : State<TTokenType>
+internal class EndOfTokenState<TTokenType> : State<TTokenType>, IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected EndOfTokenState(TTokenType tokenType)
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => this;
+
+    private EndOfTokenState(TTokenType tokenType)
     {
         TokenType = tokenType;
     }
 
-    private static readonly Dictionary<TTokenType, EndOfTokenState<TTokenType>> Instances = new();
-    
     public TTokenType TokenType { get; }
-    
+
+
     public static EndOfTokenState<TTokenType> For(TTokenType tokenType)
     {
-        return Instances.GetOrAdd(tokenType, tt => new EndOfTokenState<TTokenType>(tt));
+        return new EndOfTokenState<TTokenType>(tokenType);
     }
 
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    public override void OnEnter(StateMachineContext context)
     {
-        nextState = null;
-        return false;
-    }
-
-    public override void OnEnter(StateMachineContext<TTokenType> context)
-    {
-        if (context is { PotentialLexemeLength: > 0, ConfirmedLexemeLength: 0 })
+        if (context.FallbackLexemeLength > 0)
+            context.ConfirmedLexemeLength = context.FallbackLexemeLength;
+        else
             context.ConfirmedLexemeLength = context.PotentialLexemeLength;
+    }
+
+    public override bool CharacterIsValidForState(char c)
+    {
+        return false;
     }
 }

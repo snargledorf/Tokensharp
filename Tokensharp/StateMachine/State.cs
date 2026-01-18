@@ -4,21 +4,39 @@ namespace Tokensharp.StateMachine;
 
 internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public virtual bool TryTransition(char c, StateMachineContext<TTokenType> context, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    //private readonly Dictionary<char, IState<TTokenType>> _states = new();
+    
+    public virtual bool TryTransition(char c, StateMachineContext context, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (!TryGetStateNextState(c, out nextState))
+        if (TryGetStateFromCache(c, out nextState))
+            return true;
+        
+        if (!TryGetStateNextState(c, out nextState) && !TryGetDefaultState(out nextState))
             return false;
         
         nextState.OnEnter(context);
         return true;
     }
 
-    protected virtual bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    private bool TryGetStateFromCache(char c, [NotNullWhen(true)] out IState<TTokenType>? state)
     {
-        return TryGetDefaultState(out nextState);
+        state = null;
+        return false;
+        // return _states.TryGetValue(c, out state);
     }
 
-    public virtual bool TryDefaultTransition(StateMachineContext<TTokenType> context, [NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected void AddStateToCache(char c, IState<TTokenType> state)
+    {
+        //_states.Add(c, state);
+    }
+
+    protected virtual bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    {
+        nextState = null;
+        return false;
+    }
+
+    public virtual bool TryDefaultTransition(StateMachineContext context, [NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
         if (!TryGetDefaultState(out defaultState))
             return false;
@@ -33,14 +51,10 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
         return false;
     }
 
-    public virtual void OnEnter(StateMachineContext<TTokenType> context)
+    public abstract bool CharacterIsValidForState(char c);
+    
+    public virtual void OnEnter(StateMachineContext context)
     {
-        if (context.PotentialLexemeLength > context.ConfirmedLexemeLength)
-            context.ConfirmedLexemeLength = context.PotentialLexemeLength;
-        else
-        {
-            context.ConfirmedLexemeLength++;
-            context.PotentialLexemeLength = context.ConfirmedLexemeLength;
-        }
+        context.PotentialLexemeLength++;
     }
 }

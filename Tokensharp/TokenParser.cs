@@ -32,7 +32,7 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
         length = 0;
 
         IState<TTokenType> currentState = _startState;
-        var context = new StateMachineContext<TTokenType>();
+        var context = new StateMachineContext();
 
         foreach (char c in buffer)
         {
@@ -71,11 +71,4 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
 
         return tokenType is not null;
     }
-}
-
-public class StateMachineContext<TTokenType>
-{
-    public TTokenType? TokenType;
-    public int ConfirmedLexemeLength;
-    public int PotentialLexemeLength;
 }

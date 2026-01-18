@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
@@ -9,14 +8,13 @@ internal class TextState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
 {
     private static TextState<TTokenType>? _instance;
 
-    protected override TTokenType TokenType => TokenType<TTokenType>.Text;
-    public override EndOfTokenState<TTokenType> EndOfTokenState { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Text);
+    public override EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Text);
 
-    internal override WhiteSpaceState<TTokenType> WhiteSpaceStateInstance => field ??= WhiteSpaceState<TTokenType>.For(RootNode);
+    protected override WhiteSpaceState<TTokenType> WhiteSpaceStateInstance => field ??= WhiteSpaceState<TTokenType>.For(Node);
 
-    internal override NumberState<TTokenType> NumberStateInstance => field ??= NumberState<TTokenType>.For(RootNode);
+    protected override NumberState<TTokenType> NumberStateInstance => field ??= NumberState<TTokenType>.For(Node);
 
-    internal override TextState<TTokenType> TextStateInstance => this;
+    protected override TextState<TTokenType> TextStateInstance => this;
     
     internal static TextState<TTokenType> For(ITokenTreeNode<TTokenType> treeNode)
     {
@@ -26,7 +24,7 @@ internal class TextState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
         return _instance = new TextState<TTokenType>(treeNode.RootNode);
     }
 
-    public override bool CharacterIsValidForToken(char c)
+    public override bool CharacterIsValidForState(char c)
     {
         return !char.IsWhiteSpace(c) && !char.IsDigit(c);
     }

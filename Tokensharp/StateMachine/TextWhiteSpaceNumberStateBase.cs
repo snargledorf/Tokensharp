@@ -4,17 +4,15 @@ using Tokensharp.TokenTree;
 namespace Tokensharp.StateMachine;
 
 internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
-    : RootState<TTokenType>(rootNode) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+    : RootState<TTokenType>(rootNode), IEndOfTokenAccessorState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected abstract TTokenType TokenType { get; }
-    public abstract EndOfTokenState<TTokenType> EndOfTokenState { get; }
-
-
+    public abstract EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; }
+    
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (!CharacterIsValidForToken(c))
+        if (!CharacterIsValidForState(c))
         {
-            nextState = EndOfTokenState;
+            nextState = EndOfTokenStateInstance;
             return true;
         }
         
@@ -27,25 +25,12 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        defaultState = EndOfTokenState;
+        defaultState = EndOfTokenStateInstance;
         return true;
     }
 
-    protected override IState<TTokenType> GetFallbackEndOfTokenState(ITokenTreeNode<TTokenType> node)
+    protected override IEndOfTokenAccessorState<TTokenType> GetNextStateForChildNode(ITokenTreeNode<TTokenType> childNode, IEndOfTokenAccessorState<TTokenType> fallbackState)
     {
-        return EndOfTokenState;
+        return new StartOfCheckForTokenState<TTokenType>(childNode, this);
     }
-
-    protected override IState<TTokenType> GetStateForChildNode(ITokenTreeNode<TTokenType> childNode)
-    {
-        return new CheckForTokenState<TTokenType>(childNode, this);
-    }
-
-    public override void OnEnter(StateMachineContext<TTokenType> context)
-    {
-        context.TokenType = TokenType;
-        base.OnEnter(context);
-    }
-
-    public abstract bool CharacterIsValidForToken(char c);
 }

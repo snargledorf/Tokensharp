@@ -4,55 +4,53 @@ using Tokensharp.TokenTree;
 namespace Tokensharp.StateMachine;
 
 internal abstract class RootState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
-    : State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+    : NodeStateBase<TTokenType>(rootNode.RootNode) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly Dictionary<char, IState<TTokenType>> _transitions = new();
-
-    protected ITokenTreeNode<TTokenType> RootNode { get; } = rootNode.RootNode;
-    internal abstract WhiteSpaceState<TTokenType> WhiteSpaceStateInstance { get; }
-    internal abstract NumberState<TTokenType> NumberStateInstance { get; }
-    internal abstract TextState<TTokenType> TextStateInstance { get; }
+    protected abstract WhiteSpaceState<TTokenType> WhiteSpaceStateInstance { get; }
+    protected abstract NumberState<TTokenType> NumberStateInstance { get; }
+    protected abstract TextState<TTokenType> TextStateInstance { get; }
 
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (_transitions.TryGetValue(c, out nextState)) 
-            return true;
-
-        if (RootNode.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
+        if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
         {
-            if (childNode.IsEndOfToken)
-            {
-                nextState = GetFallbackEndOfTokenState(childNode);
-                return true;
-            }
-            
-            nextState = GetStateForChildNode(childNode);
+            IEndOfTokenAccessorState<TTokenType> fallbackState = GetFallbackState(c);
+            nextState = GetNextStateForChildNode(childNode, fallbackState);
 
-            _transitions.Add(c, nextState);
+            AddStateToCache(c, nextState);
             return true;
         }
 
-        nextState = null;
-        return false;
+        if (char.IsWhiteSpace(c))
+        {
+            nextState = WhiteSpaceStateInstance;
+            return true;
+        }
+
+        if (char.IsDigit(c))
+        {
+            nextState = NumberStateInstance;
+            return true;
+        }
+
+        nextState = TextStateInstance;
+        return true;
     }
 
-    protected virtual IState<TTokenType> GetStateForChildNode(ITokenTreeNode<TTokenType> childNode)
+    protected virtual IEndOfTokenAccessorState<TTokenType> GetNextStateForChildNode(ITokenTreeNode<TTokenType> childNode, IEndOfTokenAccessorState<TTokenType> fallbackState)
     {
-        IState<TTokenType> fallbackState = GetFallbackState(childNode);
         return new PotentialTokenState<TTokenType>(childNode, fallbackState, WhiteSpaceStateInstance,
             NumberStateInstance, TextStateInstance);
     }
 
-    private IState<TTokenType> GetFallbackState(ITokenTreeNode<TTokenType> node)
+    private IEndOfTokenAccessorState<TTokenType> GetFallbackState(char c)
     {
-        if (char.IsWhiteSpace(node.Character))
+        if (char.IsWhiteSpace(c))
             return WhiteSpaceStateInstance;
         
-        if (char.IsDigit(node.Character))
+        if (char.IsDigit(c))
             return NumberStateInstance;
         
         return TextStateInstance;
     }
-
-    protected abstract IState<TTokenType> GetFallbackEndOfTokenState(ITokenTreeNode<TTokenType> node);
 }

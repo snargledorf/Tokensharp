@@ -5,65 +5,62 @@ namespace Tokensharp.StateMachine;
 
 internal class PotentialTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
-    IState<TTokenType> fallbackState,
+    IEndOfTokenAccessorState<TTokenType> fallbackState,
     WhiteSpaceState<TTokenType> whiteSpaceState,
     NumberState<TTokenType> numberState,
     TextState<TTokenType> textState)
-    : NodeStateBase<TTokenType>(node)
+    : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly Dictionary<char, IState<TTokenType>> _transitions = new();
+    protected WhiteSpaceState<TTokenType> WhiteSpaceStateInstance { get; } = whiteSpaceState;
+    protected NumberState<TTokenType> NumberStateInstance { get; } = numberState;
+    protected TextState<TTokenType> TextStateInstance { get; } = textState;
 
-    internal WhiteSpaceState<TTokenType> WhiteSpaceState { get; } = whiteSpaceState;
-    internal NumberState<TTokenType> NumberState { get; } = numberState;
-    internal TextState<TTokenType> TextState { get; } = textState;
-    
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => field ??= Node.IsEndOfToken
+        ? EndOfTokenState<TTokenType>.For(Node.TokenType)
+        : fallbackState.EndOfTokenStateInstance;
+
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (_transitions.TryGetValue(c, out nextState)) 
-            return true;
-
         if (Node.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
         {
-            IState<TTokenType> childFallbackState = GetChildFallbackState();
-            nextState = new PotentialTokenState<TTokenType>(childNode, childFallbackState, WhiteSpaceState,
-                NumberState, TextState);
+            IEndOfTokenAccessorState<TTokenType> childFallback = Node.IsEndOfToken
+                ? EndOfTokenState<TTokenType>.For(Node.TokenType)
+                : fallbackState;
+            
+            nextState = new PotentialTokenState<TTokenType>(childNode, childFallback, WhiteSpaceStateInstance,
+                NumberStateInstance, TextStateInstance);
 
-            _transitions.Add(c, nextState);
             return true;
         }
-        
-        return TryGetDefaultState(out nextState);
-    }
 
-    private IState<TTokenType> GetChildFallbackState()
-    {
-        return Node.IsEndOfToken ? EndOfTokenState<TTokenType>.For(Node.TokenType) : fallbackState;
+        if (!CharacterIsValidForState(c) || Node.IsEndOfToken)
+        {
+            nextState = EndOfTokenStateInstance;
+            return true;
+        }
+
+        if (Node.RootNode.TryGetChild(c, out childNode))
+        {
+            nextState = new StartOfCheckForTokenState<TTokenType>(childNode, fallbackState);
+            return true;
+        }
+
+        return TryGetDefaultState(out nextState);
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        if (Node.IsEndOfToken)
-        {
-            defaultState = EndOfTokenState<TTokenType>.For(Node.TokenType);
-            return true;
-        }
-        
-        defaultState = fallbackState;
+        defaultState = EndOfTokenStateInstance;
         return true;
     }
 
-    public override void OnEnter(StateMachineContext<TTokenType> context)
+    public override void OnEnter(StateMachineContext context)
     {
+        context.PotentialLexemeLength++;
         if (Node.IsEndOfToken)
-        {
-            context.TokenType = Node.TokenType;
-            context.PotentialLexemeLength++;
-            context.ConfirmedLexemeLength = context.PotentialLexemeLength;
-        }
-        else
-        {
-            context.PotentialLexemeLength++;
-        }
+            context.FallbackLexemeLength = context.PotentialLexemeLength;
     }
+
+    public override bool CharacterIsValidForState(char c) => fallbackState.CharacterIsValidForState(c);
 }

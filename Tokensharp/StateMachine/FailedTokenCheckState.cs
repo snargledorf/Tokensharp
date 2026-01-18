@@ -1,22 +1,11 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Tokensharp.StateMachine;
 
-internal class FailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState) : State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal class FailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState)
+    : MixedCharacterFailedTokenCheckState<TTokenType>(fallbackState) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    public override void OnEnter(StateMachineContext context)
     {
-        return TryGetDefaultState(out nextState);
-    }
-
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
-    {
-        defaultState = fallbackState;
-        return true;
-    }
-
-    public override void OnEnter(StateMachineContext<TTokenType> context)
-    {
-        context.ConfirmedLexemeLength = context.PotentialLexemeLength;
+        context.PotentialLexemeLength++;
+        base.OnEnter(context);
     }
 }

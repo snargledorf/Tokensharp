@@ -9,15 +9,14 @@ internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
 {
     private static NumberState<TTokenType>? _instance;
 
-    internal override WhiteSpaceState<TTokenType> WhiteSpaceStateInstance =>
-        field ??= WhiteSpaceState<TTokenType>.For(RootNode);
-    
-    internal override NumberState<TTokenType> NumberStateInstance => this;
-    
-    internal override TextState<TTokenType> TextStateInstance => field ??= TextState<TTokenType>.For(RootNode);
+    protected override WhiteSpaceState<TTokenType> WhiteSpaceStateInstance =>
+        field ??= WhiteSpaceState<TTokenType>.For(Node);
+
+    protected override NumberState<TTokenType> NumberStateInstance => this;
+
+    protected override TextState<TTokenType> TextStateInstance => field ??= TextState<TTokenType>.For(Node);
    
-    protected override TTokenType TokenType => TokenType<TTokenType>.Number;
-    public override EndOfTokenState<TTokenType> EndOfTokenState { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Number);
+    public override EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = EndOfTokenState<TTokenType>.For(TokenType<TTokenType>.Number);
 
     internal static NumberState<TTokenType> For(ITokenTreeNode<TTokenType> treeNode)
     {
@@ -31,7 +30,7 @@ internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
     {
         if (!char.IsDigit(c))
         {
-            nextState = EndOfTokenState;
+            nextState = EndOfTokenStateInstance;
             return true;
         }
         
@@ -42,7 +41,7 @@ internal class NumberState<TTokenType>(ITokenTreeNode<TTokenType> rootNode)
         return true;
     }
 
-    public override bool CharacterIsValidForToken(char c)
+    public override bool CharacterIsValidForState(char c)
     {
         return char.IsDigit(c);
     }
