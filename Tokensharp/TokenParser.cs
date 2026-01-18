@@ -6,7 +6,7 @@ namespace Tokensharp;
 public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType> tokenConfiguration)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly StartState<TTokenType> _startState = new(tokenConfiguration.TokenTree);
+    private readonly StartState<TTokenType> _startState = tokenConfiguration.StartState;
 
     public TokenParser() : this(TTokenType.Configuration)
     {

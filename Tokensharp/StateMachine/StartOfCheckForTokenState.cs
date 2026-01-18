@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
@@ -12,5 +11,11 @@ internal class StartOfCheckForTokenState<TTokenType>(
     {
         context.FallbackLexemeLength = context.PotentialLexemeLength;
         context.PotentialLexemeLength++;
+    }
+
+    public static StartOfCheckForTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node, Func<ITokenTreeNode<TTokenType>, IEndOfTokenAccessorState<TTokenType>> getFallbackState)
+    {
+        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
+        return new StartOfCheckForTokenState<TTokenType>(node, fallbackState);
     }
 }

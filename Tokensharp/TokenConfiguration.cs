@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Tokensharp.StateMachine;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp;
@@ -6,11 +7,10 @@ namespace Tokensharp;
 public class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly ITokenTreeNode<TTokenType> _tokenTree;
-
     internal TokenConfiguration(IEnumerable<LexemeToTokenType<TTokenType>> lexemeToTokenTypes)
     {
-        _tokenTree = lexemeToTokenTypes.ToTokenTree();
+        TokenTree = lexemeToTokenTypes.ToTokenTree();
+        StartState = StartState<TTokenType>.For(TokenTree);
     }
     
     public static implicit operator TokenConfiguration<TTokenType>(LexemeToTokenType<TTokenType>[] lexemeToTokenTypes)
@@ -18,5 +18,7 @@ public class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenType>
         return new TokenConfiguration<TTokenType>(lexemeToTokenTypes);
     }
 
-    internal ITokenTreeNode<TTokenType> TokenTree => _tokenTree;
+    internal ITokenTreeNode<TTokenType> TokenTree { get; }
+    
+    internal StartState<TTokenType> StartState { get; }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
@@ -7,7 +8,16 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
     : NodeStateBase<TTokenType>(rootNode.RootNode), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    private FrozenDictionary<char, IState<TTokenType>>? _states;
+    
+    private FrozenDictionary<char, IState<TTokenType>> States => _states ?? throw new InvalidOperationException("States not initialized");
+    
     public abstract EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; }
+
+    public void InitializeStates(FrozenDictionary<char, IState<TTokenType>> states)
+    {
+        _states = states;
+    }
 
     protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
@@ -15,7 +25,7 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
         {
             nextState = EndOfTokenStateInstance;
         }
-        else if (!TryGetStateForChildNode(c, out nextState))
+        else if (!States.TryGetValue(c, out nextState))
         {
             nextState = this;
         }

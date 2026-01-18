@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.TokenTree;
 
-internal interface ITokenTreeNode<TTokenType>
+internal interface ITokenTreeNode<TTokenType> : IEnumerable<ITokenTreeNode<TTokenType>>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public char Character { get; }

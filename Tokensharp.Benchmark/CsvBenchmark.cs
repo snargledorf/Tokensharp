@@ -17,7 +17,8 @@ public class CsvBenchmark
                                    """;
     
     private string? _largeTestStr;
-    
+    private TokenConfiguration<CsvTokenTypes>? _tokenConfiguration;
+
     public class Config : ManualConfig
     {
         private static readonly string[] TargetVersions = [
@@ -53,16 +54,17 @@ public class CsvBenchmark
             builder.Append("\r\n");
         }
         _largeTestStr = builder.ToString();
+        _tokenConfiguration = CsvTokenTypes.Configuration;
     }
 
     [Benchmark]
     public bool TokenParser_SingleToken()
     {
-        var tokenParser = new TokenParser<CsvTokenTypes>();
+        var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
         return tokenParser.TryParseToken(TestStr, false, out TokenType<CsvTokenTypes>? _, out int _);
     }
 
-/*
+
     [Benchmark]
     public void TokenParser_Small()
     {
@@ -79,7 +81,7 @@ public class CsvBenchmark
         while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
             csvSpan = csvSpan[length..];
     }
-
+/*
     [Benchmark]
     public void ParseCsv_Small()
     {

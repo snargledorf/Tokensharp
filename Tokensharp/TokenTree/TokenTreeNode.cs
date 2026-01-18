@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 
@@ -26,8 +27,18 @@ internal record TokenTreeNode<TTokenType>(
         Parent = parent;
     }
 
+    public IEnumerator<ITokenTreeNode<TTokenType>> GetEnumerator()
+    {
+        return Children.Values.Select(cn => cn).GetEnumerator();
+    }
+
     public override string ToString()
     {
         return string.Concat(Parent?.ToString(), Character.ToString());
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

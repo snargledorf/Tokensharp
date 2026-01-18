@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
@@ -5,7 +6,8 @@ namespace Tokensharp.StateMachine;
 
 internal class PotentialTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
-    IEndOfTokenAccessorState<TTokenType> fallbackState)
+    IEndOfTokenAccessorState<TTokenType> fallbackState,
+    FrozenDictionary<char, IState<TTokenType>> rootStates)
     : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
@@ -24,11 +26,8 @@ internal class PotentialTokenState<TTokenType>(
             return true;
         }
 
-        if (Node.RootNode.TryGetChild(c, out ITokenTreeNode<TTokenType>? childNode))
-        {
-            nextState = new StartOfCheckForTokenState<TTokenType>(childNode, fallbackState);
+        if (rootStates.TryGetValue(c, out nextState))
             return true;
-        }
 
         return TryGetDefaultState(out nextState);
     }
@@ -39,7 +38,7 @@ internal class PotentialTokenState<TTokenType>(
             ? EndOfTokenState<TTokenType>.For(Node.TokenType)
             : fallbackState;
             
-        return new PotentialTokenState<TTokenType>(childNode, childFallback);
+        return new PotentialTokenState<TTokenType>(childNode, childFallback, rootStates);
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
@@ -56,4 +55,24 @@ internal class PotentialTokenState<TTokenType>(
     }
 
     public override bool CharacterIsValidForState(char c) => fallbackState.CharacterIsValidForState(c);
+
+    public static IState<TTokenType> For(ITokenTreeNode<TTokenType> node, Func<ITokenTreeNode<TTokenType>, IEndOfTokenAccessorState<TTokenType>> getFallbackState)
+    {
+        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
+        if (node.IsEndOfToken)
+            fallbackState = EndOfTokenState<TTokenType>.For(node.TokenType);
+
+        Dictionary<char, IState<TTokenType>> rootStates = new();
+
+        foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
+        {
+            fallbackState = getFallbackState(startNode);
+            if (startNode.IsEndOfToken)
+                rootStates.Add(startNode.Character, fallbackState.EndOfTokenStateInstance);
+            else
+                rootStates.Add(startNode.Character, new StartOfCheckForTokenState<TTokenType>(startNode, fallbackState));
+        }
+        
+        return new PotentialTokenState<TTokenType>(node, fallbackState, rootStates.ToFrozenDictionary());
+    }
 }
