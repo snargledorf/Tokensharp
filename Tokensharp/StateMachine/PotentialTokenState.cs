@@ -5,17 +5,10 @@ namespace Tokensharp.StateMachine;
 
 internal class PotentialTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
-    IEndOfTokenAccessorState<TTokenType> fallbackState,
-    WhiteSpaceState<TTokenType> whiteSpaceState,
-    NumberState<TTokenType> numberState,
-    TextState<TTokenType> textState)
+    IEndOfTokenAccessorState<TTokenType> fallbackState)
     : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected WhiteSpaceState<TTokenType> WhiteSpaceStateInstance { get; } = whiteSpaceState;
-    protected NumberState<TTokenType> NumberStateInstance { get; } = numberState;
-    protected TextState<TTokenType> TextStateInstance { get; } = textState;
-
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => field ??= Node.IsEndOfToken
         ? EndOfTokenState<TTokenType>.For(Node.TokenType)
         : fallbackState.EndOfTokenStateInstance;
@@ -28,8 +21,7 @@ internal class PotentialTokenState<TTokenType>(
                 ? EndOfTokenState<TTokenType>.For(Node.TokenType)
                 : fallbackState;
             
-            nextState = new PotentialTokenState<TTokenType>(childNode, childFallback, WhiteSpaceStateInstance,
-                NumberStateInstance, TextStateInstance);
+            nextState = new PotentialTokenState<TTokenType>(childNode, childFallback);
 
             return true;
         }

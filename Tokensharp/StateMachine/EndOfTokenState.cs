@@ -14,7 +14,6 @@ internal class EndOfTokenState<TTokenType> : State<TTokenType>, IEndOfTokenAcces
 
     public TTokenType TokenType { get; }
 
-
     public static EndOfTokenState<TTokenType> For(TTokenType tokenType)
     {
         return new EndOfTokenState<TTokenType>(tokenType);
@@ -26,6 +25,17 @@ internal class EndOfTokenState<TTokenType> : State<TTokenType>, IEndOfTokenAcces
             context.ConfirmedLexemeLength = context.FallbackLexemeLength;
         else
             context.ConfirmedLexemeLength = context.PotentialLexemeLength;
+    }
+
+    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    {
+        return TryGetDefaultState(out nextState);
+    }
+
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    {
+        defaultState = null;
+        return false;
     }
 
     public override bool CharacterIsValidForState(char c)
