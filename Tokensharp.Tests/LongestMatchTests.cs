@@ -115,7 +115,7 @@ public class LongestMatchTests : TokenizerTestBase<LongestMatchTokenTypes>
     }
 
     [Test]
-    public void TestLongestMath_IncompleteFooFollowedByFoo()
+    public void TestLongestMatch_IncompleteFooFollowedByFoo()
     {
         RunTest("fofoo", [
             new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "fo"),
