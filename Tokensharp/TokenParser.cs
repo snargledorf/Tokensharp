@@ -7,6 +7,8 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly StartState<TTokenType> _startState = tokenConfiguration.StartState;
+    
+    private readonly StateMachineContext _context = new();
 
     public TokenParser() : this(TTokenType.Configuration)
     {
@@ -30,20 +32,21 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
     {
         tokenType = null;
         length = 0;
+        
+        _context.Reset();
 
         IState<TTokenType> currentState = _startState;
-        var context = new StateMachineContext();
 
         foreach (char c in buffer)
         {
-            if (currentState.TryTransition(c, context, out IState<TTokenType>? nextState))
+            if (currentState.TryTransition(c, _context, out IState<TTokenType>? nextState))
             {
                 currentState = nextState;
 
                 if (currentState is EndOfTokenState<TTokenType> endOfTokenState)
                 {
                     tokenType = endOfTokenState.TokenType;
-                    length = context.ConfirmedLexemeLength;
+                    length = _context.ConfirmedLexemeLength;
                     break;
                 }
             }
@@ -56,7 +59,7 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
         if (!moreDataAvailable && tokenType is null)
         {
             IState<TTokenType>? defaultState;
-            while (currentState.TryDefaultTransition(context, out defaultState) &&
+            while (currentState.TryDefaultTransition(_context, out defaultState) &&
                    defaultState is not EndOfTokenState<TTokenType>)
             {
                 currentState = defaultState;
@@ -65,7 +68,7 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
             if (defaultState is EndOfTokenState<TTokenType> endOfTokenState)
             {
                 tokenType = endOfTokenState.TokenType;
-                length = context.ConfirmedLexemeLength;
+                length = _context.ConfirmedLexemeLength;
             }
         }
 
