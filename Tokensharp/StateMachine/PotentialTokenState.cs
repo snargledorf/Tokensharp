@@ -11,7 +11,7 @@ internal class PotentialTokenState<TTokenType>(
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = node.IsEndOfToken
-        ? EndOfTokenState<TTokenType>.For(node.TokenType)
+        ? new EndOfTokenState<TTokenType>(node.TokenType)
         : fallbackState.EndOfTokenStateInstance;
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
@@ -43,25 +43,26 @@ internal class PotentialTokenState<TTokenType>(
 
     public override bool CharacterIsValidForState(char c) => fallbackState.CharacterIsValidForState(c);
 
-    public static IState<TTokenType> For(ITokenTreeNode<TTokenType> node, Func<ITokenTreeNode<TTokenType>, IEndOfTokenAccessorState<TTokenType>> getFallbackState)
+    public static IState<TTokenType> For(ITokenTreeNode<TTokenType> node, IEndOfTokenAccessorState<TTokenType> fallbackState)
     {
         var rootStates = new StateLookupBuilder<TTokenType>();
 
         foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
         {
             if (startNode.IsEndOfToken)
-                rootStates.Add(startNode.Character, getFallbackState(startNode).EndOfTokenStateInstance);
+                rootStates.Add(startNode.Character, fallbackState.EndOfTokenStateInstance);
             else
-                rootStates.Add(startNode.Character, StartOfCheckForTokenState<TTokenType>.For(startNode, getFallbackState));
+                rootStates.Add(startNode.Character, StartOfCheckForTokenState<TTokenType>.For(startNode, fallbackState));
         }
         
-        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
         if (node.IsEndOfToken)
-            fallbackState = EndOfTokenState<TTokenType>.For(node.TokenType);
+            fallbackState = new EndOfTokenState<TTokenType>(node.TokenType);
         
         var childStates = new StateLookupBuilder<TTokenType>();
         foreach (ITokenTreeNode<TTokenType> childNode in node)
-            childStates.Add(childNode.Character, For(childNode, _ => fallbackState));
+        {
+            childStates.Add(childNode.Character, For(childNode, fallbackState));
+        }
         
         return new PotentialTokenState<TTokenType>(node, fallbackState, rootStates.Build())
         {

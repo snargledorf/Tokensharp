@@ -1,6 +1,6 @@
 namespace Tokensharp.StateMachine;
 
-internal class FailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState)
+internal class FailedTokenCheckState<TTokenType>(IEndOfTokenAccessorState<TTokenType> fallbackState)
     : MixedCharacterFailedTokenCheckState<TTokenType>(fallbackState) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public override void OnEnter(StateMachineContext context)

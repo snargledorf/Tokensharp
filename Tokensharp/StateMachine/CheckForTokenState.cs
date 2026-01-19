@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
@@ -9,15 +10,11 @@ internal class CheckForTokenState<TTokenType>(
     : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly FoundTokenState<TTokenType> _foundTokenState = new(fallbackState.EndOfTokenStateInstance);
-
     private readonly FailedTokenCheckState<TTokenType> _fallbackFailedTokenCheckState = new(fallbackState);
-
-    private readonly MixedCharacterFailedTokenCheckState<TTokenType> _endOfFallbackFailedTokenCheckState = new(fallbackState.EndOfTokenStateInstance);
-
-    private readonly MixedCharacterFailedTokenCheckState<TTokenType> _defaultEndOfFallbackFailedTokenCheckState = new(fallbackState.EndOfTokenStateInstance);
+    private readonly MixedCharacterCheckFailedEndOfTokenState<TTokenType> _endOfFallbackFailedTokenCheckState = new(fallbackState.EndOfTokenStateInstance);
 
     private readonly MixedCharacterFailedTokenCheckState<TTokenType> _defaultFailedTokenCheckState = new(fallbackState);
+    private readonly MixedCharacterCheckFailedEndOfTokenState<TTokenType> _defaultEndOfFallbackFailedTokenCheckState = new(fallbackState.EndOfTokenStateInstance);
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => field ??= fallbackState.EndOfTokenStateInstance;
 
@@ -25,20 +22,17 @@ internal class CheckForTokenState<TTokenType>(
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (Node.IsEndOfToken)
+        Debug.Assert(Node.IsEndOfToken);
+        if (TryGetStateForChildNode(c, out nextState))
+            return true;
+        
+        if (CharacterIsValidForState(c))
         {
-            nextState = _foundTokenState;
+            nextState = _fallbackFailedTokenCheckState;
         }
-        else if (!TryGetStateForChildNode(c, out nextState))
+        else
         {
-            if (CharacterIsValidForState(c))
-            {
-                nextState = _fallbackFailedTokenCheckState;
-            }
-            else
-            {
-                nextState = _endOfFallbackFailedTokenCheckState;
-            }
+            nextState = _endOfFallbackFailedTokenCheckState;
         }
 
         return true;
@@ -46,11 +40,9 @@ internal class CheckForTokenState<TTokenType>(
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        if (Node.IsEndOfToken)
-        {
-            defaultState = _foundTokenState;
-        }
-        else if (CharacterIsValidForState(Node.Character))
+        Debug.Assert(Node.IsEndOfToken);
+        
+        if (CharacterIsValidForState(Node.Character))
         {
             defaultState = _defaultFailedTokenCheckState;
         }
@@ -68,13 +60,20 @@ internal class CheckForTokenState<TTokenType>(
     }
 
     protected static CheckForTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,
-        Func<ITokenTreeNode<TTokenType>, IEndOfTokenAccessorState<TTokenType>> getFallbackState)
+        IEndOfTokenAccessorState<TTokenType> fallbackState)
     {
-        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
-        
         var childStates = new StateLookupBuilder<TTokenType>();
         foreach (ITokenTreeNode<TTokenType> childNode in node)
-            childStates.Add(childNode.Character, For(childNode, getFallbackState));
+        {
+            if (childNode.IsEndOfToken)
+            {
+                childStates.Add(childNode.Character, fallbackState.EndOfTokenStateInstance);
+            }
+            else
+            {
+                childStates.Add(childNode.Character, For(childNode, fallbackState));
+            }
+        }
         
         return new CheckForTokenState<TTokenType>(node, fallbackState)
         {

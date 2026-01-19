@@ -55,17 +55,26 @@ internal class StartState<TTokenType>(
 
         foreach (ITokenTreeNode<TTokenType> startNode in tokenTree.RootNode)
         {
-            startStates.Add(startNode.Character, PotentialTokenState<TTokenType>.For(startNode, GetFallbackState));
+            IEndOfTokenAccessorState<TTokenType> fallbackState = GetFallbackState(startNode);
+            
+            if (startNode.HasChildren)
+            {
+                startStates.Add(startNode.Character, PotentialTokenState<TTokenType>.For(startNode, fallbackState));
+            }
+            else
+            {
+                startStates.Add(startNode.Character, new EndOfSingleCharacterTokenState<TTokenType>(startNode.TokenType));
+            }
 
             if (startNode.IsEndOfToken)
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    GetFallbackState(startNode).EndOfTokenStateInstance);
+                    fallbackState.EndOfTokenStateInstance);
             }
             else
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, GetFallbackState));
+                    StartOfCheckForTokenState<TTokenType>.For(startNode, fallbackState));
             }
         }
 

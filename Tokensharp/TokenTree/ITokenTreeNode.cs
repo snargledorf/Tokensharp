@@ -10,6 +10,7 @@ internal interface ITokenTreeNode<TTokenType> : IEnumerable<ITokenTreeNode<TToke
     ITokenTreeNode<TTokenType>? Parent { get; }
     ITokenTreeNode<TTokenType> RootNode { get; }
     public int Count { get; }
+    [MemberNotNullWhen(false, nameof(TokenType))]
     public bool HasChildren => Count > 0;
     [MemberNotNullWhen(true, nameof(TokenType))]
     public bool IsEndOfToken => TokenType is not null;

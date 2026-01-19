@@ -15,13 +15,20 @@ internal class StartOfCheckForTokenState<TTokenType>(
     }
 
     public new static StartOfCheckForTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,
-        Func<ITokenTreeNode<TTokenType>, IEndOfTokenAccessorState<TTokenType>> getFallbackState)
+        IEndOfTokenAccessorState<TTokenType> fallbackState)
     {
-        IEndOfTokenAccessorState<TTokenType> fallbackState = getFallbackState(node);
-        
         var childStates = new StateLookupBuilder<TTokenType>();
         foreach (ITokenTreeNode<TTokenType> childNode in node)
-            childStates.Add(childNode.Character, CheckForTokenState<TTokenType>.For(childNode, getFallbackState));
+        {
+            if (childNode.IsEndOfToken)
+            {
+                childStates.Add(childNode.Character, fallbackState.EndOfTokenStateInstance);
+            }
+            else
+            {
+                childStates.Add(childNode.Character, CheckForTokenState<TTokenType>.For(childNode, fallbackState));
+            }
+        }
         
         return new StartOfCheckForTokenState<TTokenType>(node, fallbackState)
         {

@@ -7,7 +7,7 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
     : NodeStateBase<TTokenType>(rootNode.RootNode), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = EndOfTokenState<TTokenType>.For(tokenType);
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = new(tokenType);
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {

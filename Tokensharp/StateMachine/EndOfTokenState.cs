@@ -2,24 +2,13 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.StateMachine;
 
-internal class EndOfTokenState<TTokenType> : State<TTokenType>, IEndOfTokenAccessorState<TTokenType>
+internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
+    : State<TTokenType>, IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private static readonly Dictionary<TTokenType, EndOfTokenState<TTokenType>> _instances = new();
-    
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => this;
 
-    private EndOfTokenState(TTokenType tokenType)
-    {
-        TokenType = tokenType;
-    }
-
-    public TTokenType TokenType { get; }
-
-    public static EndOfTokenState<TTokenType> For(TTokenType tokenType)
-    {
-        return _instances.GetOrAdd<TTokenType, EndOfTokenState<TTokenType>>(tokenType, tt => new EndOfTokenState<TTokenType>(tt));
-    }
+    public TTokenType TokenType { get; } = tokenType;
 
     public override void OnEnter(StateMachineContext context)
     {
