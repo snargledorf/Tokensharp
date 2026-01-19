@@ -10,25 +10,22 @@ internal class PotentialTokenState<TTokenType>(
     : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => field ??= Node.IsEndOfToken
-        ? EndOfTokenState<TTokenType>.For(Node.TokenType)
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = node.IsEndOfToken
+        ? EndOfTokenState<TTokenType>.For(node.TokenType)
         : fallbackState.EndOfTokenStateInstance;
 
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         if (TryGetStateForChildNode(c, out nextState))
             return true;
 
-        if (!CharacterIsValidForState(c) || Node.IsEndOfToken)
+        if (Node.IsEndOfToken || !CharacterIsValidForState(c))
         {
             nextState = EndOfTokenStateInstance;
             return true;
         }
 
-        if (rootStates.TryGetState(c, out nextState))
-            return true;
-
-        return TryGetDefaultState(out nextState);
+        return rootStates.TryGetState(c, out nextState) || TryGetDefaultState(out nextState);
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)

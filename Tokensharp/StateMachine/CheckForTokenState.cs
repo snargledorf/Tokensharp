@@ -9,42 +9,35 @@ internal class CheckForTokenState<TTokenType>(
     : NodeStateBase<TTokenType>(node), IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private IEndOfTokenAccessorState<TTokenType> FallbackState { get; } = fallbackState;
+    private readonly FoundTokenState<TTokenType> _foundTokenState = new(fallbackState.EndOfTokenStateInstance);
 
-    private FoundTokenState<TTokenType> FoundTokenState =>
-        field ??= new FoundTokenState<TTokenType>(FallbackState.EndOfTokenStateInstance);
+    private readonly FailedTokenCheckState<TTokenType> _fallbackFailedTokenCheckState = new(fallbackState);
 
-    private FailedTokenCheckState<TTokenType> FallbackFailedTokenCheckState =>
-        field ??= new FailedTokenCheckState<TTokenType>(FallbackState);
+    private readonly MixedCharacterFailedTokenCheckState<TTokenType> _endOfFallbackFailedTokenCheckState = new(fallbackState.EndOfTokenStateInstance);
 
-    private MixedCharacterFailedTokenCheckState<TTokenType> EndOfFallbackFailedTokenCheckState => field ??=
-        new MixedCharacterFailedTokenCheckState<TTokenType>(FallbackState.EndOfTokenStateInstance);
+    private readonly MixedCharacterFailedTokenCheckState<TTokenType> _defaultEndOfFallbackFailedTokenCheckState = new(fallbackState.EndOfTokenStateInstance);
 
-    private MixedCharacterFailedTokenCheckState<TTokenType> DefaultEndOfFallbackFailedTokenCheckState => field ??=
-        new MixedCharacterFailedTokenCheckState<TTokenType>(FallbackState.EndOfTokenStateInstance);
+    private readonly MixedCharacterFailedTokenCheckState<TTokenType> _defaultFailedTokenCheckState = new(fallbackState);
 
-    private MixedCharacterFailedTokenCheckState<TTokenType> DefaultFailedTokenCheckState => field ??=
-        new MixedCharacterFailedTokenCheckState<TTokenType>(FallbackState);
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => field ??= fallbackState.EndOfTokenStateInstance;
 
-    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => field ??= FallbackState.EndOfTokenStateInstance;
+    public override bool CharacterIsValidForState(char c) => fallbackState.CharacterIsValidForState(c);
 
-    public override bool CharacterIsValidForState(char c) => FallbackState.CharacterIsValidForState(c);
-
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         if (Node.IsEndOfToken)
         {
-            nextState = FoundTokenState;
+            nextState = _foundTokenState;
         }
         else if (!TryGetStateForChildNode(c, out nextState))
         {
             if (CharacterIsValidForState(c))
             {
-                nextState = FallbackFailedTokenCheckState;
+                nextState = _fallbackFailedTokenCheckState;
             }
             else
             {
-                nextState = EndOfFallbackFailedTokenCheckState;
+                nextState = _endOfFallbackFailedTokenCheckState;
             }
         }
 
@@ -55,15 +48,15 @@ internal class CheckForTokenState<TTokenType>(
     {
         if (Node.IsEndOfToken)
         {
-            defaultState = FoundTokenState;
+            defaultState = _foundTokenState;
         }
         else if (CharacterIsValidForState(Node.Character))
         {
-            defaultState = DefaultFailedTokenCheckState;
+            defaultState = _defaultFailedTokenCheckState;
         }
         else
         {
-            defaultState = DefaultEndOfFallbackFailedTokenCheckState;
+            defaultState = _defaultEndOfFallbackFailedTokenCheckState;
         }
 
         return true;

@@ -15,7 +15,7 @@ internal class StartState<TTokenType>(
     private NumberState<TTokenType> NumberStateInstance { get; } = numberState;
     private TextState<TTokenType> TextStateInstance { get; } = textState;
 
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         if (TryGetStateForChildNode(c, out nextState))
             return true;

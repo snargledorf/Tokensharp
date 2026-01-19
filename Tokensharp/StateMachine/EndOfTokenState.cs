@@ -5,6 +5,8 @@ namespace Tokensharp.StateMachine;
 internal class EndOfTokenState<TTokenType> : State<TTokenType>, IEndOfTokenAccessorState<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    private static readonly Dictionary<TTokenType, EndOfTokenState<TTokenType>> _instances = new();
+    
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => this;
 
     private EndOfTokenState(TTokenType tokenType)
@@ -16,7 +18,7 @@ internal class EndOfTokenState<TTokenType> : State<TTokenType>, IEndOfTokenAcces
 
     public static EndOfTokenState<TTokenType> For(TTokenType tokenType)
     {
-        return new EndOfTokenState<TTokenType>(tokenType);
+        return _instances.GetOrAdd<TTokenType, EndOfTokenState<TTokenType>>(tokenType, tt => new EndOfTokenState<TTokenType>(tt));
     }
 
     public override void OnEnter(StateMachineContext context)
@@ -27,7 +29,7 @@ internal class EndOfTokenState<TTokenType> : State<TTokenType>, IEndOfTokenAcces
             context.ConfirmedLexemeLength = context.PotentialLexemeLength;
     }
 
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         return TryGetDefaultState(out nextState);
     }

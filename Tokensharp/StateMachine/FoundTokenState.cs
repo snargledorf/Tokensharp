@@ -5,7 +5,7 @@ namespace Tokensharp.StateMachine;
 internal class FoundTokenState<TTokenType>(EndOfTokenState<TTokenType> endOfTokenState)
     : State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         nextState = endOfTokenState;
         return true;

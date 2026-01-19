@@ -5,7 +5,7 @@ namespace Tokensharp.StateMachine;
 internal class MixedCharacterFailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState)
     : State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         return TryGetDefaultState(out nextState);
     }

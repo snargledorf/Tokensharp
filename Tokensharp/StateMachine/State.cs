@@ -4,12 +4,9 @@ namespace Tokensharp.StateMachine;
 
 internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private protected readonly Dictionary<char, IState<TTokenType>> _states = new();
-    
     public virtual bool TryTransition(char c, StateMachineContext context, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (!TryGetStateFromCache(c, out nextState) &&
-            !TryGetStateNextState(c, out nextState) &&
+        if (!TryGetNextState(c, out nextState) &&
             !TryGetDefaultState(out nextState))
             return false;
         
@@ -17,17 +14,7 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
         return true;
     }
 
-    private bool TryGetStateFromCache(char c, [NotNullWhen(true)] out IState<TTokenType>? state)
-    {
-        return _states.TryGetValue(c, out state);
-    }
-
-    protected void AddStateToCache(char c, IState<TTokenType> state)
-    {
-        _states.Add(c, state);
-    }
-
-    protected abstract bool TryGetStateNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState);
+    protected abstract bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState);
 
     public virtual bool TryDefaultTransition(StateMachineContext context, [NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {

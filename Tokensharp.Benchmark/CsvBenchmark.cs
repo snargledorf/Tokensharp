@@ -64,20 +64,20 @@ public class CsvBenchmark
         return tokenParser.TryParseToken(TestStr, false, out TokenType<CsvTokenTypes>? _, out int _);
     }
 
-
     [Benchmark]
     public void TokenParser_Small()
     {
         ReadOnlySpan<char> csvSpan = TestStr.AsSpan();
-        var tokenParser = new TokenParser<CsvTokenTypes>();
+        var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
         while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
             csvSpan = csvSpan[length..];
     }
+    
     [Benchmark]
     public void TokenParser_Large()
     {
         ReadOnlySpan<char> csvSpan = _largeTestStr.AsSpan();
-        var tokenParser = new TokenParser<CsvTokenTypes>();
+        var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
         while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
             csvSpan = csvSpan[length..];
     }
