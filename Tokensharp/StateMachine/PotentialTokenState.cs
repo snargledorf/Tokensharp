@@ -26,9 +26,7 @@ internal class PotentialTokenState<TTokenType>(
             return true;
         }
 
-        if (rootStates.TryGetState(c, out nextState))
-            return true;
-        return TryGetDefaultState(out nextState);
+        return rootStates.TryGetState(c, out nextState) || TryGetDefaultState(out nextState);
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
