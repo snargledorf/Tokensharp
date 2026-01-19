@@ -25,10 +25,15 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 
     protected abstract bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState);
 
+    public virtual TTokenType? TokenType => null;
+
     public abstract bool CharacterIsValidForState(char c);
 
-    public virtual void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
+    public virtual bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
+        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
+        tokenType = null;
         potentialLexemeLength++;
+        return false;
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
@@ -8,10 +9,13 @@ internal class StartOfCheckForTokenState<TTokenType>(
     : CheckForTokenState<TTokenType>(node, fallbackState) 
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public override void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
+    public override bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
+        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         fallbackLexemeLength = potentialLexemeLength;
         potentialLexemeLength++;
+        tokenType = null;
+        return false;
     }
 
     public new static StartOfCheckForTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,

@@ -37,11 +37,14 @@ internal class PotentialTokenState<TTokenType>(
         return true;
     }
 
-    public override void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
+    public override bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
+        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         potentialLexemeLength++;
         if (Node.IsEndOfToken)
             fallbackLexemeLength = potentialLexemeLength;
+        tokenType = null;
+        return false;
     }
 
     public override bool CharacterIsValidForState(char c) => fallbackState.CharacterIsValidForState(c);

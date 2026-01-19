@@ -40,13 +40,9 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
             if (currentState.TryTransition(c, out IState<TTokenType>? nextState))
             {
                 currentState = nextState;
-                currentState.UpdateCounts(ref potentialLexemeLength, ref fallbackLexemeLength, ref length);
-
-                if (currentState is EndOfTokenState<TTokenType> endOfTokenState)
-                {
-                    tokenType = endOfTokenState.TokenType;
+                if (currentState.UpdateCounts(ref potentialLexemeLength, ref fallbackLexemeLength, ref length,
+                        out tokenType))
                     return true;
-                }
             }
             else
             {
@@ -59,13 +55,9 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
             while (currentState.TryDefaultTransition(out IState<TTokenType>? defaultState))
             {
                 currentState = defaultState;
-                currentState.UpdateCounts(ref potentialLexemeLength, ref fallbackLexemeLength, ref length);
-                
-                if (currentState is EndOfTokenState<TTokenType> endOfTokenState)
-                {
-                    tokenType = endOfTokenState.TokenType;
+                if (currentState.UpdateCounts(ref potentialLexemeLength, ref fallbackLexemeLength, ref length,
+                        out tokenType))
                     return true;
-                }
             }
         }
 

@@ -8,14 +8,18 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
 {
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => this;
 
-    public TTokenType TokenType { get; } = tokenType;
+    public override TTokenType TokenType { get; } = tokenType;
 
-    public override void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
+    public override bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
+        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         if (fallbackLexemeLength > 0)
             confirmedLexemeLength = fallbackLexemeLength;
         else
             confirmedLexemeLength = potentialLexemeLength;
+
+        tokenType = TokenType;
+        return true;
     }
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)

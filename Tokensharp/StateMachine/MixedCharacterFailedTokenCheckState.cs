@@ -15,10 +15,13 @@ internal class MixedCharacterFailedTokenCheckState<TTokenType>(IState<TTokenType
         defaultState = fallbackState;
         return true;
     }
-    
-    public override void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
+
+    public override bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
+        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         fallbackLexemeLength = potentialLexemeLength;
+        tokenType = null;
+        return false;
     }
 
     public override bool CharacterIsValidForState(char c) => fallbackState.CharacterIsValidForState(c);
