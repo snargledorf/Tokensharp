@@ -56,8 +56,7 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
 
         if (!moreDataAvailable && tokenType is null)
         {
-            IState<TTokenType>? defaultState;
-            while (currentState.TryDefaultTransition(out defaultState))
+            while (currentState.TryDefaultTransition(out IState<TTokenType>? defaultState))
             {
                 currentState = defaultState;
                 currentState.UpdateCounts(ref potentialLexemeLength, ref fallbackLexemeLength, ref length);
