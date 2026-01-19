@@ -128,4 +128,13 @@ public class LongestMatchTests : TokenizerTestBase<LongestMatchTokenTypes>
             new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.WhiteSpace, " ")
         ]);
     }
+
+    [Test]
+    public void TestLongestMatch_IncompleteFooFollowedByFoo()
+    {
+        RunTest("fofoo", [
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "fo"),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Foo)
+        ]);
+    }
 }
