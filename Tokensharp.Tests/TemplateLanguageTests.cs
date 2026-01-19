@@ -38,4 +38,17 @@ public class TemplateLanguageTests : TokenizerTestBase<TemplateLanguageTokenType
             new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.EndBinding),
         ]);
     }
+
+    [Test]
+    public void TextHasIncompleteTokenFollowedByValidToken()
+    {
+        RunTest("{{{}}text}}",
+        [
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.StartBinding),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "{"),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.EndBinding),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.Text, "text"),
+            new TestCase<TemplateLanguageTokenTypes>(TemplateLanguageTokenTypes.EndBinding),
+        ]);
+    }
 }
