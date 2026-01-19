@@ -47,7 +47,7 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
                 {
                     tokenType = endOfTokenState.TokenType;
                     length = _context.ConfirmedLexemeLength;
-                    break;
+                    return true;
                 }
             }
             else
@@ -69,9 +69,10 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
             {
                 tokenType = endOfTokenState.TokenType;
                 length = _context.ConfirmedLexemeLength;
+                return true;
             }
         }
 
-        return tokenType is not null;
+        return false;
     }
 }

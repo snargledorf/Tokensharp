@@ -6,6 +6,7 @@ using BenchmarkDotNet.Loggers;
 
 namespace Tokensharp.Benchmark;
 
+[SimpleJob]
 [MemoryDiagnoser]
 //[Config(typeof(Config))]
 public class CsvBenchmark
