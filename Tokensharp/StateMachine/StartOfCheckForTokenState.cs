@@ -8,10 +8,10 @@ internal class StartOfCheckForTokenState<TTokenType>(
     : CheckForTokenState<TTokenType>(node, fallbackState) 
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public override void OnEnter(StateMachineContext context)
+    public override void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
     {
-        context.FallbackLexemeLength = context.PotentialLexemeLength;
-        context.PotentialLexemeLength++;
+        fallbackLexemeLength = potentialLexemeLength;
+        potentialLexemeLength++;
     }
 
     public new static StartOfCheckForTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,

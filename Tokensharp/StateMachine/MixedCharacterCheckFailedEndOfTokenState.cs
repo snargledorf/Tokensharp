@@ -4,9 +4,9 @@ internal class MixedCharacterCheckFailedEndOfTokenState<TTokenType>(IEndOfTokenA
     : EndOfTokenState<TTokenType>(fallbackState.EndOfTokenStateInstance.TokenType)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public override void OnEnter(StateMachineContext context)
+    public override void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
     {
-        context.FallbackLexemeLength = context.PotentialLexemeLength;
-        base.OnEnter(context);
+        fallbackLexemeLength = potentialLexemeLength;
+        base.UpdateCounts(ref  potentialLexemeLength, ref fallbackLexemeLength, ref confirmedLexemeLength);
     }
 }

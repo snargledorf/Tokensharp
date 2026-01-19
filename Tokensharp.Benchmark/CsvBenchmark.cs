@@ -6,9 +6,7 @@ using BenchmarkDotNet.Loggers;
 
 namespace Tokensharp.Benchmark;
 
-[SimpleJob]
 [MemoryDiagnoser]
-//[Config(typeof(Config))]
 public class CsvBenchmark
 {
     private const string TestStr = """
@@ -19,30 +17,6 @@ public class CsvBenchmark
     
     private string? _largeTestStr;
     private TokenConfiguration<CsvTokenTypes>? _tokenConfiguration;
-
-    public class Config : ManualConfig
-    {
-        private static readonly string[] TargetVersions = [
-            "2.0.0",
-            "3.0.0-beta.1",
-            "3.0.0-beta.2",
-            "3.0.0-beta.3"
-        ];
-        
-        public Config()
-        {
-            foreach (string version in TargetVersions)
-            {
-                AddJob(Job.MediumRun
-                    //.WithMsBuildArguments($"/p:SwiftStateVersion={version}")
-                    //.WithId($"v{version}")
-                );
-            }
-
-            AddColumnProvider(DefaultColumnProviders.Instance);
-            AddLogger(ConsoleLogger.Default);
-        }
-    }
     
     [GlobalSetup]
     public void Setup()

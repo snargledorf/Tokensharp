@@ -10,12 +10,12 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
 
     public TTokenType TokenType { get; } = tokenType;
 
-    public override void OnEnter(StateMachineContext context)
+    public override void UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength, ref int confirmedLexemeLength)
     {
-        if (context.FallbackLexemeLength > 0)
-            context.ConfirmedLexemeLength = context.FallbackLexemeLength;
+        if (fallbackLexemeLength > 0)
+            confirmedLexemeLength = fallbackLexemeLength;
         else
-            context.ConfirmedLexemeLength = context.PotentialLexemeLength;
+            confirmedLexemeLength = potentialLexemeLength;
     }
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)

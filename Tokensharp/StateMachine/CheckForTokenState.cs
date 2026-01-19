@@ -22,7 +22,8 @@ internal class CheckForTokenState<TTokenType>(
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        Debug.Assert(Node.IsEndOfToken);
+        Debug.Assert(!Node.IsEndOfToken);
+        
         if (TryGetStateForChildNode(c, out nextState))
             return true;
         
@@ -40,7 +41,7 @@ internal class CheckForTokenState<TTokenType>(
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        Debug.Assert(Node.IsEndOfToken);
+        Debug.Assert(!Node.IsEndOfToken);
         
         if (CharacterIsValidForState(Node.Character))
         {
@@ -52,11 +53,6 @@ internal class CheckForTokenState<TTokenType>(
         }
 
         return true;
-    }
-
-    public override void OnEnter(StateMachineContext context)
-    {
-        context.PotentialLexemeLength++;
     }
 
     protected static CheckForTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,
