@@ -2,27 +2,24 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.StateMachine;
 
-internal class MixedCharacterFailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState)
-    : State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal class MixedCharacterFailedTokenCheckState<TTokenType>(State<TTokenType> fallbackState, IStateCharacterCheck fallbackStateCharacterCheck)
+    : State<TTokenType>, IStateCharacterCheck where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
     {
         return TryGetDefaultState(out nextState);
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
     {
         defaultState = fallbackState;
         return true;
     }
 
-    public override bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
-        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    protected override void UpdateCounts(ref StateMachineContext context)
     {
-        fallbackLexemeLength = potentialLexemeLength;
-        tokenType = null;
-        return false;
+        context.FallbackLexemeLength = context.PotentialLexemeLength;
     }
 
-    public override bool CharacterIsValidForState(char c) => fallbackState.CharacterIsValidForState(c);
+    public bool CharacterIsValidForState(char c) => fallbackStateCharacterCheck.CharacterIsValidForState(c);
 }

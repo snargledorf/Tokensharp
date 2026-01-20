@@ -5,11 +5,11 @@ namespace Tokensharp.StateMachine;
 
 internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly Dictionary<char, IState<TTokenType>> _states = new();
+    private readonly Dictionary<char, State<TTokenType>> _states = new();
     
     private readonly AlwaysFalseLookup _noStatesLookup = new();
 
-    public void Add(char character, IState<TTokenType> state)
+    public void Add(char character, State<TTokenType> state)
     {
         _states.Add(character, state);
     }
@@ -19,15 +19,9 @@ internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TToke
         if (_states.Count == 0)
             return _noStatesLookup;
 
-        if (_states.Count == 1)
-        {
-            (char key, IState<TTokenType> value) = _states.First();
-            return new SingleStateLookup<TTokenType>(key, value);
-        }
+        var swiftStateBuilder = new PredicateMapBuilder<char, State<TTokenType>>();
 
-        var swiftStateBuilder = new PredicateMapBuilder<char, IState<TTokenType>>();
-
-        foreach ((char character, IState<TTokenType> state) in _states)
+        foreach ((char character, State<TTokenType> state) in _states)
             swiftStateBuilder.Add(character, state);
 
         return new MultipleStateLookup<TTokenType>(swiftStateBuilder.ToPredicateMap());
@@ -35,7 +29,7 @@ internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TToke
 
     private class AlwaysFalseLookup : IStateLookup<TTokenType>
     {
-        public bool TryGetState(char c, [NotNullWhen(true)] out IState<TTokenType>? state)
+        public bool TryGetState(char c, [NotNullWhen(true)] out State<TTokenType>? state)
         {
             state = null;
             return false;

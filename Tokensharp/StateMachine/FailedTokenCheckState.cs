@@ -1,15 +1,11 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Tokensharp.StateMachine;
 
-internal class FailedTokenCheckState<TTokenType>(IEndOfTokenAccessorState<TTokenType> fallbackState)
-    : MixedCharacterFailedTokenCheckState<TTokenType>(fallbackState) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal class FailedTokenCheckState<TTokenType>(State<TTokenType> fallbackState, IStateCharacterCheck fallbackStateCharacterCheck)
+    : MixedCharacterFailedTokenCheckState<TTokenType>(fallbackState, fallbackStateCharacterCheck) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public override bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
-        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    protected override void UpdateCounts(ref StateMachineContext context)
     {
-        potentialLexemeLength++;
-        return base.UpdateCounts(ref potentialLexemeLength, ref fallbackLexemeLength, ref confirmedLexemeLength,
-            out tokenType);
+        context.PotentialLexemeLength++;
+        base.UpdateCounts(ref context);
     }
 }

@@ -5,61 +5,59 @@ namespace Tokensharp.StateMachine;
 
 internal class StartState<TTokenType>(
     ITokenTreeNode<TTokenType> rootNode,
-    WhiteSpaceState<TTokenType> whiteSpaceState,
-    NumberState<TTokenType> numberState,
-    TextState<TTokenType> textState)
+    WhiteSpace<TTokenType> whiteSpace,
+    Number<TTokenType> number,
+    Text<TTokenType> text)
     : NodeStateBase<TTokenType>(rootNode.RootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private WhiteSpaceState<TTokenType> WhiteSpaceStateInstance { get; } = whiteSpaceState;
-    private NumberState<TTokenType> NumberStateInstance { get; } = numberState;
-    private TextState<TTokenType> TextStateInstance { get; } = textState;
+    private WhiteSpace<TTokenType> WhiteSpaceInstance { get; } = whiteSpace;
+    private Number<TTokenType> NumberInstance { get; } = number;
+    private Text<TTokenType> TextInstance { get; } = text;
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
     {
         if (TryGetStateForChildNode(c, out nextState))
             return true;
 
         if (char.IsWhiteSpace(c))
         {
-            nextState = WhiteSpaceStateInstance;
+            nextState = WhiteSpaceInstance;
             return true;
         }
 
         if (char.IsDigit(c))
         {
-            nextState = NumberStateInstance;
+            nextState = NumberInstance;
             return true;
         }
 
-        nextState = TextStateInstance;
+        nextState = TextInstance;
         return true;
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
     {
         defaultState = null;
         return false;
     }
 
-    public override bool CharacterIsValidForState(char c) => true;
-
     public static StartState<TTokenType> For(ITokenTreeNode<TTokenType> tokenTree)
     {
-        var whiteSpaceState = new WhiteSpaceState<TTokenType>(tokenTree);
-        var numberState = new NumberState<TTokenType>(tokenTree);
-        var textState = new TextState<TTokenType>(tokenTree);
+        var whiteSpaceState = new WhiteSpace<TTokenType>(tokenTree);
+        var numberState = new Number<TTokenType>(tokenTree);
+        var textState = new Text<TTokenType>(tokenTree);
 
         var startStates = new StateLookupBuilder<TTokenType>();
         var textWhiteSpaceNumberStates = new StateLookupBuilder<TTokenType>();
 
         foreach (ITokenTreeNode<TTokenType> startNode in tokenTree.RootNode)
         {
-            IEndOfTokenAccessorState<TTokenType> fallbackState = GetFallbackState(startNode);
+            TextWhiteSpaceNumberBase<TTokenType> fallback = GetFallbackState(startNode);
             
             if (startNode.HasChildren)
             {
-                startStates.Add(startNode.Character, PotentialTokenState<TTokenType>.For(startNode, fallbackState));
+                startStates.Add(startNode.Character, PotentialTokenState<TTokenType>.For(startNode, fallback, fallback, fallback));
             }
             else
             {
@@ -69,12 +67,12 @@ internal class StartState<TTokenType>(
             if (startNode.IsEndOfToken)
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    fallbackState.EndOfTokenStateInstance);
+                    fallback.EndOfTokenStateInstance);
             }
             else
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, fallbackState));
+                    StartOfCheckForTokenState<TTokenType>.For(startNode, fallback, fallback, fallback));
             }
         }
 
@@ -92,7 +90,7 @@ internal class StartState<TTokenType>(
         
         return startState;
 
-        IEndOfTokenAccessorState<TTokenType> GetFallbackState(ITokenTreeNode<TTokenType> child)
+        TextWhiteSpaceNumberBase<TTokenType> GetFallbackState(ITokenTreeNode<TTokenType> child)
         {
             if (char.IsWhiteSpace(child.Character))
                 return whiteSpaceState;

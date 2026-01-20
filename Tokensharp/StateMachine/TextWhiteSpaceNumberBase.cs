@@ -3,13 +3,13 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode<TTokenType> rootNode, TTokenType tokenType)
-    : NodeStateBase<TTokenType>(rootNode.RootNode), IEndOfTokenAccessorState<TTokenType>
+internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTokenType> rootNode, TTokenType tokenType)
+    : NodeStateBase<TTokenType>(rootNode.RootNode), IEndOfTokenStateAccessor<TTokenType>, IStateCharacterCheck
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = new(tokenType);
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
     {
         if (!CharacterIsValidForState(c))
         {
@@ -23,9 +23,11 @@ internal abstract class TextWhiteSpaceNumberStateBase<TTokenType>(ITokenTreeNode
         return true;
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
     {
         defaultState = EndOfTokenStateInstance;
         return true;
     }
+
+    public abstract bool CharacterIsValidForState(char c);
 }

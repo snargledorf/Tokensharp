@@ -3,37 +3,37 @@ using System.Diagnostics.CodeAnalysis;
 namespace Tokensharp.StateMachine;
 
 internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
-    : State<TTokenType>, IEndOfTokenAccessorState<TTokenType>
+    : State<TTokenType>, IEndOfTokenStateAccessor<TTokenType>, IStateCharacterCheck
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    public TTokenType TokenType { get; } = tokenType;
+    
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => this;
 
-    public override TTokenType TokenType { get; } = tokenType;
-
-    public override bool UpdateCounts(ref int potentialLexemeLength, ref int fallbackLexemeLength,
-        ref int confirmedLexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    protected override void UpdateCounts(ref StateMachineContext context)
     {
-        if (fallbackLexemeLength > 0)
-            confirmedLexemeLength = fallbackLexemeLength;
-        else
-            confirmedLexemeLength = potentialLexemeLength;
+        // NoOp
+    }
 
+    public override bool IsEndOfToken(ref StateMachineContext context, out int length, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    {
+        length = context.FallbackLexemeLength > 0 ? context.FallbackLexemeLength : context.PotentialLexemeLength;
         tokenType = TokenType;
         return true;
     }
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
     {
         return TryGetDefaultState(out nextState);
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
     {
         defaultState = null;
         return false;
     }
 
-    public override bool CharacterIsValidForState(char c)
+    public bool CharacterIsValidForState(char c)
     {
         return false;
     }
