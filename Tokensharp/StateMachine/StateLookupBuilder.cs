@@ -1,0 +1,38 @@
+using System.Diagnostics.CodeAnalysis;
+using PredicateMap;
+
+namespace Tokensharp.StateMachine;
+
+internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+{
+    private readonly Dictionary<char, State<TTokenType>> _states = new();
+    
+    private readonly AlwaysFalseLookup _noStatesLookup = new();
+
+    public void Add(char character, State<TTokenType> state)
+    {
+        _states.Add(character, state);
+    }
+
+    public IStateLookup<TTokenType> Build()
+    {
+        if (_states.Count == 0)
+            return _noStatesLookup;
+
+        var swiftStateBuilder = new PredicateMapBuilder<char, State<TTokenType>>();
+
+        foreach ((char character, State<TTokenType> state) in _states)
+            swiftStateBuilder.Add(character, state);
+
+        return new MultipleStateLookup<TTokenType>(swiftStateBuilder.ToPredicateMap());
+    }
+
+    private class AlwaysFalseLookup : IStateLookup<TTokenType>
+    {
+        public bool TryGetState(char c, [NotNullWhen(true)] out State<TTokenType>? state)
+        {
+            state = null;
+            return false;
+        }
+    }
+}

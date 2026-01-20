@@ -1,4 +1,3 @@
-using Tokensharp.StateMachine;
 
 namespace Tokensharp.Tests;
 
@@ -28,9 +27,7 @@ public class TokenReaderTests : TokenizerTestBase<SimpleTokenTypes>
         string input = "A";
         ReadOnlyMemory<char> memory = input.AsMemory();
         
-        TokenReaderStateMachine<SimpleTokenTypes> tokenReaderStateMachine = TokenReaderStateMachine<SimpleTokenTypes>.For(SimpleTokenTypes.Configuration);
-        
-        var tokenReader = new TokenReader<SimpleTokenTypes>(memory.Span, tokenReaderStateMachine, moreDataAvailable: true);
+        var tokenReader = new TokenReader<SimpleTokenTypes>(memory.Span, moreDataAvailable: true);
         bool result = tokenReader.Read(out TokenType<SimpleTokenTypes>? tokenType, out ReadOnlySpan<char> lexeme);
 
         using (Assert.EnterMultipleScope())

@@ -100,6 +100,21 @@ public class LongestMatchTests : TokenizerTestBase<LongestMatchTokenTypes>
     }
 
     [Test]
+    public void TestLongestMatch_TextFollowedByFo()
+    {
+        RunTest("ThisIsTextfo", LongestMatchTokenTypes.Text, "ThisIsTextfo");
+    }
+
+    [Test]
+    public void TestLongestMatch_TextFollowedByFoAndSpace()
+    {
+        RunTest("ThisIsTextfo ", [
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.Text, "ThisIsTextfo"),
+            new TestCase<LongestMatchTokenTypes>(LongestMatchTokenTypes.WhiteSpace, " ")
+        ]);
+    }
+
+    [Test]
     public void TestLongestMatch_IncompleteFoo()
     {
         RunTest("fo", LongestMatchTokenTypes.Text, "fo");

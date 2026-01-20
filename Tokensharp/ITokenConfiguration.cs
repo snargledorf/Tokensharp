@@ -1,6 +1,6 @@
 ﻿namespace Tokensharp;
 
-public interface ITokenConfiguration<TTokenType> : IEnumerable<LexemeToTokenType<TTokenType>>
+public interface ITokenConfiguration<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
 }

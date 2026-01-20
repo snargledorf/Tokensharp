@@ -9,13 +9,14 @@
         <RepositoryType>git</RepositoryType>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <Version>3.1.2</Version>
+        <Version>3.1.3-beta.1</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="SwiftState" Version="2.0.0" />
-    </ItemGroup>
+    <PropertyGroup>
+        <!-- Use 2.0.0 as default package version if not specified -->
+        <SwiftStateVersion Condition="'$(SwiftStateVersion)' == ''">3.0.0-beta.2</SwiftStateVersion>
+    </PropertyGroup>
 
     <ItemGroup>
         <None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="" />
@@ -23,6 +24,10 @@
 
     <ItemGroup>
         <None Include="$(SolutionDir)\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="PredicateMap" Version="1.0.1" />
     </ItemGroup>
 
 </Project>

@@ -1,17 +1,23 @@
 using System.Diagnostics.CodeAnalysis;
-using Tokensharp.StateMachine;
 
 namespace Tokensharp;
 
 public ref struct TokenReader<TTokenType>(
     ReadOnlySpan<char> buffer,
-    TokenReaderStateMachine<TTokenType> stateMachine,
+    TokenConfiguration<TTokenType> tokenConfiguration,
     bool moreDataAvailable = false,
     TokenReaderOptions options = default)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly TokenParser<TTokenType> _tokenParser = new(stateMachine);
+    private readonly TokenParser<TTokenType> _tokenParser = new(tokenConfiguration);
+
     private readonly ReadOnlySpan<char> _buffer = buffer;
+
+    public TokenReader(ReadOnlySpan<char> buffer,
+        bool moreDataAvailable = false,
+        TokenReaderOptions options = default) : this(buffer, TTokenType.Configuration, moreDataAvailable, options)
+    {
+    }
 
     public int Consumed { get; private set; }
 

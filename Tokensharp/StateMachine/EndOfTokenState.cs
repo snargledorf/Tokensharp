@@ -1,0 +1,40 @@
+using System.Diagnostics.CodeAnalysis;
+
+namespace Tokensharp.StateMachine;
+
+internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
+    : State<TTokenType>, IEndOfTokenStateAccessor<TTokenType>, IStateCharacterCheck
+    where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+{
+    public TTokenType TokenType { get; } = tokenType;
+    
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => this;
+
+    protected override void UpdateCounts(ref StateMachineContext context)
+    {
+        // NoOp
+    }
+
+    public override bool IsEndOfToken(ref StateMachineContext context, out int length, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    {
+        length = context.FallbackLexemeLength > 0 ? context.FallbackLexemeLength : context.PotentialLexemeLength;
+        tokenType = TokenType;
+        return true;
+    }
+
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
+    {
+        return TryGetDefaultState(out nextState);
+    }
+
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
+    {
+        defaultState = null;
+        return false;
+    }
+
+    public bool CharacterIsValidForState(char c)
+    {
+        return false;
+    }
+}
