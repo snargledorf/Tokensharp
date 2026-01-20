@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using SwiftState;
+using PredicateMap;
 
 namespace Tokensharp.StateMachine;
 
@@ -25,12 +25,12 @@ internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TToke
             return new SingleStateLookup<TTokenType>(key, value);
         }
 
-        var swiftStateBuilder = new StateBuilder<char, SwiftStateId<TTokenType>>(new SwiftStateId<TTokenType>());
+        var swiftStateBuilder = new PredicateMapBuilder<char, IState<TTokenType>>();
 
         foreach ((char character, IState<TTokenType> state) in _states)
-            swiftStateBuilder.When(character, new SwiftStateId<TTokenType>(state));
+            swiftStateBuilder.Add(character, state);
 
-        return new MultipleStateLookup<TTokenType>(swiftStateBuilder.Build());
+        return new MultipleStateLookup<TTokenType>(swiftStateBuilder.ToPredicateMap());
     }
 
     private class AlwaysFalseLookup : IStateLookup<TTokenType>

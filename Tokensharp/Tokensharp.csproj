@@ -19,15 +19,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="SwiftState" Version="$(SwiftStateVersion)" />
-    </ItemGroup>
-
-    <ItemGroup>
         <None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="$(SolutionDir)\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="PredicateMap" Version="1.0.1" />
     </ItemGroup>
 
 </Project>
