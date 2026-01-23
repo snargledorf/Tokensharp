@@ -24,7 +24,8 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
     {
-        return TryGetDefaultState(out nextState);
+        nextState = null;
+        return false;
     }
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
