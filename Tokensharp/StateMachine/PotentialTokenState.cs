@@ -17,7 +17,7 @@ internal class PotentialTokenState<TTokenType>(
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
     {
         if (base.TryGetNextState(c, out nextState))
             return true;
@@ -28,10 +28,14 @@ internal class PotentialTokenState<TTokenType>(
             return true;
         }
 
-        return rootStates.TryGetState(c, out nextState) || TryGetDefaultState(out nextState);
+        if (rootStates.TryGetState(c, out nextState!))
+            return true;
+        
+        nextState = _endOfTokenStateInstance;
+        return true;
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
     {
         defaultState = _endOfTokenStateInstance;
         return true;
