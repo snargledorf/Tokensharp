@@ -4,18 +4,20 @@ namespace Tokensharp.StateMachine;
 
 internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public virtual bool TryTransition(char c, ref StateMachineContext context, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected abstract TransitionResult TransitionResult { get; }
+
+    public virtual TransitionResult TryTransition(char c, ref StateMachineContext context, out IState<TTokenType>? nextState)
     {
         if (!TryGetNextState(c, out State<TTokenType>? state) &&
             !TryGetDefaultState(out state))
         {
             nextState = null;
-            return false;
+            return TransitionResult.Failure;
         }
         
         state.UpdateCounts(ref context);
         nextState = state;
-        return true;
+        return state.TransitionResult;
     }
 
     protected abstract bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState);
@@ -35,7 +37,7 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 
     protected abstract bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState);
     
-    public virtual bool IsEndOfToken(ref StateMachineContext context, out int lexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    public virtual bool TryFinalizeToken(ref StateMachineContext context, out int lexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         lexemeLength = 0;
         tokenType = null;

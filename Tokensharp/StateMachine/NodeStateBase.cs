@@ -6,6 +6,8 @@ namespace Tokensharp.StateMachine;
 internal abstract class NodeStateBase<TTokenType>(ITokenTreeNode<TTokenType> node)
     : State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    protected override TransitionResult TransitionResult => TransitionResult.NewState;
+    
     protected ITokenTreeNode<TTokenType> Node { get; } = node;
 
     private IStateLookup<TTokenType>? _stateLookup;

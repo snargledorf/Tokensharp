@@ -7,7 +7,9 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public TTokenType TokenType { get; } = tokenType;
-    
+
+    protected override TransitionResult TransitionResult => TransitionResult.EndOfToken;
+
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => this;
 
     protected override void UpdateCounts(ref StateMachineContext context)
@@ -15,7 +17,7 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
         // NoOp
     }
 
-    public override bool IsEndOfToken(ref StateMachineContext context, out int length, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    public override bool TryFinalizeToken(ref StateMachineContext context, out int length, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         length = context.FallbackLexemeLength > 0 ? context.FallbackLexemeLength : context.PotentialLexemeLength;
         tokenType = TokenType;
