@@ -7,7 +7,8 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
     : NodeStateBase<TTokenType>(rootNode.RootNode), IEndOfTokenStateAccessor<TTokenType>, IStateCharacterCheck
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = new(tokenType);
+    private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance = new(tokenType);
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
@@ -15,7 +16,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
         {
             nextState = EndOfTokenStateInstance;
         }
-        else if (!TryGetStateForChildNode(c, out nextState))
+        else if (!base.TryGetNextState(c, out nextState))
         {
             nextState = this;
         }
@@ -25,7 +26,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        defaultState = EndOfTokenStateInstance;
+        defaultState = _endOfTokenStateInstance;
         return true;
     }
 
