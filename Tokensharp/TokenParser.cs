@@ -45,20 +45,11 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
 
             return tokenFinalized;
         }
-
-        if (!moreDataAvailable)
-        {
-            while (currentState.TryDefaultTransition(ref context, out IState<TTokenType>? defaultState))
-            {
-                if (defaultState.FinalizeToken(ref context, out length, out tokenType))
-                    return true;
-                
-                currentState = defaultState;
-            }
-        }
         
-        tokenType = null;
-        length = 0;
-        return false;
+        while (!moreDataAvailable && currentState.TryDefaultTransition(ref context, out currentState)) ;
+            
+        Debug.Assert(currentState is not null, "Default state transition resulted in null state");
+            
+        return currentState.FinalizeToken(ref context, out length, out tokenType);
     }
 }
