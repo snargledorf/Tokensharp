@@ -6,13 +6,15 @@ namespace Tokensharp.StateMachine;
 internal abstract class NodeStateBase<TTokenType>(ITokenTreeNode<TTokenType> node)
     : State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    public override bool IsEndOfToken => false;
+    
     protected ITokenTreeNode<TTokenType> Node { get; } = node;
 
     private IStateLookup<TTokenType>? _stateLookup;
     
     internal IStateLookup<TTokenType> StateLookup { set => _stateLookup = value; }
 
-    protected bool TryGetStateForChildNode(char c, [NotNullWhen(true)] out State<TTokenType>? state) =>
+    protected bool TryGetStateForChildNode(char c, [NotNullWhen(true)] out IState<TTokenType>? state) =>
         _stateLookup!.TryGetState(c, out state);
 
     public override string ToString()

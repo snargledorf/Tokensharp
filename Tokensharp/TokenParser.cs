@@ -28,9 +28,6 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
     
     public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int length)
     {
-        tokenType = null;
-        length = 0;
-
         IState<TTokenType> currentState = _startState;
         var context = new StateMachineContext();
 
@@ -38,10 +35,11 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
         {
             if (currentState.TryTransition(c, ref context, out IState<TTokenType>? nextState))
             {
-                if (nextState.IsEndOfToken(ref context, out length, out tokenType))
-                    return true;
-                
-                currentState = nextState;
+                currentState = nextState!;
+            }
+            else if (nextState!.TryFinalizeToken(ref context, out length, out tokenType))
+            {
+                return true;
             }
             else
             {
@@ -49,15 +47,19 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
             }
         }
 
-        if (!moreDataAvailable && tokenType is null)
+        if (!moreDataAvailable)
         {
-            while (currentState.TryDefaultTransition(ref context, out IState<TTokenType>? defaultState)
-                   && !defaultState.IsEndOfToken(ref context, out length, out tokenType))
+            while (currentState.TryDefaultTransition(ref context, out IState<TTokenType>? defaultState))
             {
+                if (defaultState.TryFinalizeToken(ref context, out length, out tokenType))
+                    return true;
+                
                 currentState = defaultState;
             }
         }
-
-        return tokenType is not null;
+        
+        tokenType = null;
+        length = 0;
+        return false;
     }
 }
