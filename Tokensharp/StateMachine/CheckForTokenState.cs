@@ -17,14 +17,14 @@ internal class CheckForTokenState<TTokenType>(
 
     private readonly MixedCharacterFailedTokenCheckState<TTokenType> _defaultFailedTokenCheckState = new(fallback, fallbackStateCharacterCheck);
     private readonly MixedCharacterCheckFailedEndOfTokenState<TTokenType> _defaultEndOfFallbackFailedTokenCheckState = new(fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance);
-
-    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => field ??= fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
+    
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         Debug.Assert(!Node.IsEndOfToken);
         
-        if (TryGetStateForChildNode(c, out nextState))
+        if (base.TryGetNextState(c, out nextState))
             return true;
         
         if (fallbackStateCharacterCheck.CharacterIsValidForState(c))

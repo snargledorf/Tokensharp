@@ -11,28 +11,24 @@ internal class StartState<TTokenType>(
     : NodeStateBase<TTokenType>(rootNode.RootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private WhiteSpace<TTokenType> WhiteSpaceInstance { get; } = whiteSpace;
-    private Number<TTokenType> NumberInstance { get; } = number;
-    private Text<TTokenType> TextInstance { get; } = text;
-
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (TryGetStateForChildNode(c, out nextState))
+        if (base.TryGetNextState(c, out nextState))
             return true;
 
         if (char.IsWhiteSpace(c))
         {
-            nextState = WhiteSpaceInstance;
+            nextState = whiteSpace;
             return true;
         }
 
         if (char.IsDigit(c))
         {
-            nextState = NumberInstance;
+            nextState = number;
             return true;
         }
 
-        nextState = TextInstance;
+        nextState = text;
         return true;
     }
 

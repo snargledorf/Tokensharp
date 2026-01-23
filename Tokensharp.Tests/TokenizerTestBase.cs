@@ -4,6 +4,14 @@ namespace Tokensharp.Tests;
 public abstract class TokenizerTestBase<TTokenType> 
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    private TokenConfiguration<TTokenType> _tokenConfiguration;
+
+    [OneTimeSetUp]
+    public void Setup()
+    {
+        _tokenConfiguration = TTokenType.Configuration;
+    }
+    
     protected void RunTest(string input,
         IEnumerable<TestCase<TTokenType>> testCases,
         bool moreDataAvailable = false)
@@ -18,14 +26,14 @@ public abstract class TokenizerTestBase<TTokenType>
         foreach (TestCase<TTokenType> expectedToken in testCases)
             text = text[RunTest(text, expectedToken, moreDataAvailable)..];
         
-        bool parsed =
-            Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
+        var tokenParser =  new TokenParser<TTokenType>(_tokenConfiguration);
+        bool parsed = tokenParser.TryParseToken(text.Span, moreDataAvailable, out TokenType<TTokenType>? tokenType, out int length);
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(parsed, Is.False, "Parsed additional tokens");
-            Assert.That(token.Type, Is.Null);
-            Assert.That(token.Lexeme, Is.Null);
+            Assert.That(tokenType, Is.Null);
+            Assert.That(length, Is.Zero);
         }
     }
     
@@ -59,28 +67,28 @@ public abstract class TokenizerTestBase<TTokenType>
         if (expectedLexeme is null)
             expectedLexeme = expectedTokenType.Identifier;
 
-        bool parsed =
-            Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token);
+        var tokenParser =  new TokenParser<TTokenType>(_tokenConfiguration);
+        bool parsed = tokenParser.TryParseToken(text.Span, moreDataAvailable, out TokenType<TTokenType>? tokenType, out ReadOnlySpan<char> lexeme);
 
         using (Assert.EnterMultipleScope())
         {
             if (expectToParse)
             {
                 Assert.That(parsed, Is.True);
-                Assert.That(token.Type, Is.Not.Null.And.EqualTo(expectedTokenType));
-                Assert.That(token.Lexeme, Is.EqualTo(expectedLexeme));
-                Assert.That(token.Length, Is.EqualTo(expectedLexeme.Length));
+                Assert.That(tokenType, Is.Not.Null.And.EqualTo(expectedTokenType));
+                Assert.That(lexeme.ToString(), Is.EqualTo(expectedLexeme));
+                Assert.That(lexeme.Length, Is.EqualTo(expectedLexeme.Length));
             }
             else
             {
                 Assert.That(parsed, Is.False);
-                Assert.That(token.Type, Is.Null);
-                Assert.That(token.Lexeme, Is.Null);
-                Assert.That(token.Length, Is.Zero);
+                Assert.That(tokenType, Is.Null);
+                Assert.That(lexeme.IsEmpty, Is.True);
+                Assert.That(lexeme.Length, Is.Zero);
             }
         }
 
-        return token.Length;
+        return lexeme.Length;
     }
 
     protected void RunTestShouldThrow<TExceptionType>(ReadOnlyMemory<char> text, Action<TExceptionType> validateException, bool moreDataAvailable = false) 
@@ -88,7 +96,7 @@ public abstract class TokenizerTestBase<TTokenType>
     {
         var exception = Assert.Throws<TExceptionType>(() =>
         {
-            while (Tokenizer.TryParseToken(text, moreDataAvailable, out Token<TTokenType> token))
+            while (Tokenizer.TryParseToken(text, _tokenConfiguration, moreDataAvailable, out Token<TTokenType> token))
                 text = text[token.Lexeme.Length..];
         });
         

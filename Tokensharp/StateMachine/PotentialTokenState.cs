@@ -11,18 +11,20 @@ internal class PotentialTokenState<TTokenType>(
     : NodeStateBase<TTokenType>(node), IEndOfTokenStateAccessor<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public EndOfTokenState<TTokenType> EndOfTokenStateInstance { get; } = node.IsEndOfToken
+    private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance = node.IsEndOfToken
         ? new EndOfTokenState<TTokenType>(node.TokenType)
         : fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
+
     protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
-        if (TryGetStateForChildNode(c, out nextState))
+        if (base.TryGetNextState(c, out nextState))
             return true;
 
         if (Node.IsEndOfToken || !fallbackStateCharacterCheck.CharacterIsValidForState(c))
         {
-            nextState = EndOfTokenStateInstance;
+            nextState = _endOfTokenStateInstance;
             return true;
         }
 
@@ -31,7 +33,7 @@ internal class PotentialTokenState<TTokenType>(
 
     protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
-        defaultState = EndOfTokenStateInstance;
+        defaultState = _endOfTokenStateInstance;
         return true;
     }
 
