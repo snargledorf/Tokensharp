@@ -15,7 +15,7 @@ internal class PotentialTokenState<TTokenType>(
         ? new EndOfTokenState<TTokenType>(node.TokenType)
         : fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         if (TryGetStateForChildNode(c, out nextState))
             return true;
@@ -29,13 +29,13 @@ internal class PotentialTokenState<TTokenType>(
         return rootStates.TryGetState(c, out nextState) || TryGetDefaultState(out nextState);
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
         defaultState = EndOfTokenStateInstance;
         return true;
     }
 
-    protected override void UpdateCounts(ref StateMachineContext context)
+    public override void UpdateCounts(ref StateMachineContext context)
     {
         context.PotentialLexemeLength++;
         if (Node.IsEndOfToken)

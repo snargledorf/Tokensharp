@@ -10,6 +10,9 @@ internal interface IStateCharacterCheck
 internal interface IState<TTokenType> : ITransitionHandler<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
+    bool IsEndOfToken { get; }
+    void UpdateCounts(ref StateMachineContext context);
+
     bool TryFinalizeToken(ref StateMachineContext context, out int lexemeLength,
         [NotNullWhen(true)] out TokenType<TTokenType>? tokenType);
 }

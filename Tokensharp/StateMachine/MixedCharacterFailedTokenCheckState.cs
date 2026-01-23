@@ -5,20 +5,20 @@ namespace Tokensharp.StateMachine;
 internal class MixedCharacterFailedTokenCheckState<TTokenType>(State<TTokenType> fallbackState, IStateCharacterCheck fallbackStateCharacterCheck)
     : State<TTokenType>, IStateCharacterCheck where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override TransitionResult TransitionResult => TransitionResult.NewState;
+    public override bool IsEndOfToken => false;
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out State<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
     {
         return TryGetDefaultState(out nextState);
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out State<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
     {
         defaultState = fallbackState;
         return true;
     }
 
-    protected override void UpdateCounts(ref StateMachineContext context)
+    public override void UpdateCounts(ref StateMachineContext context)
     {
         context.FallbackLexemeLength = context.PotentialLexemeLength;
     }

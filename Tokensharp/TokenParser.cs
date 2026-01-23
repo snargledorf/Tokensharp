@@ -33,21 +33,17 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
 
         foreach (char c in buffer)
         {
-            switch (currentState.TryTransition(c, ref context, out IState<TTokenType>? nextState))
+            if (currentState.TryTransition(c, ref context, out IState<TTokenType>? nextState))
             {
-                case TransitionResult.NewState:
-                    currentState = nextState!;
-                    break;
-                    
-                case TransitionResult.EndOfToken:
-                    if (nextState!.TryFinalizeToken(ref context, out length, out tokenType))
-                        return true;
-                    
-                    throw new InvalidDataException($"Unexpected character: {c}, Current state: {currentState}");
-
-                case TransitionResult.Failure:
-                default:
-                    throw new InvalidDataException($"Unexpected character: {c}, Current state: {currentState}");
+                currentState = nextState!;
+            }
+            else if (nextState!.TryFinalizeToken(ref context, out length, out tokenType))
+            {
+                return true;
+            }
+            else
+            {
+                throw new InvalidDataException($"Unexpected character: {c}, Current state: {currentState}");
             }
         }
 

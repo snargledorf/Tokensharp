@@ -11,7 +11,7 @@ internal class StartOfCheckForTokenState<TTokenType>(
     : CheckForTokenState<TTokenType>(node, fallback, fallbackStateEndOfTokenStateAccessor, fallbackStateCharacterCheck) 
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override void UpdateCounts(ref StateMachineContext context)
+    public override void UpdateCounts(ref StateMachineContext context)
     {
         context.FallbackLexemeLength = context.PotentialLexemeLength;
         context.PotentialLexemeLength++;
