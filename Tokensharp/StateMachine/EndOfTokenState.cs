@@ -17,22 +17,22 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
         // NoOp
     }
 
-    public override bool TryFinalizeToken(ref StateMachineContext context, out int length, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    public override bool FinalizeToken(ref StateMachineContext context, out int length, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         length = context.FallbackLexemeLength > 0 ? context.FallbackLexemeLength : context.PotentialLexemeLength;
         tokenType = TokenType;
         return true;
     }
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
     {
-        nextState = null;
+        nextState = this;
         return false;
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
     {
-        defaultState = null;
+        defaultState = this;
         return false;
     }
 

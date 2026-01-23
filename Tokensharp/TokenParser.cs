@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Tokensharp.StateMachine;
 
 namespace Tokensharp;
@@ -28,30 +29,28 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
     
     public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int length)
     {
-        IState<TTokenType> currentState = _startState;
+        IState<TTokenType>? currentState = _startState;
         var context = new StateMachineContext();
 
         foreach (char c in buffer)
         {
-            if (currentState.TryTransition(c, ref context, out IState<TTokenType>? nextState))
-            {
-                currentState = nextState!;
-            }
-            else if (nextState!.TryFinalizeToken(ref context, out length, out tokenType))
-            {
-                return true;
-            }
-            else
-            {
-                throw new InvalidDataException($"Unexpected character: {c}, Current state: {currentState}");
-            }
+            if (currentState.TryTransition(c, ref context, out currentState))
+                continue;
+            
+            Debug.Assert(currentState is not null, $"State transition failed for character: {c}");
+            
+            bool tokenFinalized = currentState.FinalizeToken(ref context, out length, out tokenType);
+            
+            Debug.Assert(tokenFinalized, $"Finalize token failed: '{c}', Current state: {currentState}");
+
+            return tokenFinalized;
         }
 
         if (!moreDataAvailable)
         {
             while (currentState.TryDefaultTransition(ref context, out IState<TTokenType>? defaultState))
             {
-                if (defaultState.TryFinalizeToken(ref context, out length, out tokenType))
+                if (defaultState.FinalizeToken(ref context, out length, out tokenType))
                     return true;
                 
                 currentState = defaultState;

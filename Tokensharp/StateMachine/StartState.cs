@@ -11,7 +11,7 @@ internal class StartState<TTokenType>(
     : NodeStateBase<TTokenType>(rootNode.RootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
     {
         if (base.TryGetNextState(c, out nextState))
             return true;
@@ -32,9 +32,9 @@ internal class StartState<TTokenType>(
         return true;
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
     {
-        defaultState = null;
+        defaultState = this;
         return false;
     }
 

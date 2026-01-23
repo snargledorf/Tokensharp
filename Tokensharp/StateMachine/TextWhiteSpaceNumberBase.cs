@@ -10,7 +10,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
     private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance = new(tokenType);
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override bool TryGetNextState(char c, [NotNullWhen(true)] out IState<TTokenType>? nextState)
+    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
     {
         if (!CharacterIsValidForState(c))
         {
@@ -24,7 +24,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
         return true;
     }
 
-    protected override bool TryGetDefaultState([NotNullWhen(true)] out IState<TTokenType>? defaultState)
+    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
     {
         defaultState = _endOfTokenStateInstance;
         return true;
