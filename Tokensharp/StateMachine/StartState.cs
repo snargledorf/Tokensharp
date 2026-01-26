@@ -10,7 +10,7 @@ internal class StartState<TTokenType>(
 {
     protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
-        if (base.TryGetNextState(c, out nextState))
+        if (StateLookup.TryGetState(c, out nextState!))
             return true;
 
         nextState = textWhiteSpaceNumberLookup.GetState(in c);

@@ -18,7 +18,7 @@ internal class PotentialTokenState<TTokenType>(
 
     protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
-        if (base.TryGetNextState(c, out nextState))
+        if (StateLookup.TryGetState(c, out nextState!))
             return true;
 
         if (Node.IsEndOfToken || !fallbackStateCharacterCheck.CharacterIsValidForState(c))

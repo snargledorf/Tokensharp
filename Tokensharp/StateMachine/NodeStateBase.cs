@@ -9,17 +9,10 @@ internal abstract class NodeStateBase<TTokenType>(ITokenTreeNode<TTokenType> nod
     
     protected ITokenTreeNode<TTokenType> Node { get; } = node;
 
-    private IStateLookup<TTokenType>? _stateLookup;
-    
-    internal IStateLookup<TTokenType> StateLookup { set => _stateLookup = value; }
-
-    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
+    internal IStateLookup<TTokenType> StateLookup
     {
-        if (_stateLookup!.TryGetState(c, out nextState!))
-            return true;
-
-        nextState = null!;
-        return false;
+        get => field ?? throw new InvalidOperationException("StateLookup not initialized");
+        set;
     }
 
     public override string ToString()

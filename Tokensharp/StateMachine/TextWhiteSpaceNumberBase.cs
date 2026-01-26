@@ -11,13 +11,16 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
 
     protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
-        if (!CharacterIsValidForState(c))
+        if (CharacterIsValidForState(c))
         {
-            nextState = EndOfTokenStateInstance;
-        }
-        else if (!base.TryGetNextState(in c, out nextState))
-        {
+            if (StateLookup.TryGetState(in c, out nextState!))
+                return true;
+            
             nextState = this;
+        }
+        else
+        {
+            nextState = _endOfTokenStateInstance;
         }
 
         return true;
