@@ -5,7 +5,7 @@ namespace Tokensharp.StateMachine;
 
 internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly Dictionary<char, State<TTokenType>> _states = new();
+    private readonly Dictionary<char, IState<TTokenType>> _states = new();
     
     private readonly AlwaysFalseLookup _noStatesLookup = new();
 
@@ -21,16 +21,11 @@ internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TToke
 
         if (_states.Count == 1)
         {
-            (char character, State<TTokenType> state) = _states.First();
+            (char character, IState<TTokenType> state) = _states.First();
             return new SingleStateLookup<TTokenType>(character, state);
         }
 
-        var swiftStateBuilder = new Dictionary<char, IState<TTokenType>>();
-
-        foreach ((char character, State<TTokenType> state) in _states)
-            swiftStateBuilder.Add(character, state);
-
-        return new MultipleStateLookup<TTokenType>(swiftStateBuilder.ToFrozenDictionary());
+        return new MultipleStateLookup<TTokenType>(_states.ToFrozenDictionary());
     }
 
     private class AlwaysFalseLookup : IStateLookup<TTokenType>

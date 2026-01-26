@@ -2,24 +2,13 @@
 
 namespace Tokensharp.StateMachine;
 
-internal class TextWhiteSpaceNumberLookup<TTokenType> : TextWhiteSpaceNumberLookupBase<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal class TextWhiteSpaceNumberLookup<TTokenType>(ITokenTreeNode<TTokenType> tokenTreeNode)
+    : TextWhiteSpaceNumberLookupBase<TTokenType>
+    where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly WhiteSpace<TTokenType> _whiteSpaceState;
-    private readonly Number<TTokenType> _numberState;
-    private readonly Text<TTokenType> _textState;
-
-    public TextWhiteSpaceNumberLookup(ITokenTreeNode<TTokenType> tokenTreeNode)
-    {
-        _whiteSpaceState = new WhiteSpace<TTokenType>(tokenTreeNode);
-        _numberState = new Number<TTokenType>(tokenTreeNode);
-        _textState = new Text<TTokenType>(tokenTreeNode);
-
-        IStateLookup<TTokenType> compiledTextWhiteSpaceNumberStates = BuildStateLookup(tokenTreeNode);
-
-        _whiteSpaceState.StateLookup = compiledTextWhiteSpaceNumberStates;
-        _numberState.StateLookup = compiledTextWhiteSpaceNumberStates;
-        _textState.StateLookup = compiledTextWhiteSpaceNumberStates;
-    }
+    private readonly WhiteSpace<TTokenType> _whiteSpaceState = new(tokenTreeNode);
+    private readonly Number<TTokenType> _numberState = new(tokenTreeNode);
+    private readonly Text<TTokenType> _textState = new(tokenTreeNode);
 
     public override TextWhiteSpaceNumberBase<TTokenType> GetState(in char c)
     {
