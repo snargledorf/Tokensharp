@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
@@ -10,13 +9,13 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
     private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance = new(tokenType);
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         if (!CharacterIsValidForState(c))
         {
             nextState = EndOfTokenStateInstance;
         }
-        else if (!base.TryGetNextState(c, out nextState))
+        else if (!base.TryGetNextState(in c, out nextState))
         {
             nextState = this;
         }
@@ -30,5 +29,5 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
         return true;
     }
 
-    public abstract bool CharacterIsValidForState(char c);
+    public abstract bool CharacterIsValidForState(in char c);
 }

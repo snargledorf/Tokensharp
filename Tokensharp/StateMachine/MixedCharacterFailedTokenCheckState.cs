@@ -1,13 +1,11 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Tokensharp.StateMachine;
 
-internal class MixedCharacterFailedTokenCheckState<TTokenType>(State<TTokenType> fallbackState, IStateCharacterCheck fallbackStateCharacterCheck)
+internal class MixedCharacterFailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState, IStateCharacterCheck fallbackStateCharacterCheck)
     : State<TTokenType>, IStateCharacterCheck where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public override bool IsEndOfToken => false;
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         nextState = fallbackState;
         return true;
@@ -24,5 +22,5 @@ internal class MixedCharacterFailedTokenCheckState<TTokenType>(State<TTokenType>
         context.FallbackLexemeLength = context.PotentialLexemeLength;
     }
 
-    public bool CharacterIsValidForState(char c) => fallbackStateCharacterCheck.CharacterIsValidForState(c);
+    public bool CharacterIsValidForState(in char c) => fallbackStateCharacterCheck.CharacterIsValidForState(c);
 }

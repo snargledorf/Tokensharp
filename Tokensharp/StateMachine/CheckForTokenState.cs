@@ -1,12 +1,11 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
 internal class CheckForTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
-    State<TTokenType> fallback,
+    IState<TTokenType> fallback,
     IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor,
     IStateCharacterCheck fallbackStateCharacterCheck)
     : NodeStateBase<TTokenType>(node), IEndOfTokenStateAccessor<TTokenType>
@@ -20,7 +19,7 @@ internal class CheckForTokenState<TTokenType>(
     
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         Debug.Assert(!Node.IsEndOfToken);
         
@@ -57,7 +56,7 @@ internal class CheckForTokenState<TTokenType>(
 
     protected static CheckForTokenState<TTokenType> For(
         ITokenTreeNode<TTokenType> node,
-        State<TTokenType> fallbackState,
+        IState<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenAccessor,
         IStateCharacterCheck fallbackStateCharacterCheck)
     {

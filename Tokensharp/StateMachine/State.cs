@@ -6,9 +6,9 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 {
     public abstract bool IsEndOfToken { get; }
 
-    public virtual bool TryTransition(char c, ref StateMachineContext context, out IState<TTokenType> nextState)
+    public virtual bool TryTransition(in char c, ref StateMachineContext context, out IState<TTokenType> nextState)
     {
-        if (!TryGetNextState(c, out nextState) &&
+        if (!TryGetNextState(in c, out nextState) &&
             !TryGetDefaultState(out nextState))
             return false;
         
@@ -16,7 +16,7 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
         return !nextState.IsEndOfToken;
     }
 
-    protected abstract bool TryGetNextState(char c, out IState<TTokenType> nextState);
+    protected abstract bool TryGetNextState(in char c, out IState<TTokenType> nextState);
 
     public virtual bool TryDefaultTransition(ref StateMachineContext context, out IState<TTokenType> defaultState)
     {

@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Tokensharp.StateMachine;
 
 internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
@@ -17,14 +15,14 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
         // NoOp
     }
 
-    public override bool FinalizeToken(ref StateMachineContext context, out int length, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    public override bool FinalizeToken(ref StateMachineContext context, out int length, out TokenType<TTokenType> tokenType)
     {
         length = context.FallbackLexemeLength > 0 ? context.FallbackLexemeLength : context.PotentialLexemeLength;
         tokenType = TokenType;
         return true;
     }
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         nextState = this;
         return false;
@@ -36,7 +34,7 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
         return false;
     }
 
-    public bool CharacterIsValidForState(char c)
+    public bool CharacterIsValidForState(in char c)
     {
         return false;
     }
