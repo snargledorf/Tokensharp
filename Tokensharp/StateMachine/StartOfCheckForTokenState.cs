@@ -4,7 +4,7 @@ namespace Tokensharp.StateMachine;
 
 internal class StartOfCheckForTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
-    State<TTokenType> fallback,
+    IState<TTokenType> fallback,
     IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor,
     IStateCharacterCheck fallbackStateCharacterCheck)
     : CheckForTokenState<TTokenType>(node, fallback, fallbackStateEndOfTokenStateAccessor, fallbackStateCharacterCheck) 
@@ -18,7 +18,7 @@ internal class StartOfCheckForTokenState<TTokenType>(
 
     public new static StartOfCheckForTokenState<TTokenType> For(
         ITokenTreeNode<TTokenType> node,
-        State<TTokenType> fallbackState,
+        IState<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor,
         IStateCharacterCheck fallbackStateCharacterCheck)
     {

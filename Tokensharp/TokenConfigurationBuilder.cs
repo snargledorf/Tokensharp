@@ -35,9 +35,14 @@ public class TokenConfigurationBuilder<TTokenType> : IEnumerable<TTokenType>
             throw new DuplicateLexemeException(tokenType.Identifier);
     }
 
+    public bool TextAndNumbersAreText { get; set; } = false;
+
     public bool LexemeConfigured(string lexeme) => _tokenDefinitions.ContainsKey(lexeme);
     
-    public TokenConfiguration<TTokenType> Build() => new(_tokenDefinitions.Select(kv => new LexemeToTokenType<TTokenType>(kv.Key, kv.Value)));
+    public TokenConfiguration<TTokenType> Build()
+    {
+        return new TokenConfiguration<TTokenType>(_tokenDefinitions.Select(kv => new LexemeToTokenType<TTokenType>(kv.Key, kv.Value)), TextAndNumbersAreText);
+    }
 
     public IEnumerator<TTokenType> GetEnumerator()
     {

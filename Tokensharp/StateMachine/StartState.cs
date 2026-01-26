@@ -1,13 +1,10 @@
-using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
 internal class StartState<TTokenType>(
     ITokenTreeNode<TTokenType> rootNode,
-    WhiteSpace<TTokenType> whiteSpace,
-    Number<TTokenType> number,
-    Text<TTokenType> text)
+    ITextWhiteSpaceNumberLookup<TTokenType> textWhiteSpaceNumberLookup)
     : NodeStateBase<TTokenType>(rootNode.RootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
@@ -16,19 +13,7 @@ internal class StartState<TTokenType>(
         if (base.TryGetNextState(c, out nextState))
             return true;
 
-        if (char.IsWhiteSpace(c))
-        {
-            nextState = whiteSpace;
-            return true;
-        }
-
-        if (char.IsDigit(c))
-        {
-            nextState = number;
-            return true;
-        }
-
-        nextState = text;
+        nextState = textWhiteSpaceNumberLookup.GetState(in c);
         return true;
     }
 
@@ -38,18 +23,23 @@ internal class StartState<TTokenType>(
         return false;
     }
 
-    public static StartState<TTokenType> For(ITokenTreeNode<TTokenType> tokenTree)
+    public static StartState<TTokenType> For(ITokenTreeNode<TTokenType> tokenTreeNode, bool textAndNumbersAreText)
     {
-        var whiteSpaceState = new WhiteSpace<TTokenType>(tokenTree);
-        var numberState = new Number<TTokenType>(tokenTree);
-        var textState = new Text<TTokenType>(tokenTree);
+        ITextWhiteSpaceNumberLookup<TTokenType> textWhiteSpaceNumberLookup;
+        if (textAndNumbersAreText)
+        {
+            textWhiteSpaceNumberLookup = new TextAndNumberAsTextLookup<TTokenType>(tokenTreeNode);
+        }
+        else
+        {
+            textWhiteSpaceNumberLookup = new TextWhiteSpaceNumberLookup<TTokenType>(tokenTreeNode);
+        }
 
         var startStates = new StateLookupBuilder<TTokenType>();
-        var textWhiteSpaceNumberStates = new StateLookupBuilder<TTokenType>();
 
-        foreach (ITokenTreeNode<TTokenType> startNode in tokenTree.RootNode)
+        foreach (ITokenTreeNode<TTokenType> startNode in tokenTreeNode.RootNode)
         {
-            TextWhiteSpaceNumberBase<TTokenType> fallback = GetFallbackState(startNode);
+            TextWhiteSpaceNumberBase<TTokenType> fallback = textWhiteSpaceNumberLookup.GetState(startNode.Character);
             
             if (startNode.HasChildren)
             {
@@ -59,42 +49,13 @@ internal class StartState<TTokenType>(
             {
                 startStates.Add(startNode.Character, new EndOfSingleCharacterTokenState<TTokenType>(startNode.TokenType));
             }
-
-            if (startNode.IsEndOfToken)
-            {
-                textWhiteSpaceNumberStates.Add(startNode.Character,
-                    fallback.EndOfTokenStateInstance);
-            }
-            else
-            {
-                textWhiteSpaceNumberStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, fallback, fallback, fallback));
-            }
         }
 
-        IStateLookup<TTokenType> compiledTextWhiteSpaceNumberStates = textWhiteSpaceNumberStates.Build();
-
-        whiteSpaceState.StateLookup = compiledTextWhiteSpaceNumberStates;
-        numberState.StateLookup = compiledTextWhiteSpaceNumberStates;
-        textState.StateLookup = compiledTextWhiteSpaceNumberStates;
-
-        var startState = new StartState<TTokenType>(tokenTree.RootNode, whiteSpaceState,
-            numberState, textState)
+        var startState = new StartState<TTokenType>(tokenTreeNode.RootNode, textWhiteSpaceNumberLookup)
         {
             StateLookup = startStates.Build()
         };
         
         return startState;
-
-        TextWhiteSpaceNumberBase<TTokenType> GetFallbackState(ITokenTreeNode<TTokenType> child)
-        {
-            if (char.IsWhiteSpace(child.Character))
-                return whiteSpaceState;
-
-            if (char.IsDigit(child.Character))
-                return numberState;
-
-            return textState;
-        }
     }
 }

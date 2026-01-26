@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Tokensharp.StateMachine;
 
 internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
@@ -36,7 +34,7 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
         return false;
     }
 
-    public bool CharacterIsValidForState(char c)
+    public bool CharacterIsValidForState(in char c)
     {
         return false;
     }

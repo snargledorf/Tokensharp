@@ -1,10 +1,8 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Tokensharp.StateMachine;
 
 internal interface IStateCharacterCheck
 {
-    bool CharacterIsValidForState(char c);
+    bool CharacterIsValidForState(in char c);
 }
 
 internal interface IState<TTokenType> : ITransitionHandler<TTokenType>

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
@@ -30,5 +29,5 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType>(ITokenTreeNode<TTok
         return true;
     }
 
-    public abstract bool CharacterIsValidForState(char c);
+    public abstract bool CharacterIsValidForState(in char c);
 }

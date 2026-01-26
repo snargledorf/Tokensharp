@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
@@ -49,7 +48,7 @@ internal class PotentialTokenState<TTokenType>(
     }
 
     public static PotentialTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,
-        State<TTokenType> fallbackState,
+        IState<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackEndOfTokenStateAccessor,
         IStateCharacterCheck fallbackStateCharacterCheck)
     {
