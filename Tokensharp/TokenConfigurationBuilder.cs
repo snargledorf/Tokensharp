@@ -7,7 +7,7 @@ public class TokenConfigurationBuilder<TTokenType> : IEnumerable<TTokenType>
 {
     private readonly Dictionary<string, TTokenType> _tokenDefinitions = new();
 
-    public TokenConfigurationBuilder() : this([])
+    public TokenConfigurationBuilder() : this(Array.Empty<LexemeToTokenType<TTokenType>>())
     {
     }
 
@@ -15,6 +15,12 @@ public class TokenConfigurationBuilder<TTokenType> : IEnumerable<TTokenType>
     {
         foreach (TTokenType tokenType in tokenTypes)
             Add(tokenType);
+    }
+
+    public TokenConfigurationBuilder(IEnumerable<LexemeToTokenType<TTokenType>> lexemesToTokens)
+    {
+        foreach (LexemeToTokenType<TTokenType> lexemeToToken in lexemesToTokens)
+            Add(lexemeToToken);
     }
     
     public TTokenType this[string lexeme]
@@ -33,6 +39,11 @@ public class TokenConfigurationBuilder<TTokenType> : IEnumerable<TTokenType>
     {
         if (!_tokenDefinitions.TryAdd(tokenType.Identifier, tokenType))
             throw new DuplicateLexemeException(tokenType.Identifier);
+    }
+
+    public void Add(LexemeToTokenType<TTokenType> lexemeToTokenType)
+    {
+        Add(lexemeToTokenType.Lexeme, lexemeToTokenType.TokenType);
     }
 
     public bool NumbersAreText { get; set; } = false;

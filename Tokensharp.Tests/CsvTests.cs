@@ -7,13 +7,13 @@ public record CsvTokenTypes(string Identifier) : TokenType<CsvTokenTypes>(Identi
     public static readonly CsvTokenTypes DoubleQuote = new("doubleQuote");
     public static readonly CsvTokenTypes Escape = new("escape");
 
-    public static TokenConfiguration<CsvTokenTypes> Configuration { get; } = new TokenConfigurationBuilder<CsvTokenTypes>()
-    {
-        { ",", Comma },
-        { "\r\n", EndOfRecord },
-        { "\"", DoubleQuote },
-        { "\"\"", Escape }
-    }.Build();
+    public static TokenConfiguration<CsvTokenTypes> Configuration { get; } = new TokenConfigurationBuilder<CsvTokenTypes>(
+    [
+        new LexemeToTokenType<CsvTokenTypes>(",", Comma),
+        new LexemeToTokenType<CsvTokenTypes>("\r\n", EndOfRecord),
+        new LexemeToTokenType<CsvTokenTypes>("\"", DoubleQuote),
+        new LexemeToTokenType<CsvTokenTypes>("\"\"", Escape),
+    ]) { NumbersAreText = true }.Build();
     
     public static CsvTokenTypes Create(string token) => new(token);
 }
@@ -34,7 +34,7 @@ public class CsvTests : TokenizerTestBase<CsvTokenTypes>
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "test"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma, ","),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.WhiteSpace, " "),
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.Number, "123"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "123"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.EndOfRecord, "\r\n"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "foo"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma, ","),
@@ -53,7 +53,7 @@ public class CsvTests : TokenizerTestBase<CsvTokenTypes>
         
         RunTest(testStr, 
         [
-            new TestCase<CsvTokenTypes>(CsvTokenTypes.Number, "123"),
+            new TestCase<CsvTokenTypes>(CsvTokenTypes.Text, "123"),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Comma, ","),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.WhiteSpace, " "),
             new TestCase<CsvTokenTypes>(CsvTokenTypes.Escape, "\"\""),

@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace Tokensharp.Tests;
 
 public class EnumerateTokensTests

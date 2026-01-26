@@ -6,12 +6,13 @@ public record CsvTokenTypes(string Identifier) : TokenType<CsvTokenTypes>(Identi
     public static readonly CsvTokenTypes EndOfRecord = new("\r\n");
     public static readonly CsvTokenTypes DoubleQuote = new("\"");
 
-    public static TokenConfiguration<CsvTokenTypes> Configuration { get; } = new TokenConfigurationBuilder<CsvTokenTypes>(
-    [
-        Comma,
-        EndOfRecord,
-        DoubleQuote
-    ]).Build();
+    public static TokenConfiguration<CsvTokenTypes> Configuration { get; } =
+        new TokenConfigurationBuilder<CsvTokenTypes>(
+        [
+            Comma,
+            EndOfRecord,
+            DoubleQuote
+        ]) { NumbersAreText = true }.Build();
     
     public static CsvTokenTypes Create(string token) => new(token);
 }

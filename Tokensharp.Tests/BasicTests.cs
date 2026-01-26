@@ -1,7 +1,4 @@
-﻿using System.Buffers;
-using System.Text;
-
-namespace Tokensharp.Tests;
+﻿namespace Tokensharp.Tests;
 
 public class BasicTests : TokenizerTestBase<EmptyTokens>
 {
