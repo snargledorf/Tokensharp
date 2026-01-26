@@ -14,7 +14,7 @@ internal abstract class NodeStateBase<TTokenType>(ITokenTreeNode<TTokenType> nod
     
     internal IStateLookup<TTokenType> StateLookup { set => _stateLookup = value; }
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         if (_stateLookup!.TryGetState(c, out nextState!))
             return true;

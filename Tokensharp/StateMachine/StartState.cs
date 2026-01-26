@@ -11,7 +11,7 @@ internal class StartState<TTokenType>(
     : NodeStateBase<TTokenType>(rootNode.RootNode)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         if (base.TryGetNextState(c, out nextState))
             return true;

@@ -7,7 +7,7 @@ internal class MixedCharacterFailedTokenCheckState<TTokenType>(State<TTokenType>
 {
     public override bool IsEndOfToken => false;
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         nextState = fallbackState;
         return true;

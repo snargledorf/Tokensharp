@@ -20,7 +20,7 @@ internal class CheckForTokenState<TTokenType>(
     
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         Debug.Assert(!Node.IsEndOfToken);
         

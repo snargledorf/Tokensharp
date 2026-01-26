@@ -17,7 +17,7 @@ internal class PotentialTokenState<TTokenType>(
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override bool TryGetNextState(char c, out IState<TTokenType> nextState)
+    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
     {
         if (base.TryGetNextState(c, out nextState))
             return true;

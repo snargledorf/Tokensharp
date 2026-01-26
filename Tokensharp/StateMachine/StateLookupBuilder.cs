@@ -19,6 +19,12 @@ internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TToke
         if (_states.Count == 0)
             return _noStatesLookup;
 
+        if (_states.Count == 1)
+        {
+            (char character, State<TTokenType> state) = _states.First();
+            return new SingleStateLookup<TTokenType>(character, state);
+        }
+
         var swiftStateBuilder = new Dictionary<char, IState<TTokenType>>();
 
         foreach ((char character, State<TTokenType> state) in _states)
@@ -29,7 +35,7 @@ internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TToke
 
     private class AlwaysFalseLookup : IStateLookup<TTokenType>
     {
-        public bool TryGetState(char c, [NotNullWhen(true)] out IState<TTokenType>? state)
+        public bool TryGetState(in char c, [NotNullWhen(true)] out IState<TTokenType>? state)
         {
             state = null;
             return false;
