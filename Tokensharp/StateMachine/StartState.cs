@@ -23,10 +23,10 @@ internal class StartState<TTokenType>(
         return false;
     }
 
-    public static StartState<TTokenType> For(ITokenTreeNode<TTokenType> tokenTreeNode, bool textAndNumbersAreText)
+    public static StartState<TTokenType> For(ITokenTreeNode<TTokenType> tokenTreeNode, bool numbersAreText)
     {
         ITextWhiteSpaceNumberLookup<TTokenType> textWhiteSpaceNumberLookup;
-        if (textAndNumbersAreText)
+        if (numbersAreText)
         {
             textWhiteSpaceNumberLookup = new TextAndNumberAsTextLookup<TTokenType>(tokenTreeNode);
         }

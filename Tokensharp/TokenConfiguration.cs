@@ -6,16 +6,16 @@ namespace Tokensharp;
 public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    internal TokenConfiguration(IEnumerable<LexemeToTokenType<TTokenType>> lexemeToTokenTypes, bool textAndNumbersAreText = false)
+    internal TokenConfiguration(IEnumerable<LexemeToTokenType<TTokenType>> lexemeToTokenTypes, bool numbersAreText = false)
     {
         ITokenTreeNode<TTokenType> tokenTree = lexemeToTokenTypes.ToTokenTree();
         
-        StartState = StartState<TTokenType>.For(tokenTree, textAndNumbersAreText);
+        StartState = StartState<TTokenType>.For(tokenTree, numbersAreText);
         
-        TextAndNumbersAreText = textAndNumbersAreText;
+        NumbersAreText = numbersAreText;
     }
 
-    public bool TextAndNumbersAreText { get; }
+    public bool NumbersAreText { get; }
     
     public static implicit operator TokenConfiguration<TTokenType>(LexemeToTokenType<TTokenType>[] lexemeToTokenTypes)
     {
