@@ -10,7 +10,7 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
     {
         ITokenTreeNode<TTokenType> tokenTree = lexemeToTokenTypes.ToTokenTree();
         
-        StartState = StartState<TTokenType>.For(tokenTree, numbersAreText);
+        StartState = new StartState<TTokenType>(tokenTree, numbersAreText);
         
         NumbersAreText = numbersAreText;
     }

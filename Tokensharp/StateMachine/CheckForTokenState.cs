@@ -23,7 +23,7 @@ internal class CheckForTokenState<TTokenType>(
     {
         Debug.Assert(!Node.IsEndOfToken);
         
-        if (base.TryGetNextState(c, out nextState))
+        if (StateLookup.TryGetState(c, out nextState!))
             return true;
         
         if (fallbackStateCharacterCheck.CharacterIsValidForState(c))
