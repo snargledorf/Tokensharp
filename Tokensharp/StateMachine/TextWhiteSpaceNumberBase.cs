@@ -48,7 +48,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
             else
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, this, this, this));
+                    new StartOfCheckForTokenState<TTokenType>(startNode, this, this, this));
             }
         }
 

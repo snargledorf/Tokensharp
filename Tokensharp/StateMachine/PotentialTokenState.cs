@@ -60,7 +60,8 @@ internal class PotentialTokenState<TTokenType>(
                 rootStates.Add(startNode.Character, fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance);
             else
                 rootStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, fallbackState, fallbackEndOfTokenStateAccessor, fallbackStateCharacterCheck));
+                    new StartOfCheckForTokenState<TTokenType>(startNode, fallbackState, fallbackEndOfTokenStateAccessor,
+                        fallbackStateCharacterCheck));
         }
 
         if (node.IsEndOfToken)
