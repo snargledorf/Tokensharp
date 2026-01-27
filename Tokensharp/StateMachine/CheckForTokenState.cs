@@ -41,39 +41,29 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
-    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
+    protected override IState<TTokenType> GetNextState(in char c)
     {
         Debug.Assert(!Node.IsEndOfToken);
         
-        if (StateLookup.TryGetState(c, out nextState!))
-            return true;
+        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState))
+            return nextState;
         
         if (_fallbackStateCharacterCheck.CharacterIsValidForState(c))
         {
-            nextState = _fallbackFailedTokenCheckState;
-        }
-        else
-        {
-            nextState = _endOfFallbackFailedTokenCheckState;
+            return _fallbackFailedTokenCheckState;
         }
 
-        return true;
+        return _endOfFallbackFailedTokenCheckState;
     }
 
-    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
+    protected override IState<TTokenType> GetDefaultState()
     {
         Debug.Assert(!Node.IsEndOfToken);
         
         if (_fallbackStateCharacterCheck.CharacterIsValidForState(Node.Character))
-        {
-            defaultState = _defaultFailedTokenCheckState;
-        }
-        else
-        {
-            defaultState = _defaultEndOfFallbackFailedTokenCheckState;
-        }
+            return _defaultFailedTokenCheckState;
 
-        return true;
+        return _defaultEndOfFallbackFailedTokenCheckState;
     }
 
     private static IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, IState<TTokenType> fallbackState,

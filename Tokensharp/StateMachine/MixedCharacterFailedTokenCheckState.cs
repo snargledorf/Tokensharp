@@ -5,16 +5,14 @@ internal class MixedCharacterFailedTokenCheckState<TTokenType>(IState<TTokenType
 {
     public override bool IsEndOfToken => false;
 
-    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
+    protected override IState<TTokenType> GetNextState(in char c)
     {
-        nextState = fallbackState;
-        return true;
+        return fallbackState;
     }
 
-    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
+    protected override IState<TTokenType> GetDefaultState()
     {
-        defaultState = fallbackState;
-        return true;
+        return fallbackState;
     }
 
     public override void UpdateCounts(ref StateMachineContext context)

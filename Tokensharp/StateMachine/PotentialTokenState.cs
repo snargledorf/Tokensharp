@@ -16,28 +16,25 @@ internal class PotentialTokenState<TTokenType>(
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
+    protected override IState<TTokenType> GetNextState(in char c)
     {
-        if (StateLookup.TryGetState(c, out nextState!))
-            return true;
+        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState))
+            return nextState;
 
         if (Node.IsEndOfToken || !fallbackStateCharacterCheck.CharacterIsValidForState(c))
         {
-            nextState = _endOfTokenStateInstance;
-            return true;
+            return _endOfTokenStateInstance;
         }
 
-        if (rootStates.TryGetState(c, out nextState!))
-            return true;
+        if (rootStates.TryGetState(c, out nextState))
+            return nextState;
         
-        nextState = _endOfTokenStateInstance;
-        return true;
+        return _endOfTokenStateInstance;
     }
 
-    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
+    protected override IState<TTokenType> GetDefaultState()
     {
-        defaultState = _endOfTokenStateInstance;
-        return true;
+        return _endOfTokenStateInstance;
     }
 
     public override void UpdateCounts(ref StateMachineContext context)

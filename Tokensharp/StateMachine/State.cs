@@ -6,30 +6,27 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 {
     public abstract bool IsEndOfToken { get; }
 
-    public virtual bool TryTransition(in char c, ref StateMachineContext context, out IState<TTokenType> nextState)
+    public void Transition(in char c, ref StateMachineContext context, out IState<TTokenType> nextState)
     {
-        if (!TryGetNextState(in c, out nextState) &&
-            !TryGetDefaultState(out nextState))
-            return false;
-        
+        nextState = GetNextState(in c);
         nextState.UpdateCounts(ref context);
-        return !nextState.IsEndOfToken;
     }
 
-    protected abstract bool TryGetNextState(in char c, out IState<TTokenType> nextState);
+    protected abstract IState<TTokenType> GetNextState(in char c);
 
-    public virtual bool TryDefaultTransition(ref StateMachineContext context, out IState<TTokenType> defaultState)
+    public bool TryDefaultTransition(ref StateMachineContext context, out IState<TTokenType> defaultState)
     {
-        if (!TryGetDefaultState(out defaultState))
-            return false;
-
+        defaultState = GetDefaultState();
+        
         defaultState.UpdateCounts(ref context);
-        return true;
+
+        return !defaultState.IsEndOfToken;
     }
 
-    protected abstract bool TryGetDefaultState(out IState<TTokenType> defaultState);
+    protected abstract IState<TTokenType> GetDefaultState();
     
-    public virtual bool FinalizeToken(ref StateMachineContext context, out int lexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    public virtual bool FinalizeToken(ref StateMachineContext context, out int lexemeLength,
+        [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {
         lexemeLength = 0;
         tokenType = null;
