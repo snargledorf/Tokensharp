@@ -7,6 +7,8 @@ internal class StartState<TTokenType> : NodeStateBase<TTokenType>
 {
     private readonly ITextWhiteSpaceNumberLookup<TTokenType> _textWhiteSpaceNumberLookup;
 
+    public override bool IsEndOfToken => true;
+
     public StartState(ITokenTreeNode<TTokenType> tokenTreeNode, bool numbersAreText) : base(tokenTreeNode.RootNode)
     {
         _textWhiteSpaceNumberLookup = numbersAreText
@@ -32,18 +34,15 @@ internal class StartState<TTokenType> : NodeStateBase<TTokenType>
         StateLookup = startStates.Build();
     }
 
-    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
+    protected override IState<TTokenType> GetNextState(in char c)
     {
-        if (StateLookup.TryGetState(c, out nextState!))
-            return true;
-
-        nextState = _textWhiteSpaceNumberLookup.GetState(in c);
-        return true;
+        return StateLookup.TryGetState(c, out IState<TTokenType>? nextState)
+            ? nextState
+            : _textWhiteSpaceNumberLookup.GetState(in c);
     }
 
-    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
+    protected override IState<TTokenType> GetDefaultState()
     {
-        defaultState = this;
-        return false;
+        return this;
     }
 }

@@ -15,20 +15,20 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override bool TryGetNextState(in char c, out IState<TTokenType> nextState)
+    protected override IState<TTokenType> GetNextState(in char c)
     {
-        if (StateLookup.TryGetState(in c, out nextState!))
-            return true;
+        if (StateLookup.TryGetState(in c, out IState<TTokenType>? nextState))
+            return nextState;
 
-        nextState = CharacterIsValidForState(c) ? this : _endOfTokenStateInstance;
-
-        return true;
+        if (CharacterIsValidForState(c))
+            return this;
+        
+        return _endOfTokenStateInstance;
     }
 
-    protected override bool TryGetDefaultState(out IState<TTokenType> defaultState)
+    protected override IState<TTokenType> GetDefaultState()
     {
-        defaultState = _endOfTokenStateInstance;
-        return true;
+        return _endOfTokenStateInstance;
     }
 
     private IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> tokenTreeNode)
@@ -48,7 +48,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
             else
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character,
-                    StartOfCheckForTokenState<TTokenType>.For(startNode, this, this, this));
+                    new StartOfCheckForTokenState<TTokenType>(startNode, this, this, this));
             }
         }
 

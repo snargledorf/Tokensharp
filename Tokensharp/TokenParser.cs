@@ -34,16 +34,9 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
 
         foreach (char c in buffer)
         {
-            if (currentState.TryTransition(c, ref context, out currentState))
-                continue;
-            
-            Debug.Assert(currentState is not null, $"State transition failed for character: {c}");
-            
-            bool tokenFinalized = currentState.FinalizeToken(ref context, out length, out tokenType);
-            
-            Debug.Assert(tokenFinalized, $"Finalize token failed: '{c}', Current state: {currentState}");
-
-            return tokenFinalized;
+            currentState.Transition(c, ref context, out currentState);
+            if (currentState.IsEndOfToken)
+                return currentState.FinalizeToken(ref context, out length, out tokenType);
         }
         
         while (!moreDataAvailable && currentState.TryDefaultTransition(ref context, out currentState)) ;
