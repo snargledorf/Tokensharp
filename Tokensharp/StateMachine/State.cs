@@ -17,13 +17,12 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 
     public IState<TTokenType> PerformDefaultTransition(ref StateMachineContext context)
     {
-        IState<TTokenType> defaultState = GetDefaultState();
-        defaultState.UpdateCounts(ref context);
-        return defaultState;
+        DefaultState.UpdateCounts(ref context);
+        return DefaultState;
     }
 
-    protected abstract IState<TTokenType> GetDefaultState();
-    
+    protected abstract IState<TTokenType> DefaultState { get; }
+
     public virtual bool FinalizeToken(ref StateMachineContext context, out int lexemeLength,
         [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
     {

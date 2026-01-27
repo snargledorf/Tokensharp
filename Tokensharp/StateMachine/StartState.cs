@@ -23,7 +23,7 @@ internal class StartState<TTokenType> : NodeStateBase<TTokenType>
             
             if (startNode.HasChildren)
             {
-                startStates.Add(startNode.Character, PotentialTokenState<TTokenType>.For(startNode, fallback, fallback, fallback));
+                startStates.Add(startNode.Character, new PotentialTokenState<TTokenType>(startNode, fallback, fallback, fallback));
             }
             else
             {
@@ -41,8 +41,5 @@ internal class StartState<TTokenType> : NodeStateBase<TTokenType>
             : _textWhiteSpaceNumberLookup.GetState(in c);
     }
 
-    protected override IState<TTokenType> GetDefaultState()
-    {
-        return this;
-    }
+    protected override IState<TTokenType> DefaultState => this;
 }

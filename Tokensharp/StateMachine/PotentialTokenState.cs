@@ -2,65 +2,39 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class PotentialTokenState<TTokenType>(
-    ITokenTreeNode<TTokenType> node,
-    IEndOfTokenStateAccessor<TTokenType> fallbackEndOfTokenStateAccessor,
-    IStateCharacterCheck fallbackStateCharacterCheck,
-    IStateLookup<TTokenType> rootStates)
-    : NodeStateBase<TTokenType>(node), IEndOfTokenStateAccessor<TTokenType>
+internal class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndOfTokenStateAccessor<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance = node.IsEndOfToken
-        ? new EndOfTokenState<TTokenType>(node.TokenType)
-        : fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance;
+    private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance;
 
-    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
+    private readonly IStateCharacterCheck _fallbackStateCharacterCheck;
+    private readonly IStateLookup<TTokenType> _rootStates;
 
-    protected override IState<TTokenType> GetNextState(in char c)
-    {
-        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState))
-            return nextState;
-
-        if (Node.IsEndOfToken || !fallbackStateCharacterCheck.CharacterIsValidForState(c))
-        {
-            return _endOfTokenStateInstance;
-        }
-
-        if (rootStates.TryGetState(c, out nextState))
-            return nextState;
-        
-        return _endOfTokenStateInstance;
-    }
-
-    protected override IState<TTokenType> GetDefaultState()
-    {
-        return _endOfTokenStateInstance;
-    }
-
-    public override void UpdateCounts(ref StateMachineContext context)
-    {
-        context.PotentialLexemeLength++;
-        if (Node.IsEndOfToken)
-            context.FallbackLexemeLength = context.PotentialLexemeLength;
-    }
-
-    public static PotentialTokenState<TTokenType> For(ITokenTreeNode<TTokenType> node,
+    public PotentialTokenState(ITokenTreeNode<TTokenType> node,
         IState<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackEndOfTokenStateAccessor,
-        IStateCharacterCheck fallbackStateCharacterCheck)
+        IStateCharacterCheck fallbackStateCharacterCheck) : base(node)
     {
-        var rootStates = new StateLookupBuilder<TTokenType>();
+        _fallbackStateCharacterCheck = fallbackStateCharacterCheck;
+        _endOfTokenStateInstance = node.IsEndOfToken
+            ? new EndOfTokenState<TTokenType>(node.TokenType)
+            : fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance;
+        
+        var rootStatesBuilder = new StateLookupBuilder<TTokenType>();
 
         foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
         {
             if (startNode.IsEndOfToken)
-                rootStates.Add(startNode.Character, fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance);
+                rootStatesBuilder.Add(startNode.Character, fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance);
             else
-                rootStates.Add(startNode.Character,
+                rootStatesBuilder.Add(startNode.Character,
                     new StartOfCheckForTokenState<TTokenType>(startNode, fallbackState, fallbackEndOfTokenStateAccessor,
                         fallbackStateCharacterCheck));
         }
+        
+        _rootStates = rootStatesBuilder.Build();
 
+        // If this is an end of token node then we should fallback to this token if we don't find a longer one
         if (node.IsEndOfToken)
         {
             var endOfTokenStateAccessor = new EndOfTokenState<TTokenType>(node.TokenType);
@@ -69,20 +43,36 @@ internal class PotentialTokenState<TTokenType>(
             fallbackStateCharacterCheck = endOfTokenStateAccessor;
         }
 
-        var childStates = new StateLookupBuilder<TTokenType>();
+        var childStatesBuilder = new StateLookupBuilder<TTokenType>();
         foreach (ITokenTreeNode<TTokenType> childNode in node)
         {
             if (childNode.HasChildren)
-                childStates.Add(childNode.Character,
-                    For(childNode, fallbackState, fallbackEndOfTokenStateAccessor, fallbackStateCharacterCheck));
+                childStatesBuilder.Add(childNode.Character,
+                    new PotentialTokenState<TTokenType>(childNode, fallbackState, fallbackEndOfTokenStateAccessor, fallbackStateCharacterCheck));
             else
-                childStates.Add(childNode.Character, new EndOfPotentialTokenState<TTokenType>(childNode.TokenType));
+                childStatesBuilder.Add(childNode.Character, new EndOfPotentialTokenState<TTokenType>(childNode.TokenType));
         }
+        
+        StateLookup = childStatesBuilder.Build();
+    }
 
-        return new PotentialTokenState<TTokenType>(node, fallbackEndOfTokenStateAccessor, fallbackStateCharacterCheck,
-            rootStates.Build())
-        {
-            StateLookup = childStates.Build()
-        };
+    public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
+
+    protected override IState<TTokenType> GetNextState(in char c)
+    {
+        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState) || 
+            !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(c) && _rootStates.TryGetState(c, out nextState))
+            return nextState;
+
+        return _endOfTokenStateInstance;
+    }
+
+    protected override IState<TTokenType> DefaultState => _endOfTokenStateInstance;
+
+    public override void UpdateCounts(ref StateMachineContext context)
+    {
+        context.PotentialLexemeLength++;
+        if (Node.IsEndOfToken)
+            context.FallbackLexemeLength = context.PotentialLexemeLength;
     }
 }

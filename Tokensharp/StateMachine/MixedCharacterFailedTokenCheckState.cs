@@ -10,10 +10,7 @@ internal class MixedCharacterFailedTokenCheckState<TTokenType>(IState<TTokenType
         return fallbackState;
     }
 
-    protected override IState<TTokenType> GetDefaultState()
-    {
-        return fallbackState;
-    }
+    protected override IState<TTokenType> DefaultState => fallbackState;
 
     public override void UpdateCounts(ref StateMachineContext context)
     {

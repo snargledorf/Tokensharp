@@ -27,10 +27,7 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
 
     protected override IState<TTokenType> GetNextState(in char c) => this;
 
-    protected override IState<TTokenType> GetDefaultState()
-    {
-        return this;
-    }
+    protected override IState<TTokenType> DefaultState => this;
 
     public bool CharacterIsValidForState(in char c)
     {
