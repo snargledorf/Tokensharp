@@ -13,11 +13,6 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <!-- Use 2.0.0 as default package version if not specified -->
-        <SwiftStateVersion Condition="'$(SwiftStateVersion)' == ''">3.0.0-beta.2</SwiftStateVersion>
-    </PropertyGroup>
-
     <ItemGroup>
         <None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="" />
     </ItemGroup>
