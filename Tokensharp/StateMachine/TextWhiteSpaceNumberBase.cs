@@ -26,10 +26,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
         return _endOfTokenStateInstance;
     }
 
-    protected override IState<TTokenType> GetDefaultState()
-    {
-        return _endOfTokenStateInstance;
-    }
+    protected override IState<TTokenType> DefaultState => _endOfTokenStateInstance;
 
     private IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> tokenTreeNode)
     {

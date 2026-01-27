@@ -41,8 +41,5 @@ internal class StartState<TTokenType> : NodeStateBase<TTokenType>
             : _textWhiteSpaceNumberLookup.GetState(in c);
     }
 
-    protected override IState<TTokenType> GetDefaultState()
-    {
-        return this;
-    }
+    protected override IState<TTokenType> DefaultState => this;
 }

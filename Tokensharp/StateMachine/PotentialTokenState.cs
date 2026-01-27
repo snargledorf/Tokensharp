@@ -22,9 +22,7 @@ internal class PotentialTokenState<TTokenType>(
             return nextState;
 
         if (Node.IsEndOfToken || !fallbackStateCharacterCheck.CharacterIsValidForState(c))
-        {
             return _endOfTokenStateInstance;
-        }
 
         if (rootStates.TryGetState(c, out nextState))
             return nextState;
@@ -32,10 +30,7 @@ internal class PotentialTokenState<TTokenType>(
         return _endOfTokenStateInstance;
     }
 
-    protected override IState<TTokenType> GetDefaultState()
-    {
-        return _endOfTokenStateInstance;
-    }
+    protected override IState<TTokenType> DefaultState => _endOfTokenStateInstance;
 
     public override void UpdateCounts(ref StateMachineContext context)
     {

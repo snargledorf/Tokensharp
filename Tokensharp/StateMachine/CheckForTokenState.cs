@@ -56,14 +56,17 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
         return _endOfFallbackFailedTokenCheckState;
     }
 
-    protected override IState<TTokenType> GetDefaultState()
+    protected override IState<TTokenType> DefaultState
     {
-        Debug.Assert(!Node.IsEndOfToken);
-        
-        if (_fallbackStateCharacterCheck.CharacterIsValidForState(Node.Character))
-            return _defaultFailedTokenCheckState;
+        get
+        {
+            Debug.Assert(!Node.IsEndOfToken);
 
-        return _defaultEndOfFallbackFailedTokenCheckState;
+            if (_fallbackStateCharacterCheck.CharacterIsValidForState(Node.Character))
+                return _defaultFailedTokenCheckState;
+
+            return _defaultEndOfFallbackFailedTokenCheckState;
+        }
     }
 
     private static IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, IState<TTokenType> fallbackState,
