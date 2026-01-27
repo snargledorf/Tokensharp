@@ -6,21 +6,20 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 {
     public abstract bool IsEndOfToken { get; }
 
-    public void Transition(in char c, ref StateMachineContext context, out IState<TTokenType> nextState)
+    public IState<TTokenType> Transition(in char c, ref StateMachineContext context)
     {
-        nextState = GetNextState(in c);
+        IState<TTokenType> nextState = GetNextState(in c);
         nextState.UpdateCounts(ref context);
+        return nextState;
     }
 
     protected abstract IState<TTokenType> GetNextState(in char c);
 
-    public bool TryDefaultTransition(ref StateMachineContext context, out IState<TTokenType> defaultState)
+    public IState<TTokenType> PerformDefaultTransition(ref StateMachineContext context)
     {
-        defaultState = GetDefaultState();
-        
+        IState<TTokenType> defaultState = GetDefaultState();
         defaultState.UpdateCounts(ref context);
-
-        return !defaultState.IsEndOfToken;
+        return defaultState;
     }
 
     protected abstract IState<TTokenType> GetDefaultState();
