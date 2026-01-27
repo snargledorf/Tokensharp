@@ -60,15 +60,10 @@ internal class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEnd
 
     protected override IState<TTokenType> GetNextState(in char c)
     {
-        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState))
+        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState) || 
+            !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(c) && _rootStates.TryGetState(c, out nextState))
             return nextState;
 
-        if (Node.IsEndOfToken || !_fallbackStateCharacterCheck.CharacterIsValidForState(c))
-            return _endOfTokenStateInstance;
-
-        if (_rootStates.TryGetState(c, out nextState))
-            return nextState;
-        
         return _endOfTokenStateInstance;
     }
 
