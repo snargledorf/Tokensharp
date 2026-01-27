@@ -35,25 +35,20 @@ public ref struct TokenReader<TTokenType>(
 
     public bool Read([NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int index, out int length)
     {
-        tokenType = null;
         index = Consumed;
-        length = 0;
         
         TokenParser<TTokenType> tokenParser = _tokenParser;
 
-        while (tokenParser.TryParseToken(_buffer[Consumed..], moreDataAvailable, out tokenType, out int potentialLength))
+        while (tokenParser.TryParseToken(_buffer[index..], moreDataAvailable, out tokenType, out length))
         {
-            if (!options.IgnoreWhiteSpace || tokenType != TokenType<TTokenType>.WhiteSpace)
-            {
-                length = potentialLength;
-                break;
-            }
+            Consumed += length;
 
-            Consumed += potentialLength;
+            if (!options.IgnoreWhiteSpace || tokenType != TokenType<TTokenType>.WhiteSpace)
+                return true;
+
             index = Consumed;
         }
-        
-        Consumed += length;
-        return tokenType is not null;
+
+        return false;
     }
 }

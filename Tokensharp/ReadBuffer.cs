@@ -97,6 +97,6 @@ internal struct ReadBuffer(int initialBufferSize) : IDisposable
         char[] toReturn = _buffer;
         _buffer = null!;
         
-        ArrayPool<char>.Shared.Return(toReturn, true);
+        ArrayPool<char>.Shared.Return(toReturn);
     }
 }
