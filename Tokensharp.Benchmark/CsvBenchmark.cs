@@ -10,21 +10,21 @@ public class CsvBenchmark
                                    foo,"bar
                                    bizz"
                                    """;
-    
-    private string? _largeTestStr;
+
+    [Params(1, 100, 1000)]
+    public int RecordCount { get; set; }
+
+    private string _testData = "";
     private TokenConfiguration<CsvTokenTypes>? _tokenConfiguration;
     
     [GlobalSetup]
     public void Setup()
     {
-        // Create a larger CSV string for more realistic benchmarking
         var builder = new System.Text.StringBuilder();
-        for (int i = 0; i < 1000; i++)
-        {
-            builder.Append(TestStr);
-            builder.Append("\r\n");
-        }
-        _largeTestStr = builder.ToString();
+        for (int i = 0; i < RecordCount; i++)
+            builder.AppendLine(TestStr);
+        
+        _testData = builder.ToString();
         _tokenConfiguration = CsvTokenTypes.Configuration;
     }
 
@@ -32,54 +32,23 @@ public class CsvBenchmark
     public bool TokenParser_SingleToken()
     {
         var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
-        return tokenParser.TryParseToken(TestStr, false, out TokenType<CsvTokenTypes>? _, out int _);
+        return tokenParser.TryParseToken(_testData, false, out TokenType<CsvTokenTypes>? _, out int _);
     }
 
     [Benchmark]
-    public void TokenParser_Small()
+    public void TokenParser()
     {
-        ReadOnlySpan<char> csvSpan = TestStr.AsSpan();
-        var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
-        while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
-            csvSpan = csvSpan[length..];
-    }
-    
-    [Benchmark]
-    public void TokenParser_Large()
-    {
-        ReadOnlySpan<char> csvSpan = _largeTestStr.AsSpan();
+        ReadOnlySpan<char> csvSpan = _testData.AsSpan();
         var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
         while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
             csvSpan = csvSpan[length..];
     }
 
     [Benchmark]
-    public void ParseCsv_Small()
+    public void Tokenizer()
     {
-        ReadOnlySpan<char> csvSpan = TestStr.AsSpan();
-        while (Tokenizer.TryParseToken(csvSpan, _tokenConfiguration!, false, out TokenType<CsvTokenTypes>? _, out ReadOnlySpan<char> lexeme))
+        ReadOnlySpan<char> csvSpan = _testData.AsSpan();
+        while (Tokensharp.Tokenizer.TryParseToken(csvSpan, _tokenConfiguration!, false, out TokenType<CsvTokenTypes>? _, out ReadOnlySpan<char> lexeme))
             csvSpan = csvSpan[lexeme.Length..];
-    }
-
-    [Benchmark]
-    public void ParseCsv_Large()
-    {
-        ReadOnlySpan<char> csvSpan = _largeTestStr.AsSpan();
-        while (Tokenizer.TryParseToken(csvSpan, _tokenConfiguration!, false, out TokenType<CsvTokenTypes>? _, out ReadOnlySpan<char> lexeme))
-            csvSpan = csvSpan[lexeme.Length..];
-    }
-
-    [Benchmark]
-    public void EnumerateTokens_Small()
-    {
-        using IEnumerator<Token<CsvTokenTypes>> enumerator = Tokenizer.EnumerateTokens(TestStr, _tokenConfiguration!).GetEnumerator();
-        while (enumerator.MoveNext()) ;
-    }
-
-    [Benchmark]
-    public void EnumerateTokens_Large()
-    {
-        using IEnumerator<Token<CsvTokenTypes>> enumerator = Tokenizer.EnumerateTokens(_largeTestStr!, _tokenConfiguration!).GetEnumerator();
-        while (enumerator.MoveNext()) ;
     }
 }

@@ -17,8 +17,8 @@ internal class EndOfTokenState<TTokenType>(TTokenType tokenType)
         // NoOp
     }
 
-    public override bool FinalizeToken(ref StateMachineContext context, out int length,
-        [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
+    public override bool FinalizeToken(ref StateMachineContext context, [NotNullWhen(true)] ref TokenType<TTokenType>? tokenType,
+        ref int length)
     {
         length = context.FallbackLexemeLength > 0 ? context.FallbackLexemeLength : context.PotentialLexemeLength;
         tokenType = TokenType;

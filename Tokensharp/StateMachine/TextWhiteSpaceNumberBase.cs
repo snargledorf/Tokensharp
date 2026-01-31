@@ -20,7 +20,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
         if (StateLookup.TryGetState(in c, out IState<TTokenType>? nextState))
             return nextState;
 
-        if (CharacterIsValidForState(c))
+        if (CharacterIsValidForState(in c))
             return this;
         
         return _endOfTokenStateInstance;
@@ -39,8 +39,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
 
             if (startNode.IsEndOfToken)
             {
-                textWhiteSpaceNumberStates.Add(startNode.Character,
-                    EndOfTokenStateInstance);
+                textWhiteSpaceNumberStates.Add(startNode.Character, _endOfTokenStateInstance);
             }
             else
             {

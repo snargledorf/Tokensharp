@@ -32,11 +32,14 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
         IState<TTokenType>? currentState = _startState;
         var context = new StateMachineContext();
 
+        tokenType = null;
+        length = 0;
+
         foreach (char c in buffer)
         {
-            currentState = currentState.Transition(c, ref context);
-            if (currentState.IsEndOfToken)
-                return currentState.FinalizeToken(ref context, out length, out tokenType);
+            currentState = currentState.Transition(in c, ref context);
+            if (currentState.FinalizeToken(ref context, ref tokenType, ref length))
+                return true;
         }
 
         if (!moreDataAvailable)
@@ -47,6 +50,6 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
             
         Debug.Assert(currentState is not null, "Default state transition resulted in null state");
             
-        return currentState.FinalizeToken(ref context, out length, out tokenType);
+        return currentState.FinalizeToken(ref context, ref tokenType, ref length);
     }
 }
