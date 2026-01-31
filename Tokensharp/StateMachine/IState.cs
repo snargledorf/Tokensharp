@@ -14,5 +14,6 @@ internal interface IState<TTokenType> : ITransitionHandler<TTokenType>
 
     void UpdateCounts(ref StateMachineContext context);
 
-    bool FinalizeToken(ref StateMachineContext context, out int lexemeLength, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType);
+    bool FinalizeToken(ref StateMachineContext context, [NotNullWhen(true)] ref TokenType<TTokenType>? tokenType,
+        ref int lexemeLength);
 }

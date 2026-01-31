@@ -23,13 +23,9 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 
     protected abstract IState<TTokenType> DefaultState { get; }
 
-    public virtual bool FinalizeToken(ref StateMachineContext context, out int lexemeLength,
-        [NotNullWhen(true)] out TokenType<TTokenType>? tokenType)
-    {
-        lexemeLength = 0;
-        tokenType = null;
-        return false;
-    }
+    public virtual bool FinalizeToken(ref StateMachineContext context, [NotNullWhen(true)] ref TokenType<TTokenType>? tokenType,
+        ref int lexemeLength) =>
+        false;
 
     public virtual void UpdateCounts(ref StateMachineContext context)
     {
