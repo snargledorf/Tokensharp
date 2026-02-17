@@ -1,6 +1,6 @@
 namespace Tokensharp.StateMachine;
 
-public ref struct StateMachineContext
+internal ref struct StateMachineContext
 {
     public int PotentialLexemeLength;
     public int FallbackLexemeLength;
