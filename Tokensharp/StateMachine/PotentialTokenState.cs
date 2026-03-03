@@ -2,16 +2,17 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndOfTokenStateAccessor<TTokenType>
+internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndOfTokenStateAccessor<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance;
 
     private readonly IStateCharacterCheck _fallbackStateCharacterCheck;
-    private readonly IStateLookup<TTokenType> _rootStates;
+    private readonly StateLookup<TTokenType> _rootStates;
+    private readonly StateLookup<TTokenType> _stateLookup;
 
     public PotentialTokenState(ITokenTreeNode<TTokenType> node,
-        IState<TTokenType> fallbackState,
+        State<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackEndOfTokenStateAccessor,
         IStateCharacterCheck fallbackStateCharacterCheck) : base(node)
     {
@@ -53,14 +54,14 @@ internal class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEnd
                 childStatesBuilder.Add(childNode.Character, new EndOfPotentialTokenState<TTokenType>(childNode.TokenType));
         }
         
-        StateLookup = childStatesBuilder.Build();
+        _stateLookup = childStatesBuilder.Build();
     }
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
-        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState) ||
+        if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState) ||
             !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(in c) &&
             _rootStates.TryGetState(c, out nextState))
             return nextState;
@@ -68,7 +69,7 @@ internal class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEnd
         return _endOfTokenStateInstance;
     }
 
-    protected override IState<TTokenType> DefaultState => _endOfTokenStateInstance;
+    protected override State<TTokenType> DefaultState => _endOfTokenStateInstance;
 
     public override void UpdateCounts(ref StateMachineContext context)
     {

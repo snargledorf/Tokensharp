@@ -2,7 +2,7 @@
 
 namespace Tokensharp.StateMachine;
 
-internal class WhiteSpace<TTokenType>(ITokenTreeNode<TTokenType> rootNode) 
+internal sealed class WhiteSpace<TTokenType>(ITokenTreeNode<TTokenType> rootNode) 
     : TextWhiteSpaceNumberBase<TTokenType>(rootNode, TokenType<TTokenType>.WhiteSpace)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {

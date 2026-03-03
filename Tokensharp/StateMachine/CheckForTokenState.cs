@@ -13,9 +13,10 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
     private readonly MixedCharacterCheckFailedEndOfTokenState<TTokenType> _defaultEndOfFallbackFailedTokenCheckState;
     private readonly IEndOfTokenStateAccessor<TTokenType> _fallbackStateEndOfTokenStateAccessor;
     private readonly IStateCharacterCheck _fallbackStateCharacterCheck;
+    private readonly StateLookup<TTokenType> _stateLookup;
 
     public CheckForTokenState(ITokenTreeNode<TTokenType> node,
-        IState<TTokenType> fallbackState,
+        State<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor,
         IStateCharacterCheck fallbackStateCharacterCheck) : base(node)
     {
@@ -36,16 +37,16 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
             new MixedCharacterCheckFailedEndOfTokenState<TTokenType>(fallbackStateEndOfTokenStateAccessor
                 .EndOfTokenStateInstance);
 
-        StateLookup = BuildStateLookup(node, fallbackState, fallbackStateEndOfTokenStateAccessor, fallbackStateCharacterCheck);
+        _stateLookup = BuildStateLookup(node, fallbackState, fallbackStateEndOfTokenStateAccessor, fallbackStateCharacterCheck);
     }
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
         Debug.Assert(!Node.IsEndOfToken);
         
-        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState))
+        if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState))
             return nextState;
         
         if (_fallbackStateCharacterCheck.CharacterIsValidForState(in c))
@@ -56,7 +57,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
         return _endOfFallbackFailedTokenCheckState;
     }
 
-    protected override IState<TTokenType> DefaultState
+    protected override State<TTokenType> DefaultState
     {
         get
         {
@@ -69,7 +70,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
         }
     }
 
-    private static IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, IState<TTokenType> fallbackState,
+    private static StateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, State<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor, IStateCharacterCheck fallbackStateCharacterCheck)
     {
         var childStates = new StateLookupBuilder<TTokenType>();

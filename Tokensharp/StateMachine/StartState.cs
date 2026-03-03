@@ -2,10 +2,11 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class StartState<TTokenType> : NodeStateBase<TTokenType>
+internal sealed class StartState<TTokenType> : NodeStateBase<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly ITextWhiteSpaceNumberLookup<TTokenType> _textWhiteSpaceNumberLookup;
+    private readonly TextWhiteSpaceNumberLookupBase<TTokenType> _textWhiteSpaceNumberLookup;
+    private readonly StateLookup<TTokenType> _stateLookup;
 
     public override bool IsEndOfToken => true;
 
@@ -31,15 +32,15 @@ internal class StartState<TTokenType> : NodeStateBase<TTokenType>
             }
         }
         
-        StateLookup = startStates.Build();
+        _stateLookup = startStates.Build();
     }
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
-        return StateLookup.TryGetState(c, out IState<TTokenType>? nextState)
+        return _stateLookup.TryGetState(c, out State<TTokenType>? nextState)
             ? nextState
-            : _textWhiteSpaceNumberLookup.GetState(in c);
+            : _textWhiteSpaceNumberLookup.GetState(c);
     }
 
-    protected override IState<TTokenType> DefaultState => this;
+    protected override State<TTokenType> DefaultState => this;
 }

@@ -6,18 +6,19 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance;
+    private readonly StateLookup<TTokenType> _stateLookup;
 
     protected TextWhiteSpaceNumberBase(ITokenTreeNode<TTokenType> rootNode, TTokenType tokenType) : base(rootNode.RootNode)
     {
         _endOfTokenStateInstance = new EndOfTokenState<TTokenType>(tokenType);
-        StateLookup = BuildStateLookup(rootNode);
+        _stateLookup = BuildStateLookup(rootNode);
     }
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
-        if (StateLookup.TryGetState(in c, out IState<TTokenType>? nextState))
+        if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState))
             return nextState;
 
         if (CharacterIsValidForState(in c))
@@ -26,9 +27,9 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
         return _endOfTokenStateInstance;
     }
 
-    protected override IState<TTokenType> DefaultState => _endOfTokenStateInstance;
+    protected override State<TTokenType> DefaultState => _endOfTokenStateInstance;
 
-    private IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> tokenTreeNode)
+    private StateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> tokenTreeNode)
     {
         var textWhiteSpaceNumberStates = new StateLookupBuilder<TTokenType>();
 

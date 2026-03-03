@@ -9,12 +9,6 @@ internal abstract class NodeStateBase<TTokenType>(ITokenTreeNode<TTokenType> nod
     
     protected ITokenTreeNode<TTokenType> Node { get; } = node;
 
-    protected IStateLookup<TTokenType> StateLookup
-    {
-        get => field ?? throw new InvalidOperationException("StateLookup not initialized");
-        init;
-    }
-
     public override string ToString()
     {
         return $"{GetType().Name} Node: {Node}";
