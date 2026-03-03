@@ -2,7 +2,7 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class StartState<TTokenType> : NodeStateBase<TTokenType>
+internal sealed class StartState<TTokenType> : NodeStateBase<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly ITextWhiteSpaceNumberLookup<TTokenType> _textWhiteSpaceNumberLookup;

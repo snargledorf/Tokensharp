@@ -2,7 +2,7 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class StartOfCheckForTokenState<TTokenType>(
+internal sealed class StartOfCheckForTokenState<TTokenType>(
     ITokenTreeNode<TTokenType> node,
     IState<TTokenType> fallback,
     IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor,

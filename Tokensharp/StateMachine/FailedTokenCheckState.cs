@@ -1,6 +1,6 @@
 namespace Tokensharp.StateMachine;
 
-internal class FailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState, IStateCharacterCheck fallbackStateCharacterCheck)
+internal sealed class FailedTokenCheckState<TTokenType>(IState<TTokenType> fallbackState, IStateCharacterCheck fallbackStateCharacterCheck)
     : MixedCharacterFailedTokenCheckState<TTokenType>(fallbackState, fallbackStateCharacterCheck) where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public override void UpdateCounts(ref StateMachineContext context)

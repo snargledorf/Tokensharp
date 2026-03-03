@@ -2,7 +2,7 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndOfTokenStateAccessor<TTokenType>
+internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndOfTokenStateAccessor<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance;

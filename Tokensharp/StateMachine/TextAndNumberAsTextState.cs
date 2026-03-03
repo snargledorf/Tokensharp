@@ -2,7 +2,7 @@
 
 namespace Tokensharp.StateMachine;
 
-internal class TextAndNumberAsTextState<TTokenType>(ITokenTreeNode<TTokenType> rootNode) 
+internal sealed class TextAndNumberAsTextState<TTokenType>(ITokenTreeNode<TTokenType> rootNode) 
     : TextWhiteSpaceNumberBase<TTokenType>(rootNode, TokenType<TTokenType>.Text)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {

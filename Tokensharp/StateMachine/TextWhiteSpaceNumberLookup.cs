@@ -2,7 +2,7 @@
 
 namespace Tokensharp.StateMachine;
 
-internal class TextWhiteSpaceNumberLookup<TTokenType>(ITokenTreeNode<TTokenType> tokenTreeNode)
+internal sealed class TextWhiteSpaceNumberLookup<TTokenType>(ITokenTreeNode<TTokenType> tokenTreeNode)
     : TextWhiteSpaceNumberLookupBase<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {

@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.StateMachine;
 
-internal class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal sealed class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly Dictionary<char, IState<TTokenType>> _states = new();
     
