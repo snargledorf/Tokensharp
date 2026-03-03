@@ -34,12 +34,12 @@ internal sealed class StartState<TTokenType> : NodeStateBase<TTokenType>
         StateLookup = startStates.Build();
     }
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
-        return StateLookup.TryGetState(c, out IState<TTokenType>? nextState)
+        return StateLookup.TryGetState(c, out State<TTokenType>? nextState)
             ? nextState
-            : _textWhiteSpaceNumberLookup.GetState(in c);
+            : _textWhiteSpaceNumberLookup.GetState(c);
     }
 
-    protected override IState<TTokenType> DefaultState => this;
+    protected override State<TTokenType> DefaultState => this;
 }

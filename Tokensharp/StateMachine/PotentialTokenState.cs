@@ -11,7 +11,7 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
     private readonly IStateLookup<TTokenType> _rootStates;
 
     public PotentialTokenState(ITokenTreeNode<TTokenType> node,
-        IState<TTokenType> fallbackState,
+        State<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackEndOfTokenStateAccessor,
         IStateCharacterCheck fallbackStateCharacterCheck) : base(node)
     {
@@ -58,9 +58,9 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
-        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState) ||
+        if (StateLookup.TryGetState(c, out State<TTokenType>? nextState) ||
             !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(in c) &&
             _rootStates.TryGetState(c, out nextState))
             return nextState;
@@ -68,7 +68,7 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
         return _endOfTokenStateInstance;
     }
 
-    protected override IState<TTokenType> DefaultState => _endOfTokenStateInstance;
+    protected override State<TTokenType> DefaultState => _endOfTokenStateInstance;
 
     public override void UpdateCounts(ref StateMachineContext context)
     {

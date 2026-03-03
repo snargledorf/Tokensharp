@@ -10,7 +10,7 @@ internal sealed class TextWhiteSpaceNumberLookup<TTokenType>(ITokenTreeNode<TTok
     private readonly Number<TTokenType> _numberState = new(tokenTreeNode);
     private readonly Text<TTokenType> _textState = new(tokenTreeNode);
 
-    public override TextWhiteSpaceNumberBase<TTokenType> GetState(in char c)
+    public override TextWhiteSpaceNumberBase<TTokenType> GetState(char c)
     {
         if (char.IsWhiteSpace(c))
             return _whiteSpaceState;

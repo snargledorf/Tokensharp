@@ -15,9 +15,9 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
-        if (StateLookup.TryGetState(in c, out IState<TTokenType>? nextState))
+        if (StateLookup.TryGetState(c, out State<TTokenType>? nextState))
             return nextState;
 
         if (CharacterIsValidForState(in c))
@@ -26,7 +26,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
         return _endOfTokenStateInstance;
     }
 
-    protected override IState<TTokenType> DefaultState => _endOfTokenStateInstance;
+    protected override State<TTokenType> DefaultState => _endOfTokenStateInstance;
 
     private IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> tokenTreeNode)
     {

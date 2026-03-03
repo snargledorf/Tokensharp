@@ -2,16 +2,17 @@
 
 namespace Tokensharp.StateMachine;
 
-internal sealed class SingleStateLookup<TTokenType>(char character, IState<TTokenType> state) : IStateLookup<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal sealed class SingleStateLookup<TTokenType>(char character, State<TTokenType> state)
+    : StateLookup<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public bool TryGetState(in char c, [NotNullWhen(true)] out IState<TTokenType>? result)
+    public override bool TryGetState(char c, [NotNullWhen(true)] out State<TTokenType>? result)
     {
         if (c == character)
         {
             result = state;
             return true;
         }
-        
+
         result = null;
         return false;
     }

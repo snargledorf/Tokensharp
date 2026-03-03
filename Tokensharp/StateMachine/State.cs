@@ -6,22 +6,23 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 {
     public abstract bool IsEndOfToken { get; }
 
-    public IState<TTokenType> Transition(in char c, ref StateMachineContext context)
+    public State<TTokenType> Transition(char c, ref StateMachineContext context)
     {
-        IState<TTokenType> nextState = GetNextState(in c);
+        State<TTokenType> nextState = GetNextState(c);
         nextState.UpdateCounts(ref context);
         return nextState;
     }
 
-    protected abstract IState<TTokenType> GetNextState(in char c);
+    protected abstract State<TTokenType> GetNextState(char c);
 
-    public IState<TTokenType> PerformDefaultTransition(ref StateMachineContext context)
+    public State<TTokenType> PerformDefaultTransition(ref StateMachineContext context)
     {
-        DefaultState.UpdateCounts(ref context);
-        return DefaultState;
+        State<TTokenType> defaultState = DefaultState;
+        defaultState.UpdateCounts(ref context);
+        return defaultState;
     }
 
-    protected abstract IState<TTokenType> DefaultState { get; }
+    protected abstract State<TTokenType> DefaultState { get; }
 
     public virtual bool FinalizeToken(ref StateMachineContext context, [NotNullWhen(true)] ref TokenType<TTokenType>? tokenType,
         ref int lexemeLength) =>

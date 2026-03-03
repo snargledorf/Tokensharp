@@ -3,10 +3,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.StateMachine;
 
-internal sealed class MultipleStateLookup<TTokenType>(FrozenDictionary<char, IState<TTokenType>> dictionary)
-    : IStateLookup<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal sealed class MultipleStateLookup<TTokenType>(FrozenDictionary<char, State<TTokenType>> dictionary)
+    : StateLookup<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public bool TryGetState(in char c, [NotNullWhen(true)] out IState<TTokenType>? state)
+    public override bool TryGetState(char c, [NotNullWhen(true)] out State<TTokenType>? state)
     {
         return dictionary.TryGetValue(c, out state);
     }

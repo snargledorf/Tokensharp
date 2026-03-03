@@ -15,7 +15,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
     private readonly IStateCharacterCheck _fallbackStateCharacterCheck;
 
     public CheckForTokenState(ITokenTreeNode<TTokenType> node,
-        IState<TTokenType> fallbackState,
+        State<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor,
         IStateCharacterCheck fallbackStateCharacterCheck) : base(node)
     {
@@ -41,11 +41,11 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
 
-    protected override IState<TTokenType> GetNextState(in char c)
+    protected override State<TTokenType> GetNextState(char c)
     {
         Debug.Assert(!Node.IsEndOfToken);
         
-        if (StateLookup.TryGetState(c, out IState<TTokenType>? nextState))
+        if (StateLookup.TryGetState(c, out State<TTokenType>? nextState))
             return nextState;
         
         if (_fallbackStateCharacterCheck.CharacterIsValidForState(in c))
@@ -56,7 +56,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
         return _endOfFallbackFailedTokenCheckState;
     }
 
-    protected override IState<TTokenType> DefaultState
+    protected override State<TTokenType> DefaultState
     {
         get
         {
@@ -69,7 +69,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
         }
     }
 
-    private static IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, IState<TTokenType> fallbackState,
+    private static IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, State<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor, IStateCharacterCheck fallbackStateCharacterCheck)
     {
         var childStates = new StateLookupBuilder<TTokenType>();
