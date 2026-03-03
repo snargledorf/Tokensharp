@@ -2,7 +2,7 @@
 
 namespace Tokensharp.StateMachine;
 
-internal class TextWhiteSpaceNumberLookup<TTokenType>(ITokenTreeNode<TTokenType> tokenTreeNode)
+internal sealed class TextWhiteSpaceNumberLookup<TTokenType>(ITokenTreeNode<TTokenType> tokenTreeNode)
     : TextWhiteSpaceNumberLookupBase<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
@@ -10,7 +10,7 @@ internal class TextWhiteSpaceNumberLookup<TTokenType>(ITokenTreeNode<TTokenType>
     private readonly Number<TTokenType> _numberState = new(tokenTreeNode);
     private readonly Text<TTokenType> _textState = new(tokenTreeNode);
 
-    public override TextWhiteSpaceNumberBase<TTokenType> GetState(in char c)
+    public override TextWhiteSpaceNumberBase<TTokenType> GetState(char c)
     {
         if (char.IsWhiteSpace(c))
             return _whiteSpaceState;

@@ -29,7 +29,7 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
     
     public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int length)
     {
-        IState<TTokenType>? currentState = _startState;
+        State<TTokenType>? currentState = _startState;
         var context = new StateMachineContext();
 
         tokenType = null;
@@ -37,7 +37,7 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
 
         foreach (char c in buffer)
         {
-            currentState = currentState.Transition(in c, ref context);
+            currentState = currentState.Transition(c, ref context);
             if (currentState.FinalizeToken(ref context, ref tokenType, ref length))
                 return true;
         }
