@@ -8,7 +8,8 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
     private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance;
 
     private readonly IStateCharacterCheck _fallbackStateCharacterCheck;
-    private readonly IStateLookup<TTokenType> _rootStates;
+    private readonly StateLookup<TTokenType> _rootStates;
+    private readonly StateLookup<TTokenType> _stateLookup;
 
     public PotentialTokenState(ITokenTreeNode<TTokenType> node,
         State<TTokenType> fallbackState,
@@ -53,14 +54,14 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
                 childStatesBuilder.Add(childNode.Character, new EndOfPotentialTokenState<TTokenType>(childNode.TokenType));
         }
         
-        StateLookup = childStatesBuilder.Build();
+        _stateLookup = childStatesBuilder.Build();
     }
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
     protected override State<TTokenType> GetNextState(char c)
     {
-        if (StateLookup.TryGetState(c, out State<TTokenType>? nextState) ||
+        if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState) ||
             !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(in c) &&
             _rootStates.TryGetState(c, out nextState))
             return nextState;

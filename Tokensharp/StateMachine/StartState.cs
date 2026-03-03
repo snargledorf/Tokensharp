@@ -5,7 +5,8 @@ namespace Tokensharp.StateMachine;
 internal sealed class StartState<TTokenType> : NodeStateBase<TTokenType>
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly ITextWhiteSpaceNumberLookup<TTokenType> _textWhiteSpaceNumberLookup;
+    private readonly TextWhiteSpaceNumberLookupBase<TTokenType> _textWhiteSpaceNumberLookup;
+    private readonly StateLookup<TTokenType> _stateLookup;
 
     public override bool IsEndOfToken => true;
 
@@ -31,12 +32,12 @@ internal sealed class StartState<TTokenType> : NodeStateBase<TTokenType>
             }
         }
         
-        StateLookup = startStates.Build();
+        _stateLookup = startStates.Build();
     }
 
     protected override State<TTokenType> GetNextState(char c)
     {
-        return StateLookup.TryGetState(c, out State<TTokenType>? nextState)
+        return _stateLookup.TryGetState(c, out State<TTokenType>? nextState)
             ? nextState
             : _textWhiteSpaceNumberLookup.GetState(c);
     }

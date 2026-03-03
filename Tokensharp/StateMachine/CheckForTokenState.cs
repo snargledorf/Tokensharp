@@ -13,6 +13,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
     private readonly MixedCharacterCheckFailedEndOfTokenState<TTokenType> _defaultEndOfFallbackFailedTokenCheckState;
     private readonly IEndOfTokenStateAccessor<TTokenType> _fallbackStateEndOfTokenStateAccessor;
     private readonly IStateCharacterCheck _fallbackStateCharacterCheck;
+    private readonly StateLookup<TTokenType> _stateLookup;
 
     public CheckForTokenState(ITokenTreeNode<TTokenType> node,
         State<TTokenType> fallbackState,
@@ -36,7 +37,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
             new MixedCharacterCheckFailedEndOfTokenState<TTokenType>(fallbackStateEndOfTokenStateAccessor
                 .EndOfTokenStateInstance);
 
-        StateLookup = BuildStateLookup(node, fallbackState, fallbackStateEndOfTokenStateAccessor, fallbackStateCharacterCheck);
+        _stateLookup = BuildStateLookup(node, fallbackState, fallbackStateEndOfTokenStateAccessor, fallbackStateCharacterCheck);
     }
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _fallbackStateEndOfTokenStateAccessor.EndOfTokenStateInstance;
@@ -45,7 +46,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
     {
         Debug.Assert(!Node.IsEndOfToken);
         
-        if (StateLookup.TryGetState(c, out State<TTokenType>? nextState))
+        if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState))
             return nextState;
         
         if (_fallbackStateCharacterCheck.CharacterIsValidForState(in c))
@@ -69,7 +70,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
         }
     }
 
-    private static IStateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, State<TTokenType> fallbackState,
+    private static StateLookup<TTokenType> BuildStateLookup(ITokenTreeNode<TTokenType> node, State<TTokenType> fallbackState,
         IEndOfTokenStateAccessor<TTokenType> fallbackStateEndOfTokenStateAccessor, IStateCharacterCheck fallbackStateCharacterCheck)
     {
         var childStates = new StateLookupBuilder<TTokenType>();
