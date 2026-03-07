@@ -5,9 +5,9 @@ namespace Tokensharp.StateMachine;
 
 internal sealed class StateLookupBuilder<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly Dictionary<char, State<TTokenType>> _states = new();
+    private static readonly AlwaysFalseLookup NoStatesLookup = new();
     
-    private readonly AlwaysFalseLookup _noStatesLookup = new();
+    private readonly Dictionary<char, State<TTokenType>> _states = new();
 
     public void Add(char character, State<TTokenType> state)
     {
@@ -17,7 +17,7 @@ internal sealed class StateLookupBuilder<TTokenType> where TTokenType : TokenTyp
     public StateLookup<TTokenType> Build()
     {
         if (_states.Count == 0)
-            return _noStatesLookup;
+            return NoStatesLookup;
 
         if (_states.Count == 1)
         {
