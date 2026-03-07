@@ -49,7 +49,7 @@ internal class CheckForTokenState<TTokenType> : NodeStateBase<TTokenType>, IEndO
         if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState))
             return nextState;
         
-        if (_fallbackStateCharacterCheck.CharacterIsValidForState(in c))
+        if (_fallbackStateCharacterCheck.CharacterIsValidForState(c))
         {
             return _fallbackFailedTokenCheckState;
         }

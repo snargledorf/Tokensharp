@@ -4,7 +4,7 @@ namespace Tokensharp.StateMachine;
 
 internal interface IStateCharacterCheck
 {
-    bool CharacterIsValidForState(in char c);
+    bool CharacterIsValidForState(char c);
 }
 
 internal interface IState<TTokenType> : ITransitionHandler<TTokenType>

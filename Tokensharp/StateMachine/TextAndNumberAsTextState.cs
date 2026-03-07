@@ -6,5 +6,5 @@ internal sealed class TextAndNumberAsTextState<TTokenType>(ITokenTreeNode<TToken
     : TextWhiteSpaceNumberBase<TTokenType>(rootNode, TokenType<TTokenType>.Text)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    public override bool CharacterIsValidForState(in char c) => !char.IsWhiteSpace(c);
+    public override bool CharacterIsValidForState(char c) => !char.IsWhiteSpace(c);
 }

@@ -2,13 +2,15 @@ using Tokensharp.TokenTree;
 
 namespace Tokensharp.StateMachine;
 
-internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTokenType>, IEndOfTokenStateAccessor<TTokenType>, IStateCharacterCheck
+internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTokenType>,
+    IEndOfTokenStateAccessor<TTokenType>, IStateCharacterCheck
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     private readonly EndOfTokenState<TTokenType> _endOfTokenStateInstance;
     private readonly StateLookup<TTokenType> _stateLookup;
 
-    protected TextWhiteSpaceNumberBase(ITokenTreeNode<TTokenType> rootNode, TTokenType tokenType) : base(rootNode.RootNode)
+    protected TextWhiteSpaceNumberBase(ITokenTreeNode<TTokenType> rootNode, TTokenType tokenType) : base(
+        rootNode.RootNode)
     {
         _endOfTokenStateInstance = new EndOfTokenState<TTokenType>(tokenType);
         _stateLookup = BuildStateLookup(rootNode);
@@ -21,9 +23,9 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
         if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState))
             return nextState;
 
-        if (CharacterIsValidForState(in c))
+        if (CharacterIsValidForState(c))
             return this;
-        
+
         return _endOfTokenStateInstance;
     }
 
@@ -52,5 +54,5 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
         return textWhiteSpaceNumberStates.Build();
     }
 
-    public abstract bool CharacterIsValidForState(in char c);
+    public abstract bool CharacterIsValidForState(char c);
 }

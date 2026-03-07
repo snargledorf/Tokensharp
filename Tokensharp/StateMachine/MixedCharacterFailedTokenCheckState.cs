@@ -17,5 +17,5 @@ internal class MixedCharacterFailedTokenCheckState<TTokenType>(State<TTokenType>
         context.FallbackLexemeLength = context.PotentialLexemeLength;
     }
 
-    public bool CharacterIsValidForState(in char c) => fallbackStateCharacterCheck.CharacterIsValidForState(in c);
+    public bool CharacterIsValidForState(char c) => fallbackStateCharacterCheck.CharacterIsValidForState(c);
 }

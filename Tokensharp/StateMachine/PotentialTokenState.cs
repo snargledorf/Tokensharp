@@ -62,7 +62,7 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
     protected override State<TTokenType> GetNextState(char c)
     {
         if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState) ||
-            !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(in c) &&
+            !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(c) &&
             _rootStates.TryGetState(c, out nextState))
             return nextState;
 
