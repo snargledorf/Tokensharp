@@ -11,5 +11,18 @@ internal static class TokenTreeNodeExtensions
         public bool IsDigitsToRoot => char.IsDigit(node.Character) && (node.Parent?.IsDigitsToRoot ?? true);
 
         public bool HasPrefixTokenType(TokenType<TTokenType> tokenType) => (node.Parent?.TokenType == tokenType) || (node.Parent?.HasPrefixTokenType(tokenType) ?? false);
+
+        public HashSet<char> AllCharacters => [..GetAllCharactersForNodeRecursive(node).Distinct()];
+    }
+
+    private static IEnumerable<char>
+        GetAllCharactersForNodeRecursive<TTokenType>(ITokenTreeNode<TTokenType> tokenTreeNode)
+        where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+    {
+        if (tokenTreeNode.Character != '\0')
+            yield return tokenTreeNode.Character;
+
+        foreach (char c in tokenTreeNode.SelectMany(GetAllCharactersForNodeRecursive))
+            yield return c;
     }
 }

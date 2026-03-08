@@ -8,9 +8,9 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
 {
     internal TokenConfiguration(IEnumerable<LexemeToTokenType<TTokenType>> lexemeToTokenTypes, bool numbersAreText = false)
     {
-        ITokenTreeNode<TTokenType> tokenTree = lexemeToTokenTypes.ToTokenTree();
+        TokenTree = lexemeToTokenTypes.ToTokenTree();
         
-        StartState = new StartState<TTokenType>(tokenTree, numbersAreText);
+        StartState = new StartState<TTokenType>(TokenTree, numbersAreText);
         
         NumbersAreText = numbersAreText;
     }
@@ -21,6 +21,8 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
     {
         return new TokenConfiguration<TTokenType>(lexemeToTokenTypes);
     }
+    
+    internal ITokenTreeNode<TTokenType> TokenTree { get; }
     
     internal StartState<TTokenType> StartState { get; }
 }
