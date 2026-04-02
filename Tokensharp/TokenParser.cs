@@ -154,7 +154,6 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
         char firstChar = buffer[0];
         if (char.IsWhiteSpace(firstChar))
         {
-            tokenType = TokenType<TTokenType>.WhiteSpace;
             length = 1;
             while (length < buffer.Length && char.IsWhiteSpace(buffer[length]))
             {
@@ -163,13 +162,16 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
                 length++;
             }
             if (moreDataAvailable && length == buffer.Length)
+            {
+                length = 0;
                 return false;
+            }
+            tokenType = TokenType<TTokenType>.WhiteSpace;
             return true;
         }
 
         if (!_numbersAreText && char.IsDigit(firstChar))
         {
-            tokenType = TokenType<TTokenType>.Number;
             length = 1;
             while (length < buffer.Length && char.IsDigit(buffer[length]))
             {
@@ -178,11 +180,14 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
                 length++;
             }
             if (moreDataAvailable && length == buffer.Length)
+            {
+                length = 0;
                 return false;
+            }
+            tokenType = TokenType<TTokenType>.Number;
             return true;
         }
         
-        tokenType = TokenType<TTokenType>.Text;
         length = 1;
         while (length < buffer.Length)
         {
@@ -199,8 +204,12 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
         }
 
         if (moreDataAvailable && length == buffer.Length)
+        {
+            length = 0;
             return false;
+        }
             
+        tokenType = TokenType<TTokenType>.Text;
         return true;
     }
 
