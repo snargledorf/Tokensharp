@@ -7,10 +7,18 @@ public readonly ref struct CharacterIdMap
 
     public CharacterIdMap(HashSet<char> allCharacters)
     {
+        if (allCharacters.Count == 0)
+        {
+            _characterIdOffset = 0;
+            _characterIds = [];
+            return;
+        }
+        
         _characterIdOffset = allCharacters.Min(c => (int)c);
         
         int characterIdsLength = allCharacters.Max(c => (int)c) - _characterIdOffset + 1;
         _characterIds = new int[characterIdsLength];
+        Array.Fill(_characterIds, -1);
 
         int characterId = 0;
         foreach (char c in allCharacters)
