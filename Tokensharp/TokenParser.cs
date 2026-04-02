@@ -62,7 +62,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
 
     private int GetMaxChildCharacterId(ITokenTreeNode<TTokenType> node)
     {
-        int maxCharacterId = 0;
+        int maxCharacterId = -1;
         
         foreach (ITokenTreeNode<TTokenType> childNode in node)
         {
@@ -97,7 +97,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
         int lastMatchLength = 0;
         TTokenType? lastMatchTokenType = null;
 
-        if (_isEndOfToken[currentState] && _stateToTokenType[currentState] is not null)
+        if (_isEndOfToken[currentState])
         {
             lastMatchTokenType = _stateToTokenType[currentState];
             lastMatchLength = length;
@@ -119,7 +119,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
                         currentState = nextState;
                         length++;
 
-                        if (_isEndOfToken[currentState] && _stateToTokenType[currentState] is not null)
+                        if (_isEndOfToken[currentState])
                         {
                             lastMatchTokenType = _stateToTokenType[currentState];
                             lastMatchLength = length;
@@ -133,24 +133,13 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
             break;
         }
 
+        if (moreDataAvailable && length == buffer.Length && HasPossibleTransitions(currentState))
+        {
+            return false;
+        }
+
         if (lastMatchTokenType is not null)
         {
-            // If moreDataAvailable is true, and we hit the end of the buffer, we might be in the middle of a larger token
-            // that is a prefix of another valid token but we don't have enough data yet.
-            // Wait, if moreDataAvailable, and length == buffer.Length, and it matched a token, should we return it or wait?
-            // The original code handled this via 'PerformDefaultTransition' and checking if it's EndOfToken.
-            // Actually, if we successfully consumed all buffer and more data is available, 
-            // the state machine would wait by returning false here, allowing caller to buffer more.
-            if (moreDataAvailable && length == buffer.Length)
-            {
-                // Is there a possible transition from the current state?
-                // If there's any transition from here, we might need more data.
-                if (HasPossibleTransitions(currentState))
-                {
-                    return false;
-                }
-            }
-            
             tokenType = lastMatchTokenType;
             length = lastMatchLength;
             return true;
@@ -169,6 +158,8 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
             length = 1;
             while (length < buffer.Length && char.IsWhiteSpace(buffer[length]))
             {
+                if (StartsCustomToken(buffer[length..], moreDataAvailable))
+                    break;
                 length++;
             }
             if (moreDataAvailable && length == buffer.Length)
@@ -182,6 +173,8 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
             length = 1;
             while (length < buffer.Length && char.IsDigit(buffer[length]))
             {
+                if (StartsCustomToken(buffer[length..], moreDataAvailable))
+                    break;
                 length++;
             }
             if (moreDataAvailable && length == buffer.Length)
@@ -199,15 +192,8 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
             if (!_numbersAreText && char.IsDigit(c))
                 break;
             
-            // Check if the current character could start a defined token
-            if (_characterIdMap.TryGetCharacterId(c, out int characterId))
-            {
-                int[] transitions = _stateTransitions[0]; // Start state transitions
-                if (characterId < transitions.Length && transitions[characterId] != -1)
-                {
-                    break;
-                }
-            }
+            if (StartsCustomToken(buffer[length..], moreDataAvailable))
+                break;
             
             length++;
         }
@@ -216,6 +202,68 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
             return false;
             
         return true;
+    }
+
+    private bool StartsCustomToken(ReadOnlySpan<char> buffer, bool moreDataAvailable)
+    {
+        if (buffer.IsEmpty)
+            return false;
+
+        char c = buffer[0];
+        if (!_characterIdMap.TryGetCharacterId(c, out int characterId))
+            return false;
+
+        int[] startTransitions = _stateTransitions[0];
+        if (characterId >= startTransitions.Length || startTransitions[characterId] == -1)
+            return false;
+
+        int currentState = 0;
+        int matchLength = 0;
+        bool isPotentialPrefix = false;
+
+        for (int i = 0; i < buffer.Length; i++)
+        {
+            c = buffer[i];
+            
+            if (_characterIdMap.TryGetCharacterId(c, out characterId))
+            {
+                int[] transitions = _stateTransitions[currentState];
+
+                if (characterId < transitions.Length)
+                {
+                    int nextState = transitions[characterId];
+                    if (nextState != -1)
+                    {
+                        currentState = nextState;
+                        
+                        if (_isEndOfToken[currentState])
+                        {
+                            matchLength = i + 1;
+                        }
+                        
+                        if (i == buffer.Length - 1)
+                        {
+                            isPotentialPrefix = true;
+                        }
+                        
+                        continue;
+                    }
+                }
+            }
+
+            break;
+        }
+
+        if (matchLength > 0)
+            return true;
+        
+        if (moreDataAvailable && isPotentialPrefix)
+        {
+            if (HasPossibleTransitions(currentState))
+                return true;
+        }
+
+        return false;
     }
 
     private bool HasPossibleTransitions(int stateId)
