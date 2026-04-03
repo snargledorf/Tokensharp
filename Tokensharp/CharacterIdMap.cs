@@ -13,9 +13,9 @@ public readonly struct CharacterIdMap
             _characterIds = [];
             return;
         }
-        
+
         _characterIdOffset = allCharacters.Min(c => (int)c);
-        
+
         int characterIdsLength = allCharacters.Max(c => (int)c) - _characterIdOffset + 1;
         _characterIds = new int[characterIdsLength];
         Array.Fill(_characterIds, -1);
@@ -28,7 +28,7 @@ public readonly struct CharacterIdMap
         }
     }
 
-    public readonly bool TryGetCharacterId(char c, out int characterId)
+    public bool TryGetCharacterId(char c, out int characterId)
     {
         int index = c - _characterIdOffset;
         if (index < 0 || index >= _characterIds.Length)
@@ -36,18 +36,12 @@ public readonly struct CharacterIdMap
             characterId = -1;
             return false;
         }
-        
+
         characterId = _characterIds[index];
         return characterId != -1;
     }
 
-    public readonly int this[char c]
-    {
-        get
-        {
-            if (!TryGetCharacterId(c, out int characterId))
-                throw new ArgumentOutOfRangeException(nameof(c));
-            return characterId;
-        }
-    }
+    public int this[char c] => !TryGetCharacterId(c, out int characterId)
+        ? throw new ArgumentOutOfRangeException(nameof(c))
+        : characterId;
 }

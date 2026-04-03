@@ -17,11 +17,13 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
 
         var stateTransitions = new List<int[]>();
         var stateToTokenType = new List<TTokenType?>();
+        var hasPossibleTransitions = new List<bool>();
         
-        BuildTransitions(stateTransitions, stateToTokenType, TokenTree);
+        BuildTransitions(stateTransitions, stateToTokenType, hasPossibleTransitions, TokenTree);
 
         StateTransitions = [..stateTransitions];
         StateToTokenType = [..stateToTokenType];
+        HasPossibleTransitions = [..hasPossibleTransitions];
 
         IsEndOfToken = new bool[StateToTokenType.Length];
         for(var i = 0; i < StateToTokenType.Length; i++)
@@ -50,9 +52,12 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
 
     internal bool[] IsEndOfToken { get; }
 
-    private void BuildTransitions(List<int[]> stateTransitions, List<TTokenType?> stateToTokenType, ITokenTreeNode<TTokenType> node)
+    internal bool[] HasPossibleTransitions { get; }
+
+    private void BuildTransitions(List<int[]> stateTransitions, List<TTokenType?> stateToTokenType, List<bool> hasPossibleTransitions, ITokenTreeNode<TTokenType> node)
     {
         stateToTokenType.Add(node.TokenType);
+        hasPossibleTransitions.Add(node.HasChildren);
         
         int maxCharacterId = GetMaxChildCharacterId(node);
 
@@ -64,7 +69,7 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
         {
             int charId = CharacterIdMap[childNode.Character];
             transitions[charId] = stateTransitions.Count;
-            BuildTransitions(stateTransitions, stateToTokenType, childNode);
+            BuildTransitions(stateTransitions, stateToTokenType, hasPossibleTransitions, childNode);
         }
     }
 

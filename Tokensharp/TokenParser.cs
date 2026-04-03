@@ -35,6 +35,49 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
         return session.Parse(out tokenType, out length);
     }
 
+    private abstract class DefaultCharacterCheck
+    {
+        public abstract bool IsValid(char c);
+
+        public static DefaultCharacterCheck GetCharacterCheck(TokenType<TTokenType> tokenType, bool numbersAreText)
+        {
+            if (tokenType == TokenType<TTokenType>.WhiteSpace)
+                return new WhiteSpaceDefaultCharacterCheck();
+            
+            if (tokenType == TokenType<TTokenType>.Number)
+                return new NumberDefaultCharacterCheck();
+            
+            if (tokenType == TokenType<TTokenType>.Text)
+                return new TextDefaultCharacterCheck(numbersAreText);
+            
+            throw new InvalidOperationException("Invalid default token type");
+        }
+
+        private sealed class TextDefaultCharacterCheck(bool numbersAreText) : DefaultCharacterCheck
+        {
+            public override bool IsValid(char c)
+            {
+                return !char.IsWhiteSpace(c) && (numbersAreText || !char.IsDigit(c));
+            }
+        }
+
+        private sealed class NumberDefaultCharacterCheck : DefaultCharacterCheck
+        {
+            public override bool IsValid(char c)
+            {
+                return char.IsDigit(c);
+            }
+        }
+
+        private sealed class WhiteSpaceDefaultCharacterCheck : DefaultCharacterCheck
+        {
+            public override bool IsValid(char c)
+            {
+                return char.IsWhiteSpace(c);
+            }
+        }
+    }
+
     private ref struct ParseSession
     {
         private readonly TokenConfiguration<TTokenType> _configuration;
@@ -49,6 +92,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
         private readonly TokenType<TTokenType> _defaultTokenType;
         private bool _defaultIsValid;
         private int _defaultTokenLength;
+        private readonly DefaultCharacterCheck _isValidDefaultCharacter;
 
         public ParseSession(TokenConfiguration<TTokenType> configuration, ReadOnlySpan<char> buffer, bool moreDataAvailable)
         {
@@ -64,6 +108,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
             _defaultIsValid = true;
             _defaultTokenLength = 0;
             _defaultTokenType = GetDefaultTokenType(buffer);
+            _isValidDefaultCharacter = DefaultCharacterCheck.GetCharacterCheck(_defaultTokenType, configuration.NumbersAreText);
         }
 
         public bool Parse([NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int length)
@@ -102,7 +147,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
 
                 if (_defaultIsValid)
                 {
-                    _defaultIsValid = IsValidDefaultCharacter(c);
+                    _defaultIsValid = _isValidDefaultCharacter.IsValid(c);
                     if (_defaultIsValid)
                     {
                         _defaultTokenLength = i + 1;
@@ -159,29 +204,27 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
 
         private bool ProcessCustomTransition(char c, int currentIndex)
         {
-            if (_configuration.CharacterIdMap.TryGetCharacterId(c, out int charId))
+            if (!_configuration.CharacterIdMap.TryGetCharacterId(c, out int charId))
+                return false;
+            
+            int[] transitions = _configuration.StateTransitions[_currentCustomState];
+            if (charId >= transitions.Length || transitions[charId] == -1) 
+                return false;
+            
+            if (_currentCustomState == 0)
             {
-                int[] transitions = _configuration.StateTransitions[_currentCustomState];
-                if (charId < transitions.Length && transitions[charId] != -1)
-                {
-                    if (_currentCustomState == 0)
-                    {
-                        _customTokenStartIndex = currentIndex;
-                    }
+                _customTokenStartIndex = currentIndex;
+            }
                     
-                    _currentCustomState = transitions[charId];
+            _currentCustomState = transitions[charId];
                     
-                    if (_configuration.IsEndOfToken[_currentCustomState])
-                    {
-                        _lastMatchTokenType = _configuration.StateToTokenType[_currentCustomState];
-                        _lastMatchLength = currentIndex + 1;
-                    }
-
-                    return true;
-                }
+            if (_configuration.IsEndOfToken[_currentCustomState])
+            {
+                _lastMatchTokenType = _configuration.StateToTokenType[_currentCustomState];
+                _lastMatchLength = currentIndex + 1;
             }
 
-            return false;
+            return true;
         }
 
         private void ResetCustomMatchState()
@@ -192,23 +235,9 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
             _lastMatchLength = 0;
         }
 
-        private bool IsValidDefaultCharacter(char c)
-        {
-            if (_defaultTokenType == TokenType<TTokenType>.WhiteSpace)
-                return char.IsWhiteSpace(c);
-            
-            if (_defaultTokenType == TokenType<TTokenType>.Number)
-                return char.IsDigit(c);
-            
-            if (_defaultTokenType == TokenType<TTokenType>.Text)
-                return !char.IsWhiteSpace(c) && (_configuration.NumbersAreText || !char.IsDigit(c));
-
-            return false;
-        }
-
         private bool ShouldWaitMoreData()
         {
-            if (_currentCustomState != 0 && HasPossibleTransitions(_currentCustomState))
+            if (_currentCustomState != 0 && _configuration.HasPossibleTransitions[_currentCustomState])
             {
                 return _customTokenStartIndex == 0;
             }
@@ -228,11 +257,6 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
                 tokenType = _defaultTokenType;
                 length = _customTokenStartIndex;
             }
-        }
-
-        private bool HasPossibleTransitions(int stateId)
-        {
-            return _configuration.StateTransitions[stateId].AsSpan().ContainsAnyExcept(-1);
         }
     }
 }
