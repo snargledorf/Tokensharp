@@ -68,7 +68,9 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
         {
             int characterId = _characterIdMap[childNode.Character];
             if (characterId > maxCharacterId)
+            {
                 maxCharacterId = characterId;
+            }
         }
 
         return maxCharacterId;
@@ -90,199 +92,208 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
     
     public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int length)
     {
-        int currentState = 0;
-        tokenType = null;
-        length = 0;
+        var session = new ParseSession(this, buffer, moreDataAvailable);
+        return session.Parse(out tokenType, out length);
+    }
 
-        int lastMatchLength = 0;
-        TTokenType? lastMatchTokenType = null;
+    private ref struct ParseSession
+    {
+        private readonly TokenParser<TTokenType> _parser;
+        private readonly ReadOnlySpan<char> _buffer;
+        private readonly bool _moreDataAvailable;
 
-        if (_isEndOfToken[currentState])
+        private int _currentCustomState;
+        private int _customTokenStartIndex;
+        private TTokenType? _lastMatchTokenType;
+        private int _lastMatchLength;
+
+        private readonly TokenType<TTokenType> _defaultTokenType;
+        private bool _defaultIsValid;
+        private int _defaultTokenLength;
+
+        public ParseSession(TokenParser<TTokenType> parser, ReadOnlySpan<char> buffer, bool moreDataAvailable)
         {
-            lastMatchTokenType = _stateToTokenType[currentState];
-            lastMatchLength = length;
+            _parser = parser;
+            _buffer = buffer;
+            _moreDataAvailable = moreDataAvailable;
+
+            _currentCustomState = 0;
+            _customTokenStartIndex = -1;
+            _lastMatchTokenType = null;
+            _lastMatchLength = 0;
+
+            _defaultIsValid = true;
+            _defaultTokenLength = 0;
+            _defaultTokenType = GetDefaultTokenType(buffer);
         }
 
-        for (int i = 0; i < buffer.Length; i++)
+        public bool Parse([NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int length)
         {
-            char c = buffer[i];
-            
-            if (_characterIdMap.TryGetCharacterId(c, out int characterId))
+            if (_buffer.IsEmpty)
             {
-                int[] transitions = _stateTransitions[currentState];
-
-                if (characterId < transitions.Length)
-                {
-                    int nextState = transitions[characterId];
-                    if (nextState != -1)
-                    {
-                        currentState = nextState;
-                        length++;
-
-                        if (_isEndOfToken[currentState])
-                        {
-                            lastMatchTokenType = _stateToTokenType[currentState];
-                            lastMatchLength = length;
-                        }
-                        continue;
-                    }
-                }
-            }
-
-            // Character not in map or no transition
-            break;
-        }
-
-        if (moreDataAvailable && length == buffer.Length && HasPossibleTransitions(currentState))
-        {
-            return false;
-        }
-
-        if (lastMatchTokenType is not null)
-        {
-            tokenType = lastMatchTokenType;
-            length = lastMatchLength;
-            return true;
-        }
-
-        // Handle non-token matches (text, whitespace, numbers)
-        if (buffer.IsEmpty)
-        {
-            return false;
-        }
-
-        char firstChar = buffer[0];
-        if (char.IsWhiteSpace(firstChar))
-        {
-            length = 1;
-            while (length < buffer.Length && char.IsWhiteSpace(buffer[length]))
-            {
-                if (StartsCustomToken(buffer[length..], moreDataAvailable))
-                    break;
-                length++;
-            }
-            if (moreDataAvailable && length == buffer.Length)
-            {
+                tokenType = null;
                 length = 0;
                 return false;
             }
-            tokenType = TokenType<TTokenType>.WhiteSpace;
-            return true;
-        }
 
-        if (!_numbersAreText && char.IsDigit(firstChar))
-        {
-            length = 1;
-            while (length < buffer.Length && char.IsDigit(buffer[length]))
+            int i = 0;
+            for (; i < _buffer.Length; i++)
             {
-                if (StartsCustomToken(buffer[length..], moreDataAvailable))
-                    break;
-                length++;
-            }
-            if (moreDataAvailable && length == buffer.Length)
-            {
-                length = 0;
-                return false;
-            }
-            tokenType = TokenType<TTokenType>.Number;
-            return true;
-        }
-        
-        length = 1;
-        while (length < buffer.Length)
-        {
-            char c = buffer[length];
-            if (char.IsWhiteSpace(c))
-                break;
-            if (!_numbersAreText && char.IsDigit(c))
-                break;
-            
-            if (StartsCustomToken(buffer[length..], moreDataAvailable))
-                break;
-            
-            length++;
-        }
+                char c = _buffer[i];
 
-        if (moreDataAvailable && length == buffer.Length)
-        {
-            length = 0;
-            return false;
-        }
-            
-        tokenType = TokenType<TTokenType>.Text;
-        return true;
-    }
+                bool customTransitionFound = ProcessCustomTransition(c, i);
 
-    private bool StartsCustomToken(ReadOnlySpan<char> buffer, bool moreDataAvailable)
-    {
-        if (buffer.IsEmpty)
-            return false;
-
-        char c = buffer[0];
-        if (!_characterIdMap.TryGetCharacterId(c, out int characterId))
-            return false;
-
-        int[] startTransitions = _stateTransitions[0];
-        if (characterId >= startTransitions.Length || startTransitions[characterId] == -1)
-            return false;
-
-        int currentState = 0;
-        int matchLength = 0;
-        bool isPotentialPrefix = false;
-
-        for (int i = 0; i < buffer.Length; i++)
-        {
-            c = buffer[i];
-            
-            if (_characterIdMap.TryGetCharacterId(c, out characterId))
-            {
-                int[] transitions = _stateTransitions[currentState];
-
-                if (characterId < transitions.Length)
+                if (!customTransitionFound && _currentCustomState != 0)
                 {
-                    int nextState = transitions[characterId];
-                    if (nextState != -1)
+                    if (_lastMatchTokenType != null)
                     {
-                        currentState = nextState;
-                        
-                        if (_isEndOfToken[currentState])
-                        {
-                            matchLength = i + 1;
-                        }
-                        
-                        if (i == buffer.Length - 1)
-                        {
-                            isPotentialPrefix = true;
-                        }
-                        
-                        continue;
+                        ResolveMatch(out tokenType, out length);
+                        return true;
                     }
+                    
+                    ResetCustomMatchState();
+                    
+                    if (!_defaultIsValid)
+                    {
+                        break;
+                    }
+                    
+                    ProcessCustomTransition(c, i);
+                }
+
+                if (_defaultIsValid)
+                {
+                    _defaultIsValid = IsValidDefaultCharacter(c);
+                    if (_defaultIsValid)
+                    {
+                        _defaultTokenLength = i + 1;
+                    }
+                }
+
+                if (!_defaultIsValid && _currentCustomState == 0)
+                {
+                    break;
                 }
             }
 
-            break;
-        }
+            if (_moreDataAvailable && i == _buffer.Length)
+            {
+                if (ShouldWaitMoreData())
+                {
+                    length = 0;
+                    tokenType = null;
+                    return false;
+                }
+            }
 
-        if (matchLength > 0)
+            if (_lastMatchTokenType != null)
+            {
+                ResolveMatch(out tokenType, out length);
+                return true;
+            }
+
+            tokenType = _defaultTokenType;
+            length = _defaultTokenLength;
             return true;
-        
-        if (moreDataAvailable && isPotentialPrefix)
-        {
-            if (HasPossibleTransitions(currentState))
-                return true;
         }
 
-        return false;
-    }
-
-    private bool HasPossibleTransitions(int stateId)
-    {
-        int[] transitions = _stateTransitions[stateId];
-        for (int i = 0; i < transitions.Length; i++)
+        private TokenType<TTokenType> GetDefaultTokenType(ReadOnlySpan<char> buffer)
         {
-            if (transitions[i] != -1)
-                return true;
+            if (buffer.IsEmpty)
+            {
+                return TokenType<TTokenType>.Text;
+            }
+         
+            char firstChar = buffer[0];
+            if (char.IsWhiteSpace(firstChar))
+            {
+                return TokenType<TTokenType>.WhiteSpace;
+            }
+            
+            if (!_parser._numbersAreText && char.IsDigit(firstChar))
+            {
+                return TokenType<TTokenType>.Number;
+            }
+            
+            return TokenType<TTokenType>.Text;
         }
-        return false;
+
+        private bool ProcessCustomTransition(char c, int currentIndex)
+        {
+            if (_parser._characterIdMap.TryGetCharacterId(c, out int charId))
+            {
+                int[] transitions = _parser._stateTransitions[_currentCustomState];
+                if (charId < transitions.Length && transitions[charId] != -1)
+                {
+                    if (_currentCustomState == 0)
+                    {
+                        _customTokenStartIndex = currentIndex;
+                    }
+                    
+                    _currentCustomState = transitions[charId];
+                    
+                    if (_parser._isEndOfToken[_currentCustomState])
+                    {
+                        _lastMatchTokenType = _parser._stateToTokenType[_currentCustomState];
+                        _lastMatchLength = currentIndex + 1;
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void ResetCustomMatchState()
+        {
+            _currentCustomState = 0;
+            _customTokenStartIndex = -1;
+            _lastMatchTokenType = null;
+            _lastMatchLength = 0;
+        }
+
+        private bool IsValidDefaultCharacter(char c)
+        {
+            if (_defaultTokenType == TokenType<TTokenType>.WhiteSpace)
+                return char.IsWhiteSpace(c);
+            
+            if (_defaultTokenType == TokenType<TTokenType>.Number)
+                return char.IsDigit(c);
+            
+            if (_defaultTokenType == TokenType<TTokenType>.Text)
+                return !char.IsWhiteSpace(c) && (_parser._numbersAreText || !char.IsDigit(c));
+
+            return false;
+        }
+
+        private bool ShouldWaitMoreData()
+        {
+            if (_currentCustomState != 0 && HasPossibleTransitions(_currentCustomState))
+            {
+                return _customTokenStartIndex == 0;
+            }
+            
+            return _currentCustomState == 0 && _defaultIsValid;
+        }
+
+        private void ResolveMatch(out TokenType<TTokenType> tokenType, out int length)
+        {
+            if (_customTokenStartIndex == 0)
+            {
+                tokenType = _lastMatchTokenType!;
+                length = _lastMatchLength;
+            }
+            else
+            {
+                tokenType = _defaultTokenType;
+                length = _customTokenStartIndex;
+            }
+        }
+
+        private bool HasPossibleTransitions(int stateId)
+        {
+            return _parser._stateTransitions[stateId].AsSpan().ContainsAnyExcept(-1);
+        }
     }
 }
