@@ -1,6 +1,6 @@
 namespace Tokensharp;
 
-public readonly ref struct CharacterIdMap
+public readonly struct CharacterIdMap
 {
     private readonly int _characterIdOffset;
     private readonly int[] _characterIds;

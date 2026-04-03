@@ -1,15 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Tokensharp.TokenTree;
 
 namespace Tokensharp;
 
 public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly CharacterIdMap _characterIdMap;
-    private readonly int[][] _stateTransitions;
-    private readonly TTokenType?[] _stateToTokenType;
-    private readonly bool[] _isEndOfToken;
-    private readonly bool _numbersAreText;
+    private readonly TokenConfiguration<TTokenType> _configuration;
 
     public TokenParser() : this(TTokenType.Configuration)
     {
@@ -17,63 +12,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
 
     public TokenParser(TokenConfiguration<TTokenType> tokenConfiguration)
     {
-        ITokenTreeNode<TTokenType> tokenTree = tokenConfiguration.TokenTree;
-        _numbersAreText = tokenConfiguration.NumbersAreText;
-        
-        HashSet<char> allCharacters = tokenTree.AllCharacters;
-
-        _characterIdMap = new CharacterIdMap(allCharacters);
-
-        var stateTransitions = new List<int[]>();
-        var stateToTokenType = new List<TTokenType?>();
-        
-        BuildTransitions(stateTransitions, stateToTokenType, tokenTree);
-
-        _stateTransitions = [..stateTransitions];
-        _stateToTokenType = [..stateToTokenType];
-
-        _isEndOfToken = new bool[_stateToTokenType.Length];
-        for(var i = 0; i < _stateToTokenType.Length; i++)
-        {
-            if (_stateToTokenType[i] is not null)
-            {
-                _isEndOfToken[i] = true;
-            }
-        }
-    }
-
-    private void BuildTransitions(List<int[]> stateTransitions, List<TTokenType?> stateToTokenType, ITokenTreeNode<TTokenType> node)
-    {
-        stateToTokenType.Add(node.TokenType);
-        
-        int maxCharacterId = GetMaxChildCharacterId(node);
-
-        var transitions = new int[maxCharacterId + 1];
-        Array.Fill(transitions, -1);
-        stateTransitions.Add(transitions);
-
-        foreach (ITokenTreeNode<TTokenType> childNode in node)
-        {
-            int charId = _characterIdMap[childNode.Character];
-            transitions[charId] = stateTransitions.Count;
-            BuildTransitions(stateTransitions, stateToTokenType, childNode);
-        }
-    }
-
-    private int GetMaxChildCharacterId(ITokenTreeNode<TTokenType> node)
-    {
-        int maxCharacterId = -1;
-        
-        foreach (ITokenTreeNode<TTokenType> childNode in node)
-        {
-            int characterId = _characterIdMap[childNode.Character];
-            if (characterId > maxCharacterId)
-            {
-                maxCharacterId = characterId;
-            }
-        }
-
-        return maxCharacterId;
+        _configuration = tokenConfiguration;
     }
 
     public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable,
@@ -92,13 +31,13 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
     
     public bool TryParseToken(ReadOnlySpan<char> buffer, bool moreDataAvailable, [NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int length)
     {
-        var session = new ParseSession(this, buffer, moreDataAvailable);
+        var session = new ParseSession(_configuration, buffer, moreDataAvailable);
         return session.Parse(out tokenType, out length);
     }
 
     private ref struct ParseSession
     {
-        private readonly TokenParser<TTokenType> _parser;
+        private readonly TokenConfiguration<TTokenType> _configuration;
         private readonly ReadOnlySpan<char> _buffer;
         private readonly bool _moreDataAvailable;
 
@@ -111,9 +50,9 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
         private bool _defaultIsValid;
         private int _defaultTokenLength;
 
-        public ParseSession(TokenParser<TTokenType> parser, ReadOnlySpan<char> buffer, bool moreDataAvailable)
+        public ParseSession(TokenConfiguration<TTokenType> configuration, ReadOnlySpan<char> buffer, bool moreDataAvailable)
         {
-            _parser = parser;
+            _configuration = configuration;
             _buffer = buffer;
             _moreDataAvailable = moreDataAvailable;
 
@@ -210,7 +149,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
                 return TokenType<TTokenType>.WhiteSpace;
             }
             
-            if (!_parser._numbersAreText && char.IsDigit(firstChar))
+            if (!_configuration.NumbersAreText && char.IsDigit(firstChar))
             {
                 return TokenType<TTokenType>.Number;
             }
@@ -220,9 +159,9 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
 
         private bool ProcessCustomTransition(char c, int currentIndex)
         {
-            if (_parser._characterIdMap.TryGetCharacterId(c, out int charId))
+            if (_configuration.CharacterIdMap.TryGetCharacterId(c, out int charId))
             {
-                int[] transitions = _parser._stateTransitions[_currentCustomState];
+                int[] transitions = _configuration.StateTransitions[_currentCustomState];
                 if (charId < transitions.Length && transitions[charId] != -1)
                 {
                     if (_currentCustomState == 0)
@@ -232,9 +171,9 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
                     
                     _currentCustomState = transitions[charId];
                     
-                    if (_parser._isEndOfToken[_currentCustomState])
+                    if (_configuration.IsEndOfToken[_currentCustomState])
                     {
-                        _lastMatchTokenType = _parser._stateToTokenType[_currentCustomState];
+                        _lastMatchTokenType = _configuration.StateToTokenType[_currentCustomState];
                         _lastMatchLength = currentIndex + 1;
                     }
 
@@ -262,7 +201,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
                 return char.IsDigit(c);
             
             if (_defaultTokenType == TokenType<TTokenType>.Text)
-                return !char.IsWhiteSpace(c) && (_parser._numbersAreText || !char.IsDigit(c));
+                return !char.IsWhiteSpace(c) && (_configuration.NumbersAreText || !char.IsDigit(c));
 
             return false;
         }
@@ -293,7 +232,7 @@ public readonly ref struct TokenParser<TTokenType> where TTokenType : TokenType<
 
         private bool HasPossibleTransitions(int stateId)
         {
-            return _parser._stateTransitions[stateId].AsSpan().ContainsAnyExcept(-1);
+            return _configuration.StateTransitions[stateId].AsSpan().ContainsAnyExcept(-1);
         }
     }
 }
