@@ -37,10 +37,7 @@ internal abstract class TextWhiteSpaceNumberBase<TTokenType> : NodeStateBase<TTo
 
         foreach (ITokenTreeNode<TTokenType> startNode in tokenTreeNode.RootNode)
         {
-            if (!CharacterIsValidForState(startNode.Character))
-                continue;
-
-            if (startNode.IsEndOfToken)
+            if (startNode.IsEndOfToken || !CharacterIsValidForState(startNode.Character))
             {
                 textWhiteSpaceNumberStates.Add(startNode.Character, _endOfTokenStateInstance);
             }
