@@ -42,11 +42,8 @@ public readonly ref struct TokenParser<TTokenType>(TokenConfiguration<TTokenType
         }
 
         if (!moreDataAvailable)
-        {
-            while (!currentState.IsEndOfToken)
-                currentState = currentState.PerformDefaultTransition(ref context);
-        }
-            
+            currentState = currentState.PerformDefaultTransition(ref context);
+
         return currentState.FinalizeToken(ref context, ref tokenType, ref length);
     }
 }
