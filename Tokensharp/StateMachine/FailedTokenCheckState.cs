@@ -5,7 +5,10 @@ internal sealed class FailedTokenCheckState<TTokenType>(State<TTokenType> fallba
 {
     public override void UpdateCounts(ref StateMachineContext context)
     {
-        context.PotentialLexemeLength++;
-        base.UpdateCounts(ref context);
+        int contextPotentialLexemeLength = context.PotentialLexemeLength + 1;
+        context = new StateMachineContext(
+            potentialLexemeLength: contextPotentialLexemeLength,
+            fallbackLexemeLength: contextPotentialLexemeLength
+        );
     }
 }

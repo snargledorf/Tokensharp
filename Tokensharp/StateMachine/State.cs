@@ -34,6 +34,6 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
 
     public virtual void UpdateCounts(ref StateMachineContext context)
     {
-        context.PotentialLexemeLength++;
+        context = new StateMachineContext(context.PotentialLexemeLength+1, context.FallbackLexemeLength);
     }
 }

@@ -5,7 +5,7 @@ internal sealed class EndOfPotentialTokenState<TTokenType>(TTokenType tokenType)
 {
     public override void UpdateCounts(ref StateMachineContext context)
     {
-        context.PotentialLexemeLength++;
-        context.FallbackLexemeLength = context.PotentialLexemeLength;
+        int contextPotentialLexemeLength = context.PotentialLexemeLength+1;
+        context = new StateMachineContext(contextPotentialLexemeLength, contextPotentialLexemeLength);
     }
 }

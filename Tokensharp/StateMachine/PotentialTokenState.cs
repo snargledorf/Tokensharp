@@ -73,8 +73,10 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
 
     public override void UpdateCounts(ref StateMachineContext context)
     {
-        context.PotentialLexemeLength++;
-        if (Node.IsEndOfToken)
-            context.FallbackLexemeLength = context.PotentialLexemeLength;
+        int newPotentialLexemeLength = context.PotentialLexemeLength + 1;
+        
+        context = Node.IsEndOfToken
+            ? new StateMachineContext(newPotentialLexemeLength, newPotentialLexemeLength)
+            : new StateMachineContext(newPotentialLexemeLength, context.FallbackLexemeLength);
     }
 }
