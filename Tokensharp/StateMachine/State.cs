@@ -19,6 +19,10 @@ internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType 
     {
         State<TTokenType> defaultState = DefaultState;
         defaultState.UpdateCounts(ref context);
+        
+        if (!defaultState.IsEndOfToken)
+            defaultState = defaultState.PerformDefaultTransition(ref context);
+        
         return defaultState;
     }
 
