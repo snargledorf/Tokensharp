@@ -26,8 +26,10 @@ public abstract class TokenizerTestBase<TTokenType>
         foreach (TestCase<TTokenType> expectedToken in testCases)
             text = text[RunTest(text, expectedToken, moreDataAvailable)..];
         
-        var tokenParser =  new TokenParser<TTokenType>(_tokenConfiguration);
-        bool parsed = tokenParser.TryParseToken(text.Span, moreDataAvailable, out TokenType<TTokenType>? tokenType, out int length);
+        var tokenParser =  new TokenParser<TTokenType>(text.Span, moreDataAvailable, _tokenConfiguration);
+        bool parsed = tokenParser.Read();
+        TokenType<TTokenType> tokenType = tokenParser.TokenType;
+        int length = tokenParser.Lexeme.Length;
 
         using (Assert.EnterMultipleScope())
         {
@@ -67,8 +69,10 @@ public abstract class TokenizerTestBase<TTokenType>
         if (expectedLexeme is null)
             expectedLexeme = expectedTokenType.Identifier;
 
-        var tokenParser =  new TokenParser<TTokenType>(_tokenConfiguration);
-        bool parsed = tokenParser.TryParseToken(text.Span, moreDataAvailable, out TokenType<TTokenType>? tokenType, out ReadOnlySpan<char> lexeme);
+        var tokenParser =  new TokenParser<TTokenType>(text.Span, moreDataAvailable, _tokenConfiguration);
+        bool parsed = tokenParser.Read();
+        TokenType<TTokenType> tokenType = tokenParser.TokenType;
+        ReadOnlySpan<char> lexeme = tokenParser.Lexeme;
 
         using (Assert.EnterMultipleScope())
         {

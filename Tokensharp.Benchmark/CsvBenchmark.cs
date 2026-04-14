@@ -31,17 +31,17 @@ public class CsvBenchmark
     [Benchmark]
     public bool TokenParser_SingleToken()
     {
-        var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
-        return tokenParser.TryParseToken(_testData, false, out TokenType<CsvTokenTypes>? _, out int _);
+        var tokenParser = new TokenParser<CsvTokenTypes>(_testData, false, _tokenConfiguration!);
+        return tokenParser.Read();
     }
 
     [Benchmark]
     public void TokenParser()
     {
         ReadOnlySpan<char> csvSpan = _testData.AsSpan();
-        var tokenParser = new TokenParser<CsvTokenTypes>(_tokenConfiguration!);
-        while (tokenParser.TryParseToken(csvSpan, false, out TokenType<CsvTokenTypes>? _, out int length))
-            csvSpan = csvSpan[length..];
+        var tokenParser = new TokenParser<CsvTokenTypes>(csvSpan, false, _tokenConfiguration!);
+        while (tokenParser.Read())
+            ;
     }
 
     [Benchmark]
