@@ -9,7 +9,7 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
 
     private readonly IStateCharacterCheck _fallbackStateCharacterCheck;
     private readonly StateLookup<TTokenType> _rootStates;
-    private readonly StateLookup<TTokenType> _stateLookup;
+    private readonly StateLookup<TTokenType> _childStates;
 
     public PotentialTokenState(ITokenTreeNode<TTokenType> node,
         State<TTokenType> fallbackState,
@@ -20,20 +20,8 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
         _endOfTokenStateInstance = node.IsEndOfToken
             ? new EndOfTokenState<TTokenType>(node.TokenType)
             : fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance;
-        
-        var rootStatesBuilder = new StateLookupBuilder<TTokenType>();
 
-        foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
-        {
-            if (startNode.IsEndOfToken)
-                rootStatesBuilder.Add(startNode.Character, fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance);
-            else
-                rootStatesBuilder.Add(startNode.Character,
-                    new StartOfCheckForTokenState<TTokenType>(startNode, fallbackState, fallbackEndOfTokenStateAccessor,
-                        fallbackStateCharacterCheck));
-        }
-        
-        _rootStates = rootStatesBuilder.Build();
+        _rootStates = BuildRootStatesLookup(node, fallbackState, fallbackEndOfTokenStateAccessor, fallbackStateCharacterCheck);
 
         // If this is an end of token node then we should fallback to this token if we don't find a longer one
         if (node.IsEndOfToken)
@@ -44,24 +32,58 @@ internal sealed class PotentialTokenState<TTokenType> : NodeStateBase<TTokenType
             fallbackStateCharacterCheck = endOfTokenStateAccessor;
         }
 
+        _childStates = BuildChildStatesLookup(node, fallbackState, fallbackEndOfTokenStateAccessor, fallbackStateCharacterCheck);
+    }
+
+    private static StateLookup<TTokenType> BuildRootStatesLookup(ITokenTreeNode<TTokenType> node, State<TTokenType> fallbackState,
+        IEndOfTokenStateAccessor<TTokenType> fallbackEndOfTokenStateAccessor, IStateCharacterCheck fallbackStateCharacterCheck)
+    {
+        var rootStatesBuilder = new StateLookupBuilder<TTokenType>();
+
+        foreach (ITokenTreeNode<TTokenType> startNode in node.RootNode)
+        {
+            if (startNode.IsEndOfToken)
+            {
+                rootStatesBuilder.Add(startNode.Character, fallbackEndOfTokenStateAccessor.EndOfTokenStateInstance);
+            }
+            else
+            {
+                rootStatesBuilder.Add(startNode.Character,
+                    new StartOfCheckForTokenState<TTokenType>(startNode, fallbackState, fallbackEndOfTokenStateAccessor,
+                        fallbackStateCharacterCheck));
+            }
+        }
+
+        return rootStatesBuilder.Build();
+    }
+
+    private static StateLookup<TTokenType> BuildChildStatesLookup(ITokenTreeNode<TTokenType> node, State<TTokenType> fallbackState,
+        IEndOfTokenStateAccessor<TTokenType> fallbackEndOfTokenStateAccessor, IStateCharacterCheck fallbackStateCharacterCheck)
+    {
         var childStatesBuilder = new StateLookupBuilder<TTokenType>();
         foreach (ITokenTreeNode<TTokenType> childNode in node)
         {
             if (childNode.HasChildren)
+            {
                 childStatesBuilder.Add(childNode.Character,
-                    new PotentialTokenState<TTokenType>(childNode, fallbackState, fallbackEndOfTokenStateAccessor, fallbackStateCharacterCheck));
+                    new PotentialTokenState<TTokenType>(childNode, fallbackState, fallbackEndOfTokenStateAccessor,
+                        fallbackStateCharacterCheck));
+            }
             else
-                childStatesBuilder.Add(childNode.Character, new EndOfPotentialTokenState<TTokenType>(childNode.TokenType));
+            {
+                childStatesBuilder.Add(childNode.Character,
+                    new EndOfPotentialTokenState<TTokenType>(childNode.TokenType));
+            }
         }
-        
-        _stateLookup = childStatesBuilder.Build();
+
+        return childStatesBuilder.Build();
     }
 
     public EndOfTokenState<TTokenType> EndOfTokenStateInstance => _endOfTokenStateInstance;
 
     protected override State<TTokenType> GetNextState(char c)
     {
-        if (_stateLookup.TryGetState(c, out State<TTokenType>? nextState) ||
+        if (_childStates.TryGetState(c, out State<TTokenType>? nextState) ||
             !Node.IsEndOfToken && _fallbackStateCharacterCheck.CharacterIsValidForState(c) &&
             _rootStates.TryGetState(c, out nextState))
             return nextState;
