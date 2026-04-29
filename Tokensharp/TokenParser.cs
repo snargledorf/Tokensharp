@@ -11,11 +11,11 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
     private readonly StartState<TTokenType> _startState = state.StartState ?? TTokenType.Configuration.StartState;
     
     private int _consumedChars;
-    private static int _startOfLexemeIndex;
+    private int _startOfLexemeIndex;
 
     public int CharsConsumed => _consumedChars;
 
-    public int StartOfLexemeIndex = _startOfLexemeIndex;
+    public int StartOfLexemeIndex => _startOfLexemeIndex;
 
     public TokenParserState<TTokenType> CurrentState => new(_startState);
     
