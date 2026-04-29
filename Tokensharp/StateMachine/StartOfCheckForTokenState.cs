@@ -12,7 +12,6 @@ internal sealed class StartOfCheckForTokenState<TTokenType>(
 {
     public override void UpdateCounts(ref StateMachineContext context)
     {
-        context.FallbackLexemeLength = context.PotentialLexemeLength;
-        context.PotentialLexemeLength++;
+        context = new StateMachineContext(context.PotentialLexemeLength+1, context.PotentialLexemeLength);
     }
 }

@@ -1,7 +1,7 @@
 namespace Tokensharp.StateMachine;
 
-internal ref struct StateMachineContext
+internal readonly ref struct StateMachineContext(int potentialLexemeLength, int fallbackLexemeLength)
 {
-    public int PotentialLexemeLength;
-    public int FallbackLexemeLength;
+    public readonly int PotentialLexemeLength = potentialLexemeLength;
+    public readonly int FallbackLexemeLength = fallbackLexemeLength;
 }

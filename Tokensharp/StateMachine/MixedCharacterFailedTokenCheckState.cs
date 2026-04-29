@@ -14,7 +14,7 @@ internal class MixedCharacterFailedTokenCheckState<TTokenType>(State<TTokenType>
 
     public override void UpdateCounts(ref StateMachineContext context)
     {
-        context.FallbackLexemeLength = context.PotentialLexemeLength;
+        context = new StateMachineContext(context.PotentialLexemeLength, context.PotentialLexemeLength);
     }
 
     public bool CharacterIsValidForState(char c) => fallbackStateCharacterCheck.CharacterIsValidForState(c);

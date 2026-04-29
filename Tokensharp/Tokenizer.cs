@@ -61,8 +61,17 @@ public static class Tokenizer
         out ReadOnlySpan<char> lexeme)
         where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
     {
-        var tokenParser = new TokenParser<TTokenType>(tokenConfiguration);
-        return tokenParser.TryParseToken(buffer, moreDataAvailable, out tokenType, out lexeme);
+        var tokenParser = new TokenParser<TTokenType>(buffer, moreDataAvailable, tokenConfiguration);
+        if (tokenParser.Read())
+        {
+            tokenType = tokenParser.TokenType;
+            lexeme = tokenParser.Lexeme;
+            return true;
+        }
+        
+        tokenType = null;
+        lexeme = default;
+        return false;
     }
 
     public static IEnumerable<Token<TTokenType>> EnumerateTokens<TTokenType>(string str, TokenizerOptions? options = null)

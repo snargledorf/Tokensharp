@@ -9,8 +9,6 @@ public ref struct TokenReader<TTokenType>(
     TokenReaderOptions options = default)
     where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    private readonly TokenParser<TTokenType> _tokenParser = new(tokenConfiguration);
-
     private readonly ReadOnlySpan<char> _buffer = buffer;
 
     public TokenReader(ReadOnlySpan<char> buffer,
@@ -36,19 +34,28 @@ public ref struct TokenReader<TTokenType>(
     public bool Read([NotNullWhen(true)] out TokenType<TTokenType>? tokenType, out int index, out int length)
     {
         index = Consumed;
-        
-        TokenParser<TTokenType> tokenParser = _tokenParser;
 
-        while (tokenParser.TryParseToken(_buffer[index..], moreDataAvailable, out tokenType, out length))
+        var tokenParserState = new TokenParserState<TTokenType>(tokenConfiguration);
+        TokenParser<TTokenType> tokenParser = new(_buffer[index..], moreDataAvailable, tokenParserState);
+
+        while (tokenParser.Read())
         {
-            Consumed += length;
+            Consumed += tokenParser.CharsConsumed;
+            tokenType = tokenParser.TokenType;
 
             if (!options.IgnoreWhiteSpace || tokenType != TokenType<TTokenType>.WhiteSpace)
+            {
+                length = tokenParser.Lexeme.Length;
                 return true;
+            }
 
             index = Consumed;
+            tokenParserState = tokenParser.CurrentState;
+            tokenParser = new TokenParser<TTokenType>(_buffer[index..], moreDataAvailable, tokenParserState);
         }
 
+        length = 0;
+        tokenType = null;
         return false;
     }
 }

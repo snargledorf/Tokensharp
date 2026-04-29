@@ -6,6 +6,6 @@ internal sealed class MixedCharacterCheckFailedEndOfTokenState<TTokenType>(IEndO
 {
     public override void UpdateCounts(ref StateMachineContext context)
     {
-        context.FallbackLexemeLength = context.PotentialLexemeLength;
+        context = new StateMachineContext(context.PotentialLexemeLength, context.PotentialLexemeLength);
     }
 }
