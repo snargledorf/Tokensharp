@@ -11,9 +11,12 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
     private readonly StartState<TTokenType> _startState = state.StartState ?? TTokenType.Configuration.StartState;
     
     private int _consumedChars;
+    private static int _startOfLexemeIndex;
 
     public int CharsConsumed => _consumedChars;
-    
+
+    public int StartOfLexemeIndex = _startOfLexemeIndex;
+
     public TokenParserState<TTokenType> CurrentState => new(_startState);
     
     public TokenType<TTokenType> TokenType { get; private set; }
@@ -48,6 +51,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
         
         TokenType<TTokenType>? tokenType = null;
         int length = 0;
+        _startOfLexemeIndex = _consumedChars;
 
         for (int index = _consumedChars; index < _buffer.Length; index++)
         {
@@ -56,7 +60,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
             if (currentState.FinalizeToken(ref context, ref tokenType, ref length))
             {
                 TokenType = tokenType;
-                Lexeme = _buffer[..length];
+                Lexeme = _buffer.Slice(_startOfLexemeIndex, length);
                 _consumedChars += length;
                 return true;
             }
@@ -68,7 +72,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
         if (currentState.FinalizeToken(ref context, ref tokenType, ref length))
         {
             TokenType = tokenType;
-            Lexeme = _buffer[..length];
+            Lexeme = _buffer.Slice(_startOfLexemeIndex, length);
             _consumedChars += length;
             return true;
         }
