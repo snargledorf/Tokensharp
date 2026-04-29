@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Tokensharp.StateMachine;
 
-internal abstract class State<TTokenType> : IState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
+internal abstract class State<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
     public abstract bool IsEndOfToken { get; }
 
