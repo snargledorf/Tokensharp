@@ -1,4 +1,5 @@
-﻿using Tokensharp.FastTrie;
+﻿using System.Diagnostics.CodeAnalysis;
+using Tokensharp.FastTrie;
 
 namespace Tokensharp;
 
@@ -46,12 +47,13 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
     {
     }
 
+    [MemberNotNullWhen(true, nameof(TokenType))]
     public bool Read()
     {
         TokenType = null;
         Lexeme = ReadOnlySpan<char>.Empty;
         
-        if (_buffer.IsEmpty)
+        if (_buffer.IsEmpty || _consumedChars >= _buffer.Length)
             return false;
         
         TrieNode<TTokenType>? currentNode = _trieRootNode;
@@ -170,7 +172,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
             }
         }
 
-        if (lastAcceptTrieNode is not null)
+        if (lastAcceptTrieNode?.HasValue ?? false)
         {
             if (lastAcceptTrieNode.HasChildren && moreDataAvailable)
                 return false;

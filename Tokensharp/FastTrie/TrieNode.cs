@@ -26,7 +26,10 @@ internal sealed class TrieNode<T>
     }
 
     public readonly T? Value;
-    public readonly bool HasValue;
+
+    [MemberNotNullWhen(true, nameof(Value))]
+    public bool HasValue { get; }
+
     public readonly bool HasChildren;
 
     public bool TryGetChildNode(char c, [NotNullWhen(true)] out TrieNode<T>? state)
