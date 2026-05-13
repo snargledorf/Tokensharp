@@ -1,5 +1,4 @@
-﻿using Tokensharp.StateMachine;
-using Tokensharp.TokenTree;
+﻿using Tokensharp.FastTrie;
 
 namespace Tokensharp;
 
@@ -8,9 +7,7 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
 {
     internal TokenConfiguration(IEnumerable<LexemeToTokenType<TTokenType>> lexemeToTokenTypes, bool numbersAreText = false)
     {
-        ITokenTreeNode<TTokenType> tokenTree = lexemeToTokenTypes.ToTokenTree();
-        
-        StartState = new StartState<TTokenType>(tokenTree, numbersAreText);
+        TrieRootNode = lexemeToTokenTypes.ToFastTrie();
         
         NumbersAreText = numbersAreText;
     }
@@ -22,5 +19,5 @@ public sealed class TokenConfiguration<TTokenType> : ITokenConfiguration<TTokenT
         return new TokenConfiguration<TTokenType>(lexemeToTokenTypes);
     }
     
-    internal StartState<TTokenType> StartState { get; }
+    internal TrieNode<TTokenType> TrieRootNode { get; }
 }

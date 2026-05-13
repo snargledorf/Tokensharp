@@ -1,18 +1,20 @@
-﻿using Tokensharp.StateMachine;
+﻿using Tokensharp.FastTrie;
 
 namespace Tokensharp;
 
 public readonly struct TokenParserState<TTokenType> where TTokenType : TokenType<TTokenType>, ITokenType<TTokenType>
 {
-    internal readonly StartState<TTokenType>? StartState;
+    internal readonly TrieNode<TTokenType>? TrieRootNode;
+    internal readonly bool NumbersAreText;
 
     public TokenParserState(TokenConfiguration<TTokenType> tokenConfiguration) 
-        : this(tokenConfiguration.StartState)
+        : this(tokenConfiguration.TrieRootNode, tokenConfiguration.NumbersAreText)
     {
     }
 
-    internal TokenParserState(StartState<TTokenType> startState)
+    internal TokenParserState(TrieNode<TTokenType> trieRootNode, bool numbersAreText)
     {
-        StartState = startState;
+        TrieRootNode = trieRootNode;
+        NumbersAreText = numbersAreText;
     }
 }
