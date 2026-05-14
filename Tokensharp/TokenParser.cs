@@ -56,7 +56,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
         if (_buffer.IsEmpty || _consumedChars >= _buffer.Length)
             return false;
         
-        int lastAcceptIndex = -1, typeSwitchIndex = -1;
+        int lastAcceptIndex = -1;
         TrieNode<TTokenType>? lastAcceptTrieNode = null;
 
         _startOfLexemeIndex = _consumedChars;
@@ -85,7 +85,8 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
             }
         }
 
-        int startOfPossibleMidParseUserDefindTokenNode = -1;
+        int typeSwitchIndex = -1;
+        int startOfMidParseUserDefinedToken = -1;
         TrieNode<TTokenType>? possibleMidParseUserDefinedTokenNode = null;
         
         for (; currentIndex < _buffer.Length; currentIndex++)
@@ -134,7 +135,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                         if (possibleMidParseUserDefinedTokenNode.HasValue)
                             break;
                 
-                        startOfPossibleMidParseUserDefindTokenNode = currentIndex;
+                        startOfMidParseUserDefinedToken = currentIndex;
                     }
                 }
             }
@@ -151,12 +152,12 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                 }
                 else
                 {
-                    startOfPossibleMidParseUserDefindTokenNode = -1;
+                    startOfMidParseUserDefinedToken = -1;
                 }
             }
             else if (_trieRootNode.TryGetChildNode(c, out possibleMidParseUserDefinedTokenNode))
             {
-                startOfPossibleMidParseUserDefindTokenNode = currentIndex;
+                startOfMidParseUserDefinedToken = currentIndex;
                 
                 if (possibleMidParseUserDefinedTokenNode.HasValue)
                     break;
@@ -184,7 +185,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
 
         int endOfLexemeIndex;
         if (possibleMidParseUserDefinedTokenNode?.HasValue ?? false)
-            endOfLexemeIndex = startOfPossibleMidParseUserDefindTokenNode;
+            endOfLexemeIndex = startOfMidParseUserDefinedToken;
         else if (moreDataAvailable)
             return false;
         else
