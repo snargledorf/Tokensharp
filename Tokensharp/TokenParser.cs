@@ -51,11 +51,8 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
     [MemberNotNullWhen(true, nameof(TokenType))]
     public bool Read()
     {
-        TokenType = null;
-        Lexeme = ReadOnlySpan<char>.Empty;
-        
-        if (_buffer.IsEmpty || _consumedChars >= _buffer.Length)
-            return false;
+        if (_consumedChars >= _buffer.Length)
+            return FailedToParse();
         
         int lastAcceptIndex = -1;
         TrieNode<TTokenType>? lastAcceptTrieNode = null;
@@ -75,7 +72,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                 lastAcceptTrieNode = currentNode;
             }
             else
-                return SetToken(currentNode.Value!, currentIndex);
+                return SuccessfulParse(currentNode.Value!, currentIndex);
         }
 
         int typeSwitchIndex = -1;
@@ -126,7 +123,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                     if (_trieRootNode.TryGetChildNode(c, out possibleMidParseUserDefinedTokenNode))
                     {
                         if (possibleMidParseUserDefinedTokenNode.HasValue)
-                            return SetToken(baseTokenType, startOfMidParseUserDefinedToken);
+                            return SuccessfulParse(baseTokenType, startOfMidParseUserDefinedToken);
                 
                         startOfMidParseUserDefinedToken = currentIndex;
                     }
@@ -141,7 +138,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                 if (possibleMidParseUserDefinedTokenNode.TryGetChildNode(c, out possibleMidParseUserDefinedTokenNode))
                 {
                     if (possibleMidParseUserDefinedTokenNode.HasValue)
-                        return SetToken(baseTokenType, startOfMidParseUserDefinedToken);
+                        return SuccessfulParse(baseTokenType, startOfMidParseUserDefinedToken);
                 }
                 else
                 {
@@ -153,29 +150,37 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                 startOfMidParseUserDefinedToken = currentIndex;
                 
                 if (possibleMidParseUserDefinedTokenNode.HasValue)
-                    return SetToken(baseTokenType, startOfMidParseUserDefinedToken);
+                    return SuccessfulParse(baseTokenType, startOfMidParseUserDefinedToken);
             }
         }
 
         if (lastAcceptTrieNode is { HasValue: true } acceptTrieNode)
         {
             if (acceptTrieNode.HasChildren && moreDataAvailable)
-                return false;
+                return FailedToParse();
 
-            return SetToken(acceptTrieNode.Value!, lastAcceptIndex);
+            return SuccessfulParse(acceptTrieNode.Value!, lastAcceptIndex);
         }
 
         if (currentNode is not null && moreDataAvailable)
-            return false;
+            return FailedToParse();
 
         if (typeSwitchIndex != -1)
-            return SetToken(baseTokenType, typeSwitchIndex);
+            return SuccessfulParse(baseTokenType, typeSwitchIndex);
 
-        return !moreDataAvailable && SetToken(baseTokenType, currentIndex);
+        return moreDataAvailable ? FailedToParse() : SuccessfulParse(baseTokenType, currentIndex);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool SetToken(TTokenType tokenType, int endOfTokenIndex)
+    private bool FailedToParse()
+    {
+        TokenType = null;
+        Lexeme = ReadOnlySpan<char>.Empty;
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool SuccessfulParse(TTokenType tokenType, int endOfTokenIndex)
     {
         TokenType = tokenType;
         Lexeme = _buffer[_startOfLexemeIndex..endOfTokenIndex];
