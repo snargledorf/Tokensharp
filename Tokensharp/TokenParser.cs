@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Tokensharp.FastTrie;
 
 namespace Tokensharp;
@@ -76,18 +77,14 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                     lastAcceptTrieNode = currentNode;
                 }
                 else
-                {
-                    TokenType = currentNode.Value;
-                    Lexeme = _buffer[_startOfLexemeIndex..currentIndex];
-                    _consumedChars = currentIndex;
-                    return true;
-                }
+                    return SetToken(currentNode.Value, currentIndex);
             }
         }
 
         int typeSwitchIndex = -1;
         int startOfMidParseUserDefinedToken = -1;
         TrieNode<TTokenType>? possibleMidParseUserDefinedTokenNode = null;
+        bool foundMidParseUserDefinedToken = false;
         
         for (; currentIndex < _buffer.Length; currentIndex++)
         {
@@ -133,7 +130,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                     if (_trieRootNode.TryGetChildNode(c, out possibleMidParseUserDefinedTokenNode))
                     {
                         if (possibleMidParseUserDefinedTokenNode.HasValue)
-                            break;
+                            return SetToken(baseTokenType, startOfMidParseUserDefinedToken);
                 
                         startOfMidParseUserDefinedToken = currentIndex;
                     }
@@ -148,7 +145,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                 if (possibleMidParseUserDefinedTokenNode.TryGetChildNode(c, out possibleMidParseUserDefinedTokenNode))
                 {
                     if (possibleMidParseUserDefinedTokenNode.HasValue)
-                        break;
+                        return SetToken(baseTokenType, startOfMidParseUserDefinedToken);
                 }
                 else
                 {
@@ -160,7 +157,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                 startOfMidParseUserDefinedToken = currentIndex;
                 
                 if (possibleMidParseUserDefinedTokenNode.HasValue)
-                    break;
+                    return SetToken(baseTokenType, startOfMidParseUserDefinedToken);
             }
         }
 
@@ -169,34 +166,33 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
             if (lastAcceptTrieNode.HasChildren && moreDataAvailable)
                 return false;
             
-            TokenType = lastAcceptTrieNode.Value;
-            Lexeme = _buffer[_startOfLexemeIndex..lastAcceptIndex];
-            _consumedChars = lastAcceptIndex;
-            return true;
+            return SetToken(lastAcceptTrieNode.Value, lastAcceptIndex);
         }
 
         if (typeSwitchIndex != -1)
-        {
-            TokenType = baseTokenType;
-            Lexeme = _buffer[_startOfLexemeIndex..typeSwitchIndex];
-            _consumedChars = typeSwitchIndex;
-            return true;
-        }
+            return SetToken(baseTokenType, typeSwitchIndex);
 
         int endOfLexemeIndex;
-        if (possibleMidParseUserDefinedTokenNode?.HasValue ?? false)
+        if (foundMidParseUserDefinedToken)
             endOfLexemeIndex = startOfMidParseUserDefinedToken;
         else if (moreDataAvailable)
             return false;
         else
             endOfLexemeIndex = currentIndex;
         
-        TokenType = baseTokenType;
-        Lexeme = _buffer[_startOfLexemeIndex..endOfLexemeIndex];
-        _consumedChars = endOfLexemeIndex;
+        return SetToken(baseTokenType, endOfLexemeIndex);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool SetToken(TTokenType tokenType, int endOfTokenIndex)
+    {
+        TokenType = tokenType;
+        Lexeme = _buffer[_startOfLexemeIndex..endOfTokenIndex];
+        _consumedChars = endOfTokenIndex;
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void DetermineBaseTokenType(char c, out bool isDigit, out bool isWhiteSpace, out TTokenType baseTokenType)
     {
         if (char.IsWhiteSpace(c))
