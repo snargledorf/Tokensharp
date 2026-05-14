@@ -2,7 +2,7 @@
 
 namespace Tokensharp.Trie;
 
-internal sealed class TrieNodeBuilder<T>(char character, T? value = null) where T : class
+internal sealed class TrieNodeBuilder<T>(T? value = null) where T : class
 {
     private readonly Dictionary<char, TrieNodeBuilder<T>> _characterToTrieNodeBuilders = new();
     
@@ -10,14 +10,14 @@ internal sealed class TrieNodeBuilder<T>(char character, T? value = null) where 
 
     public TrieNodeBuilder<T> Add(char character)
     {
-        var trieNodeBuilder = new TrieNodeBuilder<T>(character);
+        var trieNodeBuilder = new TrieNodeBuilder<T>();
         _characterToTrieNodeBuilders.Add(character, trieNodeBuilder);
         return trieNodeBuilder;
     }
     
     public TrieNodeBuilder<T> Add(char character, T nodeValue)
     {
-        var trieNodeBuilder = new TrieNodeBuilder<T>(character, nodeValue);
+        var trieNodeBuilder = new TrieNodeBuilder<T>(nodeValue);
         _characterToTrieNodeBuilders.Add(character, trieNodeBuilder);
         return trieNodeBuilder;
     }
