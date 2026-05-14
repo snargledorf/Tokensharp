@@ -29,26 +29,26 @@ public class IndexingTests
     public void VerifyIndexingOrder()
     {
         // Base class defines Text, Number, WhiteSpace
-        // They should have indices 1, 2, 3
-        Assert.That((int)IndexingTokens.Text, Is.EqualTo(1));
-        Assert.That((int)IndexingTokens.Number, Is.EqualTo(2));
-        Assert.That((int)IndexingTokens.WhiteSpace, Is.EqualTo(3));
+        // They should have indices 0, 1, 2
+        Assert.That((int)IndexingTokens.Text, Is.EqualTo(0));
+        Assert.That((int)IndexingTokens.Number, Is.EqualTo(1));
+        Assert.That((int)IndexingTokens.WhiteSpace, Is.EqualTo(2));
 
         // IndexingTokens defines First, Second
-        // They should have indices 4, 5
-        Assert.That((int)IndexingTokens.First, Is.EqualTo(4));
-        Assert.That((int)IndexingTokens.Second, Is.EqualTo(5));
+        // They should have indices 3, 4
+        Assert.That((int)IndexingTokens.First, Is.EqualTo(3));
+        Assert.That((int)IndexingTokens.Second, Is.EqualTo(4));
     }
 
     [Test]
     public void VerifyIndependentIndexing()
     {
-        // OtherIndexingTokens should have its own counter
-        Assert.That((int)OtherIndexingTokens.Text, Is.EqualTo(1));
-        Assert.That((int)OtherIndexingTokens.Number, Is.EqualTo(2));
-        Assert.That((int)OtherIndexingTokens.WhiteSpace, Is.EqualTo(3));
-        Assert.That((int)OtherIndexingTokens.A, Is.EqualTo(4));
-        Assert.That((int)OtherIndexingTokens.B, Is.EqualTo(5));
-        Assert.That((int)OtherIndexingTokens.C, Is.EqualTo(6));
+        // OtherIndexingTokens should have its own counter starting at 0
+        Assert.That((int)OtherIndexingTokens.Text, Is.EqualTo(0));
+        Assert.That((int)OtherIndexingTokens.Number, Is.EqualTo(1));
+        Assert.That((int)OtherIndexingTokens.WhiteSpace, Is.EqualTo(2));
+        Assert.That((int)OtherIndexingTokens.A, Is.EqualTo(3));
+        Assert.That((int)OtherIndexingTokens.B, Is.EqualTo(4));
+        Assert.That((int)OtherIndexingTokens.C, Is.EqualTo(5));
     }
 }

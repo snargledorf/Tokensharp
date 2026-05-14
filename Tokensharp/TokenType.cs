@@ -4,7 +4,7 @@ public abstract record TokenType<T>(string Identifier)
     where T : TokenType<T>, ITokenType<T>
 {
     // ReSharper disable once StaticMemberInGenericType
-    private static int _nextTokenTypeIndex;
+    private static int _nextTokenTypeIndex = -1;
     private readonly int _tokenTypeIndex = Interlocked.Increment(ref _nextTokenTypeIndex);
     
     public static readonly T Text = T.Create("text");
