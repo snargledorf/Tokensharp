@@ -191,12 +191,11 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
             return true;
         }
 
-        if (moreDataAvailable)
-            return false;
-
         int endOfLexemeIndex;
         if (possibleMidParseUserDefinedTokenNode?.HasValue ?? false)
             endOfLexemeIndex = startOfPossibleMidParseUserDefindTokenNode;
+        else if (moreDataAvailable)
+            return false;
         else
             endOfLexemeIndex = currentIndex;
         
