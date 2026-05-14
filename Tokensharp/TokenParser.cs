@@ -168,6 +168,9 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
             return SetToken(lastAcceptTrieNode.Value, lastAcceptIndex);
         }
 
+        if (currentNode is not null && moreDataAvailable)
+            return false;
+
         if (typeSwitchIndex != -1)
             return SetToken(baseTokenType, typeSwitchIndex);
 
