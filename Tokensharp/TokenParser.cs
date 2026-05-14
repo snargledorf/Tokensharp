@@ -67,18 +67,15 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
 
         DetermineBaseTokenType(c, out bool baseIsDigit, out bool baseIsWhiteSpace, out TTokenType baseTokenType);
         
-        if (_trieRootNode.TryGetChildNode(c, out TrieNode<TTokenType>? currentNode))
+        if (_trieRootNode.TryGetChildNode(c, out TrieNode<TTokenType>? currentNode) && currentNode.HasValue)
         {
-            if (currentNode.HasValue)
+            if (currentNode.HasChildren)
             {
-                if (currentNode.HasChildren)
-                {
-                    lastAcceptIndex = currentIndex;
-                    lastAcceptTrieNode = currentNode;
-                }
-                else
-                    return SetToken(currentNode.Value, currentIndex);
+                lastAcceptIndex = currentIndex;
+                lastAcceptTrieNode = currentNode;
             }
+            else
+                return SetToken(currentNode.Value!, currentIndex);
         }
 
         int typeSwitchIndex = -1;
@@ -160,12 +157,12 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
             }
         }
 
-        if (lastAcceptTrieNode?.HasValue ?? false)
+        if (lastAcceptTrieNode is { HasValue: true } acceptTrieNode)
         {
-            if (lastAcceptTrieNode.HasChildren && moreDataAvailable)
+            if (acceptTrieNode.HasChildren && moreDataAvailable)
                 return false;
-            
-            return SetToken(lastAcceptTrieNode.Value, lastAcceptIndex);
+
+            return SetToken(acceptTrieNode.Value!, lastAcceptIndex);
         }
 
         if (currentNode is not null && moreDataAvailable)

@@ -27,8 +27,7 @@ internal sealed class TrieNode<T>
 
     public readonly T? Value;
 
-    [MemberNotNullWhen(true, nameof(Value))]
-    public bool HasValue { get; }
+    public readonly bool HasValue;
 
     public readonly bool HasChildren;
 
