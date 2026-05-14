@@ -11,8 +11,7 @@ public abstract record TokenType<T>(string Identifier)
     public static readonly T Number = T.Create("number");
     public static readonly T WhiteSpace = T.Create("whitespace");
 
-    public static implicit operator int(TokenType<T> tokenType)
-    {
-        return tokenType._tokenTypeIndex;
-    }
+    public int Index => _tokenTypeIndex;
+    
+    public static implicit operator int(TokenType<T> tokenType) => tokenType._tokenTypeIndex;
 }
