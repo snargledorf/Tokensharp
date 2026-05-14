@@ -1,4 +1,4 @@
-﻿using Tokensharp.FastTrie;
+﻿using Tokensharp.Trie;
 
 namespace Tokensharp;
 

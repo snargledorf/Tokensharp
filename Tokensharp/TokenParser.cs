@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using Tokensharp.FastTrie;
+using Tokensharp.Trie;
 
 namespace Tokensharp;
 

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Tokensharp.FastTrie;
+namespace Tokensharp.Trie;
 
 internal sealed class TrieNodeBuilder<T>(char character, T? value = null) where T : class
 {
