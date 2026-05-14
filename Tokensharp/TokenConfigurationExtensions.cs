@@ -8,7 +8,7 @@ internal static class TokenConfigurationExtensions
     {
         internal TrieNode<T> ToFastTrie()
         {
-            var rootNode = new TrieNodeBuilder<T>('\0');
+            var rootNode = new TrieNodeBuilder<T>();
 
             foreach (LexemeToTokenType<T> tokenDefinition in lexemesToTokens.OrderBy(t => t.Lexeme.Length))
             {
