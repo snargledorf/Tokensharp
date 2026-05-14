@@ -122,10 +122,10 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                     
                     if (_trieRootNode.TryGetChildNode(c, out possibleMidParseUserDefinedTokenNode))
                     {
+                        startOfMidParseUserDefinedToken = currentIndex;
+                        
                         if (possibleMidParseUserDefinedTokenNode.HasValue)
                             return SuccessfulParse(baseTokenType, startOfMidParseUserDefinedToken);
-                
-                        startOfMidParseUserDefinedToken = currentIndex;
                     }
                 }
             }
