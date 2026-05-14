@@ -84,7 +84,6 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
         int typeSwitchIndex = -1;
         int startOfMidParseUserDefinedToken = -1;
         TrieNode<TTokenType>? possibleMidParseUserDefinedTokenNode = null;
-        bool foundMidParseUserDefinedToken = false;
         
         for (; currentIndex < _buffer.Length; currentIndex++)
         {
@@ -172,15 +171,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
         if (typeSwitchIndex != -1)
             return SetToken(baseTokenType, typeSwitchIndex);
 
-        int endOfLexemeIndex;
-        if (foundMidParseUserDefinedToken)
-            endOfLexemeIndex = startOfMidParseUserDefinedToken;
-        else if (moreDataAvailable)
-            return false;
-        else
-            endOfLexemeIndex = currentIndex;
-        
-        return SetToken(baseTokenType, endOfLexemeIndex);
+        return !moreDataAvailable && SetToken(baseTokenType, currentIndex);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
