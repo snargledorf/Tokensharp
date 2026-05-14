@@ -81,14 +81,12 @@ public abstract class TokenizerTestBase<TTokenType>
                 Assert.That(parsed, Is.True);
                 Assert.That(tokenType, Is.Not.Null.And.EqualTo(expectedTokenType));
                 Assert.That(lexeme.ToString(), Is.EqualTo(expectedLexeme));
-                Assert.That(lexeme.Length, Is.EqualTo(expectedLexeme.Length));
             }
             else
             {
                 Assert.That(parsed, Is.False);
                 Assert.That(tokenType, Is.Null);
                 Assert.That(lexeme.IsEmpty, Is.True);
-                Assert.That(lexeme.Length, Is.Zero);
             }
         }
 
