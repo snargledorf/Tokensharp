@@ -56,7 +56,6 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
         if (_buffer.IsEmpty || _consumedChars >= _buffer.Length)
             return false;
         
-        TrieNode<TTokenType>? currentNode = _trieRootNode;
         int lastAcceptIndex = -1, typeSwitchIndex = -1;
         TrieNode<TTokenType>? lastAcceptTrieNode = null;
 
@@ -67,10 +66,8 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
 
         DetermineBaseTokenType(c, out bool baseIsDigit, out bool baseIsWhiteSpace, out TTokenType baseTokenType);
         
-        if (currentNode.TryGetChildNode(c, out TrieNode<TTokenType>? nextNode))
+        if (_trieRootNode.TryGetChildNode(c, out TrieNode<TTokenType>? currentNode))
         {
-            currentNode = nextNode;
-
             if (currentNode.HasValue)
             {
                 if (currentNode.HasChildren)
@@ -86,10 +83,6 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
                     return true;
                 }
             }
-        }
-        else
-        {
-            currentNode = null;
         }
 
         int startOfPossibleMidParseUserDefindTokenNode = -1;
@@ -120,10 +113,8 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
 
             if (currentNode is not null)
             {
-                if (currentNode.TryGetChildNode(c, out nextNode))
+                if (currentNode.TryGetChildNode(c, out currentNode))
                 {
-                    currentNode = nextNode;
-
                     if (currentNode.HasValue)
                     {
                         lastAcceptIndex = currentIndex+1;
