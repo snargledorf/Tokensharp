@@ -56,11 +56,19 @@ namespace Tokensharp.TokenTypeGenerator
                 return null;
 
             var tokens = new Dictionary<string, string>();
-            JsonDocument jsonDocument = JsonDocument.Parse(sourceText.ToString());
-            foreach (JsonProperty property in jsonDocument.RootElement.EnumerateObject())
-                tokens.Add(property.Name, property.Value.GetString()!);
+            bool numbersAreText = false;
             
-            return new TokenDefinition(className, tokens);
+            JsonDocument jsonDocument = JsonDocument.Parse(sourceText.ToString());
+            
+            foreach (JsonProperty property in jsonDocument.RootElement.EnumerateObject())
+            {
+                if (property.NameEquals("@NumbersAreText"))
+                    numbersAreText = property.Value.GetBoolean();
+                else
+                    tokens.Add(property.Name, property.Value.GetString()!);
+            }
+            
+            return new TokenDefinition(className, tokens, numbersAreText);
         }
 
         private static TokenClassAndDefinition? LinkTokenClassToDefinition((TokenTypeClass Left, ImmutableArray<TokenDefinition> Right) classAndDefinitions, CancellationToken _)
@@ -90,12 +98,10 @@ namespace Tokensharp.TokenTypeGenerator
                                           
                                               public static {{className}} Create(string lexeme) => new(lexeme);
                                               
-                                              public static TokenConfiguration<{{className}}> Configuration { get; } = new TokenConfigurationBuilder<{{className}}>()
-                                              {
-                                                  {{
-                                                      string.Join(",\r\n            ", definition.TokenDefinition.Tokens.Select(def => def.Key))
-                                                  }}
-                                              }.Build();
+                                              public static TokenConfiguration<{{className}}> Configuration { get; } = new TokenConfigurationBuilder<{{className}}>(
+                                              [
+                                                  {{ string.Join(",\r\n            ", definition.TokenDefinition.Tokens.Select(def => def.Key)) }}
+                                              ]) { NumbersAreText = {{ (definition.TokenDefinition.NumbersAreText ? "true" : "false") }} }.Build();
                                           }
                                       }
                                       """;

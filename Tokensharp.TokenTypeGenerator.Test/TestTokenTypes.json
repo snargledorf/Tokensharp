@@ -1,4 +1,5 @@
 ﻿{
+  "@NumbersAreText": true,
   "Hello": "World",
   "Foo": "Bar",
   "Fiz": "Buzz",
