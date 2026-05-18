@@ -12,10 +12,11 @@ internal sealed class TrieNode<T>
     {
         Value = value;
         HasValue = value is not null;
-        HasChildren = characterToNode.Count > 0;
         
-        if (!HasChildren)
+        if (characterToNode.Count == 0)
             return;
+
+        HasChildren = true;
         
         _offset = characterToNode.Min(x => (int)x.Key);
         _maxChar = characterToNode.Max(x => (int)x.Key);
@@ -33,7 +34,7 @@ internal sealed class TrieNode<T>
 
     public bool TryGetChildNode(char c, [NotNullWhen(true)] out TrieNode<T>? state)
     {
-        if (!HasChildren || c < _offset || c > _maxChar)
+        if (c < _offset || c > _maxChar)
         {
             state = null;
             return false;
