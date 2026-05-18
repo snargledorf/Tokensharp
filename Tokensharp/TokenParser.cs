@@ -171,7 +171,7 @@ public ref struct TokenParser<TTokenType>(ReadOnlySpan<char> buffer,
 
         if (lastAcceptTrieNode is not null)
         {
-            if (lastAcceptTrieNode.HasChildren && moreDataAvailable)
+            if (currentIndex == _buffer.Length && lastAcceptTrieNode.HasChildren && moreDataAvailable)
                 return FailedToParse();
 
             return SuccessfulParse(lastAcceptTrieNode.Value!, lastAcceptIndex);
