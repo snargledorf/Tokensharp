@@ -1,4 +1,4 @@
 ﻿namespace Tokensharp.TokenTypeGenerator.Test;
 
-[TokenType]
+[TokenType(numbersAreText: true)]
 public partial record TestTokenTypes;
