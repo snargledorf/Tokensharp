@@ -1,5 +1,5 @@
 ﻿{
-  "@NumbersAreText": true,
+  "@NumbersAreText": false,
   "Hello": "World",
   "Foo": "Bar",
   "Fiz": "Buzz",

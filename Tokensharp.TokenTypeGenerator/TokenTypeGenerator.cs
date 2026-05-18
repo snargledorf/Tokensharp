@@ -9,7 +9,7 @@ namespace Tokensharp.TokenTypeGenerator
     [Generator(LanguageNames.CSharp)]
     public class TokenTypeGenerator : IIncrementalGenerator
     {
-        private static readonly string AttributeFullName = typeof(TokenTypeAttribute).FullName;
+        private static readonly string AttributeFullName = TokenTypeAttribute.FullName;
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -45,7 +45,14 @@ namespace Tokensharp.TokenTypeGenerator
             if (context.TargetSymbol is not ITypeSymbol symbol)
                 return null;
 
-            return new TokenTypeClass(symbol);
+            bool numbersAreText = false;
+            AttributeData? attribute = context.Attributes.FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == AttributeFullName);
+            if (attribute is { ConstructorArguments.Length: > 0 })
+            {
+                numbersAreText = (bool)attribute.ConstructorArguments[0].Value!;
+            }
+
+            return new TokenTypeClass(symbol, numbersAreText);
         }
 
         private static TokenDefinition? GetTokenDefinition(AdditionalText file, CancellationToken cancellationToken)
@@ -101,7 +108,7 @@ namespace Tokensharp.TokenTypeGenerator
                                               public static TokenConfiguration<{{className}}> Configuration { get; } = new TokenConfigurationBuilder<{{className}}>(
                                               [
                                                   {{ string.Join(",\r\n            ", definition.TokenDefinition.Tokens.Select(def => def.Key)) }}
-                                              ]) { NumbersAreText = {{ (definition.TokenDefinition.NumbersAreText ? "true" : "false") }} }.Build();
+                                              ]) { NumbersAreText = {{ (definition.TokenDefinition.NumbersAreText || definition.TokenClass.NumbersAreText ? "true" : "false") }} }.Build();
                                           }
                                       }
                                       """;
